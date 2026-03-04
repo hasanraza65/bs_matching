@@ -78,7 +78,12 @@ const transformToKanbanRequest = (req: ParentRequest): KanbanRequest => ({
     email: '-'
   },
   childrenDOBs: (req.children || []).map(c => c.child_dob),
-  babysitters: [],
+  babysitters: (req.choices || []).map(c => ({
+    name: `${c.babysitter_first_name} ${c.babysitter_last_name}`,
+    rank: c.choice_order,
+    interviewDate: c.interview_date,
+    interviewStatus: 'Scheduled' // Default or map from somewhere if available
+  })),
   notes: ''
 });
 
@@ -503,10 +508,46 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
     } : r));
   };
 
-  const handleUpdateRequest = (reqId: number, updatedFields: Partial<KanbanRequest>) => {
-    setRequests(requests.map(r => r.id === reqId ? { ...r, ...updatedFields } : r));
-    if (activeRequest?.id === reqId) {
-      setActiveRequest({ ...activeRequest, ...updatedFields });
+  const handleUpdateRequest = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+    try {
+      // Clean children payload - ensure we send IDs if they exist
+      const childrenPayload = (updatedFields.children || []).map((c: any) => ({
+        id: c.id,
+        child_dob: c.child_dob
+      }));
+
+      // Clean choices payload - map back to BabysitterChoicePayload structure
+      const choicesPayload = (updatedFields.choices || []).map((c: any) => ({
+        choice_order: c.choice_order,
+        babysitter_first_name: c.babysitter_first_name,
+        babysitter_last_name: c.babysitter_last_name,
+        babysitter_email: c.babysitter_email,
+        babysitter_phone: c.babysitter_phone,
+        babysitter_address: c.babysitter_address,
+        interview_date: c.interview_date,
+        interview_time: c.interview_time
+      }));
+
+      const response = await api.updateParentRequest(reqId, {
+        first_name: updatedFields.user?.first_name || '',
+        last_name: updatedFields.user?.last_name || '',
+        parent_address: updatedFields.parent_address || '',
+        children: childrenPayload,
+        choices: choicesPayload,
+        _method: 'put'
+      });
+
+      if (response.status && response.data) {
+        const fullReq = transformToKanbanRequest(response.data);
+        setRequests(prev => prev.map(r => r.id === reqId ? fullReq : r));
+        if (activeRequest?.id === reqId) {
+          setActiveRequest(fullReq);
+        }
+      } else {
+        console.error('Update failed:', response.message);
+      }
+    } catch (error) {
+      console.error('Failed to update request:', error);
     }
   };
 
@@ -1020,23 +1061,59 @@ const RequestDetailsModal = ({
   };
 
   const handleSitterChange = (index: number, field: string, value: any) => {
-    const newSitters = [...formData.babysitters];
-    newSitters[index] = { ...newSitters[index], [field]: value };
-    handleChange('babysitters', newSitters);
+    const newChoices = [...(formData.choices || [])];
+    if (newChoices[index]) {
+      newChoices[index] = { ...newChoices[index], [field]: value };
+
+      // Also update babysitters array for local state/UI consistency if needed
+      const newSitters = [...formData.babysitters];
+      if (field === 'babysitter_first_name' || field === 'babysitter_last_name') {
+        newSitters[index] = {
+          ...newSitters[index],
+          name: `${newChoices[index].babysitter_first_name} ${newChoices[index].babysitter_last_name}`
+        };
+      } else if (field === 'interview_date') {
+        newSitters[index] = { ...newSitters[index], interviewDate: value };
+      }
+
+      setFormData({ ...formData, choices: newChoices, babysitters: newSitters });
+    }
   };
 
   const handleAddSitter = () => {
-    handleChange('babysitters', [...formData.babysitters, {
+    const nextOrder = (formData.choices?.length || 0) + 1;
+    const newChoice = {
+      id: 0, // Temp
+      user_id: formData.user_id,
+      parent_request_id: formData.id,
+      choice_order: nextOrder,
+      babysitter_first_name: '',
+      babysitter_last_name: '',
+      babysitter_email: '',
+      babysitter_phone: '',
+      babysitter_address: '',
+      interview_date: '',
+      interview_time: '12:00'
+    };
+
+    const newSitter = {
       name: '',
-      rank: formData.babysitters.length + 1,
+      rank: nextOrder,
       interviewDate: '',
-      interviewStatus: 'Scheduled'
-    }]);
+      interviewStatus: 'Scheduled' as const
+    };
+
+    setFormData({
+      ...formData,
+      choices: [...(formData.choices || []), newChoice as any],
+      babysitters: [...formData.babysitters, newSitter]
+    });
   };
 
   const handleRemoveSitter = (index: number) => {
+    const newChoices = (formData.choices || []).filter((_, i) => i !== index);
     const newSitters = formData.babysitters.filter((_, i) => i !== index);
-    handleChange('babysitters', newSitters);
+    setFormData({ ...formData, choices: newChoices, babysitters: newSitters });
   };
 
   const handleSave = () => {
@@ -1118,14 +1195,39 @@ const RequestDetailsModal = ({
                     <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Family Information</h4>
                       <div className="space-y-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Parent Name</label>
-                          <input
-                            type="text"
-                            value={formData.family}
-                            onChange={(e) => handleChange('family', e.target.value)}
-                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
-                          />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">First Name</label>
+                            <input
+                              type="text"
+                              value={formData.user.first_name}
+                              onChange={(e) => {
+                                const newUser = { ...formData.user, first_name: e.target.value };
+                                setFormData({
+                                  ...formData,
+                                  user: newUser,
+                                  family: `${newUser.first_name} ${newUser.last_name}`
+                                });
+                              }}
+                              className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Last Name</label>
+                            <input
+                              type="text"
+                              value={formData.user.last_name}
+                              onChange={(e) => {
+                                const newUser = { ...formData.user, last_name: e.target.value };
+                                setFormData({
+                                  ...formData,
+                                  user: newUser,
+                                  family: `${newUser.first_name} ${newUser.last_name}`
+                                });
+                              }}
+                              className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                            />
+                          </div>
                         </div>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
@@ -1153,6 +1255,15 @@ const RequestDetailsModal = ({
                               </div>
                             ))}
                           </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Parent Address</label>
+                          <input
+                            type="text"
+                            value={formData.parent_address}
+                            onChange={(e) => handleChange('parent_address', e.target.value)}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                          />
                         </div>
                       </div>
                     </div>
@@ -1294,9 +1405,9 @@ const RequestDetailsModal = ({
                       + Add Sitter
                     </button>
                   </div>
-                  {formData.babysitters.length > 0 ? (
-                    <div className="space-y-4">
-                      {formData.babysitters.map((sitter, idx) => (
+                  {formData.choices && formData.choices.length > 0 ? (
+                    <div className="space-y-6">
+                      {formData.choices.map((choice, idx) => (
                         <div key={idx} className="p-6 border border-slate-100 rounded-2xl bg-white shadow-sm flex flex-col gap-4 relative group">
                           <button
                             onClick={() => handleRemoveSitter(idx)}
@@ -1307,46 +1418,78 @@ const RequestDetailsModal = ({
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">Sitter Name</label>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">First Name</label>
                               <input
                                 type="text"
-                                value={sitter.name}
-                                onChange={(e) => handleSitterChange(idx, 'name', e.target.value)}
+                                value={choice.babysitter_first_name}
+                                onChange={(e) => handleSitterChange(idx, 'babysitter_first_name', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Last Name</label>
+                              <input
+                                type="text"
+                                value={choice.babysitter_last_name}
+                                onChange={(e) => handleSitterChange(idx, 'babysitter_last_name', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Email</label>
+                              <input
+                                type="email"
+                                value={choice.babysitter_email}
+                                onChange={(e) => handleSitterChange(idx, 'babysitter_email', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Phone</label>
+                              <input
+                                type="text"
+                                value={choice.babysitter_phone}
+                                onChange={(e) => handleSitterChange(idx, 'babysitter_phone', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                              />
+                            </div>
+                            <div className="md:col-span-2 space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Address</label>
+                              <input
+                                type="text"
+                                value={choice.babysitter_address}
+                                onChange={(e) => handleSitterChange(idx, 'babysitter_address', e.target.value)}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
                               />
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">Interview Date</label>
                               <input
-                                type="text"
-                                value={sitter.interviewDate}
-                                onChange={(e) => handleSitterChange(idx, 'interviewDate', e.target.value)}
+                                type="date"
+                                value={choice.interview_date}
+                                onChange={(e) => handleSitterChange(idx, 'interview_date', e.target.value)}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
                               />
                             </div>
-                          </div>
-
-                          <div className="flex items-center gap-4">
-                            <div className="flex-1 space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">Status</label>
-                              <select
-                                value={sitter.interviewStatus}
-                                onChange={(e) => handleSitterChange(idx, 'interviewStatus', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold"
-                              >
-                                <option value="Scheduled">Scheduled</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                              </select>
-                            </div>
-                            <div className="w-24 space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">Rank</label>
-                              <input
-                                type="number"
-                                value={sitter.rank}
-                                onChange={(e) => handleSitterChange(idx, 'rank', parseInt(e.target.value) || 0)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold"
-                              />
+                            <div className="flex gap-4">
+                              <div className="flex-1 space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Interview Time</label>
+                                <input
+                                  type="time"
+                                  value={choice.interview_time}
+                                  onChange={(e) => handleSitterChange(idx, 'interview_time', e.target.value)}
+                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold"
+                                />
+                              </div>
+                              <div className="w-24 space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Order</label>
+                                <input
+                                  type="number"
+                                  value={choice.choice_order}
+                                  onChange={(e) => handleSitterChange(idx, 'choice_order', parseInt(e.target.value) || 0)}
+                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>

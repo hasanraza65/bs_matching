@@ -1,4 +1,25 @@
+import axios from "axios";
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+// --- Centralized Axios Client ---
+const apiClient = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: false, // Disabled by default to fix CORS. Re-enable specifically for endpoints that support credentials/cookies.
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+});
+
+// Add a request interceptor to attach the token if available
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("auth_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export interface Child {
   id?: number;
@@ -126,25 +147,12 @@ export const api = {
     },
     parentRequestId?: number,
   ): Promise<RegisterResponse> => {
-    const token = api.getToken();
-    const url = new URL(`${BASE_URL}/auth/register`);
-    if (parentRequestId) {
-      url.searchParams.append("parent_request_id", parentRequestId.toString());
-    }
-
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
+    const params = parentRequestId
+      ? { parent_request_id: parentRequestId }
+      : {};
+    const response = await apiClient.post("/auth/register", data, { params });
     return {
-      ...result,
+      ...response.data,
       code: response.status,
     };
   },
@@ -153,76 +161,40 @@ export const api = {
     email: string;
     password?: string;
   }): Promise<RegisterResponse> => {
-    const response = await fetch(`${BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    return response.json();
+    const response = await apiClient.post("/auth/login", data);
+    return response.data;
   },
 
   checkEmail: async (
     email: string,
   ): Promise<{ status: boolean; message: string }> => {
-    const response = await fetch(`${BASE_URL}/auth/check-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ email }),
-    });
-    return response.json();
+    const response = await apiClient.post("/auth/check-email", { email });
+    return response.data;
   },
 
   verifyOtp: async (data: {
     email: string;
     otp: string;
   }): Promise<RegisterResponse> => {
-    const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    return response.json();
+    const response = await apiClient.post("/auth/verify-otp", data);
+    return response.data;
   },
 
   getUser: async (): Promise<UserResponse> => {
-    const token = api.getToken();
-    if (!token) return { status: false, message: "No token found" };
-
-    const response = await fetch(`${BASE_URL}/auth/user`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-    return response.json();
+    try {
+      const response = await apiClient.get("/auth/user");
+      return response.data;
+    } catch (error) {
+      return { status: false, message: "Request failed" };
+    }
   },
 
   logout: async (): Promise<LogoutResponse> => {
-    const token = api.getToken();
-    if (!token) return { status: true, message: "Already logged out" };
-
-    const response = await fetch(`${BASE_URL}/auth/logout`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-    const result = await response.json();
-    if (result.status) {
+    const response = await apiClient.post("/auth/logout");
+    if (response.data.status) {
       api.removeToken();
     }
-    return result;
+    return response.data;
   },
 
   updateParentRequest: async (
@@ -232,21 +204,16 @@ export const api = {
       last_name: string;
       parent_address: string;
       children: { id?: number; child_dob: string }[];
+      choices?: BabysitterChoicePayload[];
+      _method?: string;
     },
   ): Promise<ParentRequestResponse> => {
-    const token = api.getToken();
-    const response = await fetch(`${BASE_URL}/parent-requests/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
+    const response = await apiClient.post(`/parent-requests/${id}`, {
+      ...data,
+      _method: "put",
     });
-    const result = await response.json();
     return {
-      ...result,
+      ...response.data,
       code: response.status,
     };
   },
@@ -260,19 +227,9 @@ export const api = {
     schedules: any[];
     board_status?: string;
   }): Promise<ParentRequestResponse> => {
-    const token = api.getToken();
-    const response = await fetch(`${BASE_URL}/parent-requests`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(data),
-    });
-    const result = await response.json();
+    const response = await apiClient.post("/parent-requests", data);
     return {
-      ...result,
+      ...response.data,
       code: response.status,
     };
   },
@@ -280,18 +237,10 @@ export const api = {
   getParentSchedules: async (
     parentRequestId: number,
   ): Promise<{ status: boolean; data: any[] }> => {
-    const token = api.getToken();
-    const response = await fetch(
-      `${BASE_URL}/parent-schedules?parent_request_id=${parentRequestId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      },
-    );
-    return response.json();
+    const response = await apiClient.get("/parent-schedules", {
+      params: { parent_request_id: parentRequestId },
+    });
+    return response.data;
   },
 
   createParentSchedules: async (data: {
@@ -301,17 +250,8 @@ export const api = {
       slots: { start_time: string; end_time: string }[];
     }[];
   }): Promise<{ status: boolean; message: string }> => {
-    const token = api.getToken();
-    const response = await fetch(`${BASE_URL}/parent-schedules`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-    return response.json();
+    const response = await apiClient.post("/parent-schedules", data);
+    return response.data;
   },
 
   updateParentSchedule: async (
@@ -321,119 +261,63 @@ export const api = {
       slots: { id?: number; start_time: string; end_time: string }[];
     },
   ): Promise<{ status: boolean; message: string; data?: any }> => {
-    const token = api.getToken();
-    const response = await fetch(`${BASE_URL}/parent-schedules/${scheduleId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-    return response.json();
+    const response = await apiClient.put(
+      `/parent-schedules/${scheduleId}`,
+      data,
+    );
+    return response.data;
   },
 
   getParentBabysitterChoices: async (
     parentRequestId: number,
   ): Promise<{ status: boolean; data: any[] }> => {
-    const token = api.getToken();
-    const response = await fetch(
-      `${BASE_URL}/parent-babysitter-choices?parent_request_id=${parentRequestId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      },
-    );
-    return response.json();
+    const response = await apiClient.get("/parent-babysitter-choices", {
+      params: { parent_request_id: parentRequestId },
+    });
+    return response.data;
   },
 
   getExternalBabysitters: async (
     page: number = 1,
     filters: Record<string, any> = {},
   ): Promise<any> => {
-    const url = new URL("https://bloom-buddies.fr/api/all-bs-for-api");
-    url.searchParams.append("page", page.toString());
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value.forEach((v) => {
-          if (v) url.searchParams.append(`${key}[]`, v.toString());
-        });
-      } else if (value) {
-        url.searchParams.append(key, value.toString());
-      }
-    });
-
-    const response = await fetch(url.toString(), {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
+    const response = await axios.get(
+      "https://bloom-buddies.fr/api/all-bs-for-api",
+      {
+        params: { page, ...filters },
       },
-    });
-    return response.json();
+    );
+    return response.data;
   },
 
   createBabysitterChoices: async (data: {
     parent_request_id: number;
     choices: BabysitterChoicePayload[];
   }): Promise<{ status: boolean; message: string }> => {
-    const token = api.getToken();
-    const response = await fetch(`${BASE_URL}/parent-babysitter-choices`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-    return response.json();
+    const response = await apiClient.post("/parent-babysitter-choices", data);
+    return response.data;
   },
 
   updateBabysitterChoice: async (
     choiceId: number,
     data: BabysitterChoicePayload,
   ): Promise<{ status: boolean; message: string; data?: any }> => {
-    const token = api.getToken();
-    const response = await fetch(
-      `${BASE_URL}/parent-babysitter-choices/${choiceId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      },
+    const response = await apiClient.put(
+      `/parent-babysitter-choices/${choiceId}`,
+      data,
     );
-    return response.json();
+    return response.data;
   },
 
-  /**
-   * Fetch all parent requests for the admin dashboard.
-   * The endpoint returns a plain array which is normalised into { status, data }.
-   */
   getParentRequests: async (): Promise<{
     status: boolean;
     data: ParentRequest[];
   }> => {
-    const token = api.getToken();
-    const response = await fetch(`${BASE_URL}/parent-requests`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-    const json = await response.json();
+    const response = await apiClient.get("/parent-requests");
+    const data = response.data;
     return {
-      status: response.ok,
-      data: Array.isArray(json) ? json : [],
+      status: response.status >= 200 && response.status < 300,
+      data: Array.isArray(data) ? data : [],
     };
   },
 };
