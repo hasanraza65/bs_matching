@@ -31,13 +31,30 @@ interface ProfilePageProps {
   onBack: () => void;
   onLogout: () => void;
   onModifyRequest: (request: any) => void;
+  onGoToAdmin: () => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onModifyRequest }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onModifyRequest, onGoToAdmin }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax'>('requests');
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const response = await api.getUser();
+
+      if (response.status && response.data) {
+        setUser(response.data);
+
+        if (response.data.email === 'admin@mail.com') {
+          onGoToAdmin();
+        }
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;

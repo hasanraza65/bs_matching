@@ -965,7 +965,7 @@ export default function App() {
       if (item.id === dateId) {
         return {
           ...item,
-          slots: [...item.slots, { id: Math.random().toString(36).substr(2, 9), startTime: '09:00', endTime: '17:00' }]
+          slots: [...item.slots, { id: Math.random().toString(36).substr(2, 9), startTime: '', endTime: '' }]
         };
       }
       return item;
@@ -1086,7 +1086,17 @@ export default function App() {
               exit={{ opacity: 0 }}
               className="w-full"
             >
-              <AdminDashboard onLogout={() => setView('booking')} />
+              <AdminDashboard
+                  onLogout={() => {
+                    api.removeToken();       // remove auth token
+                    setIsLoggedIn(false);    // update login state
+                    setUser(null);           // clear user
+                    setView('booking');      // go to index page
+                    setCurrentStep(1);       // if you use this
+                    setIsModifying(false);   // optional reset
+                    setParentRequestId(null); // optional reset
+                  }}
+                />
             </motion.div>
           ) : view === 'profile' ? (
             <motion.div
@@ -1108,6 +1118,7 @@ export default function App() {
                 setParentRequestId(null);
               }}
               onModifyRequest={handleModifyRequest}
+              onGoToAdmin={() => setView('admin-dashboard')}
             />
             </motion.div>
           ) : view === 'login' ? (

@@ -683,7 +683,7 @@ const NewRequestModal = ({
     schedules: [
       {
         schedule_date: '',
-        slots: [{ start_time: '09:00:00', end_time: '17:00:00' }]
+        slots: [{ start_time: '', end_time: '' }]
       }
     ]
   });
@@ -715,7 +715,7 @@ const NewRequestModal = ({
       ...formData.schedules,
       {
         schedule_date: '',
-        slots: [{ start_time: '09:00:00', end_time: '17:00:00' }]
+        slots: [{ start_time: '', end_time: '' }]
       }
     ];
     handleChange('schedules', newSchedules);
@@ -736,7 +736,7 @@ const NewRequestModal = ({
     const newSchedules = [...formData.schedules];
     newSchedules[scheduleIndex].slots = [
       ...newSchedules[scheduleIndex].slots,
-      { start_time: '09:00:00', end_time: '17:00:00' }
+      { start_time: '', end_time: '' }
     ];
     handleChange('schedules', newSchedules);
   };
@@ -994,7 +994,10 @@ const RequestDetailsModal = ({
   onUpdate: (updatedFields: Partial<KanbanRequest>) => void;
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters' | 'notes'>('overview');
-  const [formData, setFormData] = useState<KanbanRequest>({ ...request });
+  const [formData, setFormData] = useState<KanbanRequest>({ ...request,
+     schedules: request.schedules || [],
+  choices: request.choices || [],  
+   });
 
   const handleChange = (field: string, value: any) => {
     const newData = { ...formData, [field]: value };
@@ -1033,7 +1036,7 @@ const RequestDetailsModal = ({
   };
 
   const handleAddSchedule = () => {
-    handleChange('schedules', [...formData.schedules, { schedule_date: '', slots: [{ start_time: '09:00:00', end_time: '17:00:00' }] }]);
+    handleChange('schedules', [...formData.schedules, { schedule_date: '', slots: [{ start_time: '', end_time: '' }] }]);
   };
 
   const handleRemoveSchedule = (index: number) => {
@@ -1050,7 +1053,7 @@ const RequestDetailsModal = ({
 
   const handleAddSlot = (scheduleIndex: number) => {
     const newSchedules = [...formData.schedules];
-    newSchedules[scheduleIndex].slots = [...newSchedules[scheduleIndex].slots, { start_time: '09:00:00', end_time: '17:00:00' }];
+    newSchedules[scheduleIndex].slots = [...newSchedules[scheduleIndex].slots, { start_time: '', end_time: '' }];
     handleChange('schedules', newSchedules);
   };
 
