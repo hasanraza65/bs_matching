@@ -1,0 +1,246 @@
+export const fr = {
+  common: {
+    step: "Étape",
+    of: "sur",
+    next: "Étape suivante",
+    back: "Retour",
+    modify: "Modifier",
+    total: "Total",
+    hours: "heures",
+    price: "Prix",
+    euro: "€",
+    loading: "Chargement...",
+    success: "Succès",
+    error: "Erreur",
+    remove: "Supprimer",
+    viewProfile: "Voir le profil",
+    online: "En ligne",
+    available: "Disponible",
+    reviews: "avis",
+    searchCountry: "Chercher un pays...",
+    noCountries: "Aucun pays trouvé",
+    child: "Enfant",
+    children: "Enfants",
+    noInterview: "Pas d'entretien",
+    yearsOld: "ans",
+    days: {
+      su: "Dim",
+      mo: "Lun",
+      tu: "Mar",
+      we: "Mer",
+      th: "Jeu",
+      fr: "Ven",
+      sa: "Sam"
+    }
+  },
+  steps: {
+    familyInfo: "Informations Famille",
+    scheduleQuote: "Planning & Devis",
+    matching: "Sélection Babysitters",
+  },
+  step1: {
+    title: "Informations Famille",
+    subtitle: "Parlez-nous de votre famille pour personnaliser votre expérience.",
+    firstName: "Prénom",
+    lastName: "Nom",
+    email: "Adresse Email",
+    phone: "Numéro de Téléphone",
+    address: "Adresse Complète",
+    numChildren: "Nombre d'enfants",
+    childDob: "Date de naissance enfant {n}",
+    placeholders: {
+      firstName: "ex. Jean",
+      lastName: "ex. Dupont",
+      email: "jean.dupont@email.com",
+      phone: "06 12 34 56 78",
+      address: "123 Rue de Rivoli, 75001 Paris",
+    }
+  },
+  step2: {
+    title: "Planning & Devis",
+    subtitle: "Sélectionnez vos dates et visualisez votre devis personnalisé instantanément.",
+    calendarTitle: "Sélectionner les dates",
+    calendarSubtitle: "Choisissez les jours où vous avez besoin d'une babysitter.",
+    noDates: "Veuillez sélectionner au moins une date de garde.",
+    startTime: "Heure de début",
+    endTime: "Heure de fin",
+    priceBreakdown: "Détail du prix",
+    childcarePackage: "Forfait garde d'enfants",
+    totalBeforeAid: "Total avant aides",
+    financialAid: "Aides financières",
+    official: "Officiel",
+    cafAssistance: "Aide CAF (CMG)",
+    cafSubtitle: "Reste à charge après aide CAF",
+    taxCredit: "Crédit d'Impôt (50%)",
+    taxCreditSubtitle: "50% de crédit sur le reste à charge",
+    finalCost: "Coût mensuel final",
+    finalCostSubtitle: "Votre coût réel après toutes aides",
+    howItWorks: "Comment ça marche",
+    cmgEligible: "Basé sur vos {h} heures, vous êtes éligible au CMG.",
+    cmgNotEligible: "Le CMG est disponible à partir de 16 heures de garde mensuelles.",
+    validateButton: "Commencer la mise en relation",
+    validationNote: "Commencez la mise en relation avec des babysitters premium basés sur votre planning et devis personnalisé.",
+    tooltips: {
+      caf: {
+        title: "Complément de libre choix du Mode de Garde",
+        profile: "Basé sur votre profil :",
+        youngest: "Enfant le plus jeune :",
+        ceiling: "Plafond :",
+        note: "La CAF prend en charge 85% de la facture, vous ne payez que 15%."
+      },
+      tax: {
+        title: "Crédit d'Impôt Services à la Personne",
+        calculation: "Calcul :",
+        annualLimit: "Plafond annuel :",
+        monthlyLimit: "Plafond de crédit mensuel :"
+      }
+    }
+  },
+  step3: {
+    title: "Devis Détaillé",
+    subtitle: "Consultez le détail de vos coûts estimés",
+  },
+  step4: {
+    title: "Sélectionnez vos candidates",
+    subtitle: "Choisissez jusqu'à 4 babysitters que vous souhaitez interviewer.",
+    selectedTitle: "Vos candidates sélectionnées",
+    noSelected: "Aucune babysitter sélectionnée. Choisissez jusqu'à 4 candidates dans la liste ci-dessous.",
+    maxCandidates: "Max 4 candidates",
+    selectCandidate: "Sélectionner comme candidate",
+    selectFirst: "Sélectionner 1ère candidate",
+    selectSecond: "Sélectionner 2e candidate",
+    selectThird: "Sélectionner 3e candidate",
+    selectFourth: "Sélectionner 4e candidate",
+    selected: "Sélectionnée",
+    submitSelection: "Envoyer ma sélection",
+    paymentNote: "La finalisation de votre sélection nécessite un petit paiement de confirmation de {amount}.",
+    years: "ans",
+    exp: "ans d'exp.",
+    rankLabels: ["1er", "2e", "3e", "4e"],
+  },
+  payment: {
+    title: "Validation Sécurisée",
+    subtitle: "Confirmez votre devis et commencez la sélection.",
+    amount: "Montant à payer :",
+    cardInfo: "Informations de carte",
+    cardNumber: "Numéro de carte",
+    expiry: "MM/AA",
+    cvc: "CVC",
+    payButton: "Payer {amount}",
+    processing: "Traitement du paiement...",
+    success: "Paiement réussi !",
+    redirecting: "Finalisation de votre demande...",
+    securityNote: "Vos informations de paiement sont cryptées et sécurisées.",
+  },
+  modals: {
+    interview: {
+      title: "Planifier un Entretien",
+      skip: "Passer l'entretien",
+      skipSubtitle: "Sélectionner sans entretien",
+      preferredDate: "Date préférée",
+      preferredTime: "Heure préférée",
+      timezone: "Fuseau horaire : Europe/Paris (CET)",
+      confirm: "Confirmer la sélection",
+    },
+    profile: {
+      aboutMe: "À propos de moi",
+      experience: "Expérience",
+      languages: "Langues",
+      yearsOld: "ans",
+      yearsExp: "Ans",
+    },
+    success: {
+      title: "Demande de réservation envoyée !",
+      subtitle: "Nous avons reçu votre sélection de candidats et votre planning. Nous vous contacterons prochainement pour finaliser les entretiens.",
+      backToStart: "Retour au début",
+    }
+  },
+  profilePage: {
+    title: "Mon Compte",
+    subtitle: "Gérez vos demandes, entretiens et documents.",
+    tabs: {
+      requests: "Demandes Actives",
+      interviews: "Entretiens",
+      invoices: "Factures",
+      tax: "Attestations Fiscales"
+    },
+    requests: {
+      id: "ID Demande",
+      status: "Statut",
+      children: "Enfants",
+      hours: "Total Heures",
+      amount: "Montant Total",
+      date: "Créée le",
+      pending: "En attente de matching",
+      confirmed: "Confirmée",
+      noRequests: "Vous n'avez aucune demande active."
+    },
+    interviews: {
+      with: "Entretien avec",
+      date: "Date",
+      time: "Heure",
+      status: "Statut",
+      scheduled: "Planifié",
+      completed: "Terminé",
+      noInterviews: "Aucun entretien planifié."
+    },
+    invoices: {
+      number: "Facture n°",
+      date: "Date",
+      amount: "Montant",
+      download: "Télécharger PDF",
+      noInvoices: "Aucune facture disponible."
+    },
+    tax: {
+      year: "Année",
+      type: "Type d'attestation",
+      download: "Télécharger",
+      noCertificates: "Aucune attestation fiscale disponible pour le moment."
+    }
+  },
+  login: {
+    title: "Bon retour !",
+    subtitle: "Connectez-vous pour gérer vos demandes de garde.",
+    emailLabel: "Adresse Email",
+    emailPlaceholder: "votre@email.com",
+    sendOtp: "Envoyer le code",
+    otpTitle: "Vérifiez votre email",
+    otpSubtitle: "Nous avons envoyé un code à 6 chiffres à {email}",
+    otpLabel: "Entrez le code",
+    verify: "Vérifier et se connecter",
+    resend: "Renvoyer le code",
+    backToEmail: "Changer d'email",
+    noAccount: "Pas encore de compte ?",
+    startBooking: "Commencer une demande",
+    existingAccount: "Déjà un compte ? Connectez-vous ici"
+  },
+  footer: {
+    assistance: "Si vous avez besoin d'aide, contactez-nous via WhatsApp",
+  },
+  sitters: {
+    amelie: {
+      description: "Douce et créative, j'adore organiser des activités artistiques pour les enfants.",
+      fullBio: "Je travaille comme babysitter depuis plus de 5 ans. Je suis actuellement étudiante en Éducation de la Petite Enfance. J'adore raconter des histoires, peindre et les jeux de plein air. Je suis certifiée en premiers secours et j'ai ma propre voiture.",
+    },
+    thomas: {
+      description: "Énergique et patient, je me spécialise dans les jeux actifs et l'aide aux devoirs.",
+      fullBio: "Avec 7 ans d'expérience, j'ai travaillé avec des enfants de tous âges. Ancien animateur de centre de vacances, j'adore le sport. Je peux aussi aider pour les devoirs de maths et de sciences. Je suis très fiable et ponctuel.",
+    },
+    chloe: {
+      description: "Responsable et attentionnée, j'aime cuisiner des repas sains et raconter des histoires.",
+      fullBio: "Je suis étudiante en soins infirmiers avec une passion pour la garde d'enfants. J'ai de l'expérience avec les nourrissons et les tout-petits. J'adore cuisiner et je peux préparer des collations et des repas sains. Je suis très attentive à la sécurité et à l'hygiène.",
+    },
+    lucas: {
+      description: "Patient et musicien, je peux initier vos enfants au piano.",
+      fullBio: "Je suis professeur de musique et babysitter à temps partiel. J'adore partager ma passion pour la musique avec les enfants. Je suis calme, patient et très organisé. J'ai de l'expérience avec les enfants de 4 à 12 ans.",
+    },
+    sophie: {
+      description: "Nounou expérimentée axée sur les jeux éducatifs et le développement.",
+      fullBio: "J'ai 10 ans d'expérience professionnelle en tant que nounou. Je me spécialise dans le développement de la petite enfance et les méthodes Montessori. Je parle couramment trois langues et j'adore enseigner le vocabulaire de base aux enfants.",
+    },
+    nicolas: {
+      description: "Amusant et fiable, j'adore les expériences scientifiques et les tours de magie.",
+      fullBio: "Je suis étudiant en sciences et j'adore rendre l'apprentissage amusant. Je peux faire des tours de magie simples et des expériences scientifiques que les enfants adorent. Je suis très énergique et j'apporte toujours une attitude positive.",
+    }
+  }
+};
