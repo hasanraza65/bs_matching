@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  LayoutDashboard, 
-  ClipboardList, 
-  Calendar, 
-  Receipt, 
-  FileText, 
-  Users, 
-  Search, 
-  Bell, 
-  LogOut, 
-  Menu, 
-  X, 
-  ChevronRight, 
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Calendar,
+  Receipt,
+  FileText,
+  Users,
+  Search,
+  Bell,
+  LogOut,
+  Menu,
+  X,
+  ChevronRight,
   ChevronLeft,
-  MoreVertical, 
-  Download, 
+  MoreVertical,
+  Download,
   Filter,
   TrendingUp,
   Clock,
@@ -54,10 +54,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
       {/* Sidebar */}
-      <aside 
-        className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? 'w-64' : 'w-0 -translate-x-full md:w-20 md:translate-x-0'
-        }`}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0 -translate-x-full md:w-20 md:translate-x-0'
+          }`}
       >
         <div className="h-full flex flex-col">
           {/* Sidebar Header */}
@@ -67,7 +66,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <Shield size={24} />
               </div>
               {isSidebarOpen && (
-                <motion.span 
+                <motion.span
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="text-xl font-bold tracking-tight whitespace-nowrap"
@@ -76,9 +75,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </motion.span>
               )}
             </div>
-            
+
             {/* Desktop Collapse Toggle */}
-            <button 
+            <button
               onClick={toggleSidebar}
               className="hidden md:flex p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-900 transition-colors"
             >
@@ -95,11 +94,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <button
                   key={item.id}
                   onClick={() => setActivePage(item.id as AdminPage)}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${
-                    isActive 
-                      ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' 
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${isActive
+                      ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
                       : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <Icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900'} />
                   {isSidebarOpen && (
@@ -115,7 +113,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
           {/* Sidebar Footer */}
           <div className="p-4 border-t border-slate-100">
-            <button 
+            <button
               onClick={onLogout}
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all group ${!isSidebarOpen && 'justify-center'}`}
             >
@@ -131,7 +129,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         {/* Top Header Bar */}
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={toggleSidebar}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors md:hidden"
             >
@@ -146,7 +144,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             {/* Search Bar */}
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
+              <input
                 type="text"
                 placeholder="Search anything..."
                 value={searchQuery}
@@ -160,7 +158,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <Bell size={20} />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
               </button>
-              
+
               <div className="h-8 w-px bg-slate-200 mx-1" />
 
               <div className="flex items-center gap-3 pl-2">
@@ -275,13 +273,32 @@ const DashboardView = () => {
 
 const RequestsView = () => {
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const requests = [
-    { id: '1', family: 'Smith Family', children: 2, dates: '12/03/2026 - 15/03/2026', status: 'Stage 3' },
-    { id: '2', family: 'Dupont Family', children: 1, dates: '18/03/2026 - 20/03/2026', status: 'Stage 1' },
-    { id: '3', family: 'Miller Family', children: 3, dates: '22/03/2026 - 25/03/2026', status: 'Stage 2' },
-    { id: '4', family: 'Brown Family', children: 2, dates: '01/04/2026 - 05/04/2026', status: 'Stage 1' },
-  ];
+  React.useEffect(() => {
+    let cancelled = false;
+    const fetchRequests = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { api } = await import('../services/api');
+        const result = await api.getParentRequests();
+        if (!cancelled) {
+          setRequests(result.data);
+        }
+      } catch {
+        if (!cancelled) {
+          setError('Failed to load requests. Please try again.');
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    fetchRequests();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -289,7 +306,7 @@ const RequestsView = () => {
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
+            <input
               type="text"
               placeholder="Filter requests..."
               className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -305,18 +322,16 @@ const RequestsView = () => {
           <div className="bg-white p-1 rounded-xl border border-slate-200 flex items-center shadow-sm">
             <button
               onClick={() => setViewMode('table')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === 'table' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-              }`}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'table' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                }`}
             >
               <TableIcon size={14} />
               Table View
             </button>
             <button
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-              }`}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                }`}
             >
               <LayoutGrid size={14} />
               Kanban View
@@ -350,17 +365,50 @@ const RequestsView = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {requests.map((req) => (
+                  {isLoading && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center">
+                        <div className="flex items-center justify-center gap-3 text-slate-400">
+                          <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                          </svg>
+                          <span className="text-sm font-medium">Loading requests…</span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {!isLoading && error && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center">
+                        <div className="flex items-center justify-center gap-2 text-red-500">
+                          <AlertCircle size={18} />
+                          <span className="text-sm font-medium">{error}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {!isLoading && !error && requests.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                        No requests found.
+                      </td>
+                    </tr>
+                  )}
+                  {!isLoading && !error && requests.map((req) => (
                     <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-slate-800">{req.family}</td>
-                      <td className="px-6 py-4 text-slate-600">{req.children}</td>
-                      <td className="px-6 py-4 text-slate-600">{req.dates}</td>
+                      <td className="px-6 py-4 font-bold text-slate-800">
+                        {req.user.first_name} {req.user.last_name}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {req.children.length}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        <ScheduleDatesCell schedules={req.schedules ?? []} />
+                      </td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          req.status === 'Stage 3' ? 'bg-emerald-50 text-emerald-600' : 
-                          req.status === 'Stage 2' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
-                        }`}>
-                          {req.status}
+                        <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500">
+                          {req.board_status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -375,7 +423,9 @@ const RequestsView = () => {
             </div>
 
             <div className="p-6 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-xs text-slate-400 font-medium">Showing 1 to 4 of 1,284 entries</p>
+              <p className="text-xs text-slate-400 font-medium">
+                {isLoading ? 'Loading…' : `Showing ${requests.length} ${requests.length === 1 ? 'entry' : 'entries'}`}
+              </p>
               <div className="flex items-center gap-2">
                 <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
                 <button className="p-2 border border-slate-200 rounded-lg text-slate-900 hover:bg-slate-50">Next</button>
@@ -396,6 +446,53 @@ const RequestsView = () => {
     </div>
   );
 };
+
+// --- Helper: Schedule Dates Cell ---
+
+interface ScheduleDatesCellProps {
+  schedules: import('../services/api').Schedule[];
+}
+
+const MAX_VISIBLE_DATES = 4;
+
+const ScheduleDatesCell: React.FC<ScheduleDatesCellProps> = ({ schedules }) => {
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+
+  if (schedules.length === 0) {
+    return <span className="text-slate-400 text-sm italic">No dates</span>;
+  }
+
+  const dates = schedules.map((s) => s.schedule_date);
+  const visibleDates = dates.slice(0, MAX_VISIBLE_DATES);
+  const hiddenDates = dates.slice(MAX_VISIBLE_DATES);
+
+  return (
+    <span className="flex items-center flex-wrap gap-x-1 gap-y-0.5">
+      <span>{visibleDates.join(', ')}</span>
+      {hiddenDates.length > 0 && (
+        <span className="relative inline-block">
+          <button
+            onMouseEnter={() => setTooltipOpen(true)}
+            onMouseLeave={() => setTooltipOpen(false)}
+            onClick={() => setTooltipOpen((v) => !v)}
+            className="ml-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold rounded-full transition-colors whitespace-nowrap"
+            aria-label={`Show ${hiddenDates.length} more dates`}
+          >
+            +{hiddenDates.length} more
+          </button>
+          {tooltipOpen && (
+            <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs font-medium rounded-xl px-3 py-2 shadow-xl whitespace-nowrap">
+              {hiddenDates.join(', ')}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+            </div>
+          )}
+        </span>
+      )}
+    </span>
+  );
+};
+
+
 
 const InterviewsView = () => {
   const interviews = [
@@ -424,10 +521,9 @@ const InterviewsView = () => {
                 <td className="px-6 py-4 text-slate-600">{item.sitter}</td>
                 <td className="px-6 py-4 text-slate-600">{item.date}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 
-                    item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
+                      item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
+                    }`}>
                     {item.status}
                   </span>
                 </td>
@@ -470,10 +566,9 @@ const InvoicesView = () => {
                 <td className="px-6 py-4 text-slate-600">{item.date}</td>
                 <td className="px-6 py-4 font-bold text-slate-900">{item.amount}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    item.status === 'Paid' ? 'bg-emerald-50 text-emerald-600' : 
-                    item.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
+                      item.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
+                    }`}>
                     {item.status}
                   </span>
                 </td>
@@ -534,9 +629,8 @@ const UsersView = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`px-6 py-2 rounded-xl text-sm font-bold capitalize transition-all ${
-              activeTab === tab ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:text-slate-900'
-            }`}
+            className={`px-6 py-2 rounded-xl text-sm font-bold capitalize transition-all ${activeTab === tab ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:text-slate-900'
+              }`}
           >
             {tab}
           </button>
@@ -547,7 +641,7 @@ const UsersView = () => {
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
+            <input
               type="text"
               placeholder={`Search ${activeTab}...`}
               className="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm outline-none w-64"
