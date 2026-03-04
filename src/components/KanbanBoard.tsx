@@ -39,33 +39,20 @@ import {
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { api } from '../services/api';
+import { api, ParentRequest } from '../services/api';
 
 // --- Types ---
 
-export interface KanbanRequest {
-  id: string;
+
+export interface KanbanRequest extends ParentRequest {
   family: string;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  parent_address?: string;
-  children: number;
-  childrenDOBs: string[];
   hours: number;
-  status: string;
   lastContact: {
     whatsapp: string;
     phone: string;
     email: string;
   };
-  schedules: Array<{
-    schedule_date: string;
-    slots: Array<{
-      start_time: string;
-      end_time: string;
-    }>;
-  }>;
+  childrenDOBs: string[];
   babysitters: Array<{
     name: string;
     rank: number;
@@ -81,6 +68,20 @@ export interface KanbanColumn {
   color: string;
 }
 
+const transformToKanbanRequest = (req: ParentRequest): KanbanRequest => ({
+  ...req,
+  family: `${req.user.first_name} ${req.user.last_name}`,
+  hours: calculateTotalHours(req.schedules || []),
+  lastContact: {
+    whatsapp: '-',
+    phone: '-',
+    email: '-'
+  },
+  childrenDOBs: (req.children || []).map(c => c.child_dob),
+  babysitters: [],
+  notes: ''
+});
+
 const calculateTotalHours = (schedules: any[] = []) => {
   return schedules.reduce((total, s) => {
     return total + (s.slots || []).reduce((slotTotal: number, slot: any) => {
@@ -93,12 +94,10 @@ const calculateTotalHours = (schedules: any[] = []) => {
   }, 0);
 };
 
-// --- Helpers ---
-
 const calculateAge = (dob: string) => {
   if (!dob) return '';
   const birthDate = new Date(dob);
-  const today = new Date('2026-03-04');
+  const today = new Date();
   let years = today.getFullYear() - birthDate.getFullYear();
   let months = today.getMonth() - birthDate.getMonth();
 
@@ -113,154 +112,11 @@ const calculateAge = (dob: string) => {
   return `${months} ${months === 1 ? 'month' : 'months'}`;
 };
 
-// --- Column Config ---
-
 const INITIAL_COLUMNS: KanbanColumn[] = [
   { id: 'In Matching', title: 'In Matching', color: 'bg-blue-500' },
   { id: 'Matched', title: 'Matched', color: 'bg-purple-500' },
   { id: 'Contract Signed', title: 'Contract Signed', color: 'bg-emerald-500' },
   { id: 'Lost Clients', title: 'Lost Clients', color: 'bg-slate-400' },
-];
-
-const INITIAL_REQUESTS: KanbanRequest[] = [
-  {
-    id: '1',
-    family: 'Smith Family',
-    first_name: 'John',
-    last_name: 'Smith',
-    email: 'john.smith@example.com',
-    parent_address: '123 Main St, Paris',
-    children: 2,
-    childrenDOBs: ['2023-03-15', '2021-05-20'],
-    hours: 16,
-    status: 'matching',
-    lastContact: { whatsapp: '20/03/2026 10:30', phone: '18/03/2026 14:20', email: '21/03/2026 09:15' },
-    schedules: [
-      {
-        schedule_date: '2026-03-12',
-        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }]
-      },
-      {
-        schedule_date: '2026-03-13',
-        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }]
-      },
-      {
-        schedule_date: '2026-03-14',
-        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }]
-      },
-      {
-        schedule_date: '2026-03-15',
-        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }]
-      },
-    ],
-    babysitters: [
-      { name: 'Amélie Laurent', rank: 1, interviewDate: '15/03/2026', interviewStatus: 'Scheduled' }
-    ],
-    notes: 'Family prefers someone who speaks English.'
-  },
-  {
-    id: '2',
-    family: 'Dupont Family',
-    first_name: 'Marie',
-    last_name: 'Dupont',
-    email: 'marie.dupont@example.com',
-    parent_address: '45 Ave des Champs, Paris',
-    children: 1,
-    childrenDOBs: ['2024-02-10'],
-    hours: 12,
-    status: 'matched',
-    lastContact: { whatsapp: '19/03/2026 16:45', phone: '17/03/2026 11:00', email: '20/03/2026 15:30' },
-    schedules: [
-      {
-        schedule_date: '2026-03-18',
-        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }]
-      },
-      {
-        schedule_date: '2026-03-19',
-        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }]
-      },
-      {
-        schedule_date: '2026-03-20',
-        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }]
-      },
-    ],
-    babysitters: [
-      { name: 'Thomas Dubois', rank: 1, interviewDate: '16/03/2026', interviewStatus: 'Completed' }
-    ],
-    notes: 'Needs help with meal prep.'
-  },
-  {
-    id: '3',
-    family: 'Miller Family',
-    first_name: 'Robert',
-    last_name: 'Miller',
-    email: 'robert.miller@example.com',
-    parent_address: '78 Rue de Rivoli, Paris',
-    children: 3,
-    childrenDOBs: ['2025-01-05', '2022-04-12', '2019-08-30'],
-    hours: 36,
-    status: 'contract',
-    lastContact: { whatsapp: '21/03/2026 11:20', phone: '19/03/2026 10:00', email: '22/03/2026 08:45' },
-    schedules: [
-      {
-        schedule_date: '2026-03-22',
-        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }]
-      },
-      {
-        schedule_date: '2026-03-23',
-        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }]
-      },
-      {
-        schedule_date: '2026-03-24',
-        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }]
-      },
-      {
-        schedule_date: '2026-03-25',
-        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }]
-      },
-    ],
-    babysitters: [
-      { name: 'Chloé Mercier', rank: 1, interviewDate: '18/03/2026', interviewStatus: 'Completed' }
-    ],
-    notes: 'Regular weekly booking.'
-  },
-  {
-    id: '4',
-    family: 'Brown Family',
-    first_name: 'Sarah',
-    last_name: 'Brown',
-    email: 'sarah.brown@example.com',
-    parent_address: '101 Blvd Saint-Germain, Paris',
-    children: 2,
-    childrenDOBs: ['2022-06-15', '2020-02-20'],
-    hours: 20,
-    status: 'lost',
-    lastContact: { whatsapp: '15/03/2026 09:00', phone: '14/03/2026 16:00', email: '16/03/2026 10:30' },
-    schedules: [
-      {
-        schedule_date: '2026-04-01',
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
-      },
-      {
-        schedule_date: '2026-04-02',
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
-      },
-      {
-        schedule_date: '2026-04-03',
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
-      },
-      {
-        schedule_date: '2026-04-04',
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
-      },
-      {
-        schedule_date: '2026-04-05',
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
-      },
-    ],
-    babysitters: [],
-    notes: 'Budget was too high for them.'
-  },
 ];
 
 // --- Components ---
@@ -275,10 +131,10 @@ const SortableColumn = ({
   onAddCard
 }: {
   column: KanbanColumn;
-  requests: import('../services/api').ParentRequest[];
+  requests: KanbanRequest[];
   onRename: (id: string, newTitle: string) => void;
   onDelete: (id: string) => void;
-  onCardClick: (req: import('../services/api').ParentRequest) => void;
+  onCardClick: (req: KanbanRequest) => void;
   onContactClick: (reqId: number, type: 'whatsapp' | 'phone' | 'email') => void;
   onAddCard: (colId: string) => void;
   key?: string | number;
@@ -406,7 +262,7 @@ const SortableCard = ({
   onClick,
   onContactClick
 }: {
-  request: import('../services/api').ParentRequest;
+  request: KanbanRequest;
   onClick: () => void;
   onContactClick: (reqId: number, type: 'whatsapp' | 'phone' | 'email') => void;
   key?: string | number;
@@ -520,13 +376,15 @@ const SortableCard = ({
 
 // --- Main Kanban Component ---
 
-export const KanbanBoard: React.FC<{ initialRequests: import('../services/api').ParentRequest[] }> = ({ initialRequests }) => {
+export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ initialRequests }) => {
   const [columns, setColumns] = useState<KanbanColumn[]>(INITIAL_COLUMNS);
-  const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>(initialRequests);
-  const [activeRequest, setActiveRequest] = useState<any | null>(null);
+  const [requests, setRequests] = useState<KanbanRequest[]>(() =>
+    initialRequests.map(transformToKanbanRequest)
+  );
+  const [activeRequest, setActiveRequest] = useState<KanbanRequest | null>(null);
 
   React.useEffect(() => {
-    setRequests(initialRequests);
+    setRequests(initialRequests.map(transformToKanbanRequest));
   }, [initialRequests]);
   const [isAddingToColumn, setIsAddingToColumn] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -645,7 +503,7 @@ export const KanbanBoard: React.FC<{ initialRequests: import('../services/api').
     } : r));
   };
 
-  const handleUpdateRequest = (reqId: number, updatedFields: any) => {
+  const handleUpdateRequest = (reqId: number, updatedFields: Partial<KanbanRequest>) => {
     setRequests(requests.map(r => r.id === reqId ? { ...r, ...updatedFields } : r));
     if (activeRequest?.id === reqId) {
       setActiveRequest({ ...activeRequest, ...updatedFields });
@@ -654,70 +512,28 @@ export const KanbanBoard: React.FC<{ initialRequests: import('../services/api').
 
   const handleCreateRequest = async (newReq: any) => {
     try {
-      const token = api.getToken();
-      const response = await fetch('https://punctual.bloom-buddies.fr/backend/public/api/parent-requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(newReq)
+      const response = await api.createParentRequest({
+        first_name: newReq.first_name,
+        last_name: newReq.last_name,
+        email: newReq.email,
+        parent_address: newReq.parent_address,
+        children: newReq.children.map((c: any) => ({ child_dob: c.child_dob })),
+        schedules: newReq.schedules,
+        board_status: isAddingToColumn || 'In Matching',
       });
 
-      const id = (requests.length + 1).toString();
-      const fullReq: KanbanRequest = {
-        id,
-        family: `${newReq.first_name} ${newReq.last_name}`,
-        first_name: newReq.first_name,
-        last_name: newReq.last_name,
-        email: newReq.email,
-        parent_address: newReq.parent_address,
-        children: newReq.children.length,
-        childrenDOBs: newReq.children.map((c: any) => c.child_dob),
-        hours: calculateTotalHours(newReq.schedules),
-        status: isAddingToColumn || 'matching',
-        lastContact: {
-          whatsapp: '-',
-          phone: '-',
-          email: '-'
-        },
-        schedules: newReq.schedules,
-        babysitters: [],
-        notes: '',
-      };
-      setRequests([fullReq, ...requests]);
-      setIsAddingToColumn(null);
+      if (response.status && response.data) {
+        // response.data is the full ParentRequest object from the API
+        const fullReq = transformToKanbanRequest(response.data);
+        setRequests(prev => [fullReq, ...prev]);
+        setIsAddingToColumn(null);
+      }
     } catch (error) {
       console.error('Failed to create request:', error);
-      // Fallback for demo
-      const id = (requests.length + 1).toString();
-      const fullReq: KanbanRequest = {
-        id,
-        family: `${newReq.first_name} ${newReq.last_name}`,
-        first_name: newReq.first_name,
-        last_name: newReq.last_name,
-        email: newReq.email,
-        parent_address: newReq.parent_address,
-        children: newReq.children.length,
-        childrenDOBs: newReq.children.map((c: any) => c.child_dob),
-        hours: calculateTotalHours(newReq.schedules),
-        status: isAddingToColumn || 'matching',
-        lastContact: {
-          whatsapp: '-',
-          phone: '-',
-          email: '-'
-        },
-        schedules: newReq.schedules,
-        babysitters: [],
-        notes: '',
-      };
-      setRequests([fullReq, ...requests]);
-      setIsAddingToColumn(null);
     }
   };
 
-  const handleUpdateDraft = (draft: Partial<KanbanRequest>) => {
+  const handleUpdateDraft = (draft: any) => {
     // This is for the autosave behavior
     // In a real app, we might update a draft in the backend
     // For now, we'll just handle the final creation
@@ -1150,19 +966,23 @@ const RequestDetailsModal = ({
   const handleChildDOBChange = (index: number, dob: string) => {
     const newDOBs = [...formData.childrenDOBs];
     newDOBs[index] = dob;
-    handleChange('childrenDOBs', newDOBs);
+
+    const newChildren = [...formData.children];
+    newChildren[index] = { ...newChildren[index], child_dob: dob };
+
+    setFormData({ ...formData, childrenDOBs: newDOBs, children: newChildren });
   };
 
   const handleAddChild = () => {
     const newDOBs = [...formData.childrenDOBs, ''];
-    const newChildrenCount = formData.children + 1;
-    setFormData({ ...formData, childrenDOBs: newDOBs, children: newChildrenCount });
+    const newChildren = [...formData.children, { child_dob: '' }];
+    setFormData({ ...formData, childrenDOBs: newDOBs, children: newChildren });
   };
 
   const handleRemoveChild = (index: number) => {
     const newDOBs = formData.childrenDOBs.filter((_, i) => i !== index);
-    const newChildrenCount = Math.max(0, formData.children - 1);
-    setFormData({ ...formData, childrenDOBs: newDOBs, children: newChildrenCount });
+    const newChildren = formData.children.filter((_, i) => i !== index);
+    setFormData({ ...formData, childrenDOBs: newDOBs, children: newChildren });
   };
 
   const handleScheduleChange = (scheduleIndex: number, field: string, value: string) => {
@@ -1247,8 +1067,8 @@ const RequestDetailsModal = ({
               <User size={28} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">{formData.family}</h2>
-              <p className="text-sm text-slate-400 font-medium">Request #{formData.id} • {formData.status.replace('-', ' ')}</p>
+              <h2 className="text-2xl font-bold text-slate-900">{formData.user.first_name} {formData.user.last_name}</h2>
+              <p className="text-sm text-slate-400 font-medium">Request #{formData.id} • {formData.board_status.replace('-', ' ')}</p>
             </div>
           </div>
           <button

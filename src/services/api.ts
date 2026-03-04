@@ -79,6 +79,14 @@ export interface RegisterResponse {
   code?: number;
 }
 
+export interface ParentRequestResponse {
+  status: boolean;
+  message: string;
+  data?: ParentRequest;
+  errors?: Record<string, string[]>;
+  code?: number;
+}
+
 export interface UserResponse {
   status: boolean;
   data?: User;
@@ -114,6 +122,7 @@ export const api = {
       user_phone: string;
       user_address: string;
       children: { child_dob: string }[];
+      board_status?: string;
     },
     parentRequestId?: number,
   ): Promise<RegisterResponse> => {
@@ -224,7 +233,7 @@ export const api = {
       parent_address: string;
       children: { id?: number; child_dob: string }[];
     },
-  ): Promise<RegisterResponse> => {
+  ): Promise<ParentRequestResponse> => {
     const token = api.getToken();
     const response = await fetch(`${BASE_URL}/parent-requests/${id}`, {
       method: "PUT",
@@ -232,6 +241,32 @@ export const api = {
         "Content-Type": "application/json",
         Accept: "application/json",
         Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+    return {
+      ...result,
+      code: response.status,
+    };
+  },
+
+  createParentRequest: async (data: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    parent_address: string;
+    children: { child_dob: string }[];
+    schedules: any[];
+    board_status?: string;
+  }): Promise<ParentRequestResponse> => {
+    const token = api.getToken();
+    const response = await fetch(`${BASE_URL}/parent-requests`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(data),
     });
