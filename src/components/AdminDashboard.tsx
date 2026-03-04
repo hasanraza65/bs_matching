@@ -95,8 +95,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   key={item.id}
                   onClick={() => setActivePage(item.id as AdminPage)}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${isActive
-                      ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                 >
                   <Icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900'} />
@@ -439,7 +439,7 @@ const RequestsView = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <KanbanBoard />
+            <KanbanBoard initialRequests={requests} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -522,7 +522,7 @@ const InterviewsView = () => {
                 <td className="px-6 py-4 text-slate-600">{item.date}</td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
-                      item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
+                    item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
                     }`}>
                     {item.status}
                   </span>
@@ -567,7 +567,7 @@ const InvoicesView = () => {
                 <td className="px-6 py-4 font-bold text-slate-900">{item.amount}</td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
-                      item.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
+                    item.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
                     }`}>
                     {item.status}
                   </span>

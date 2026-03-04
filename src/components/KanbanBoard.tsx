@@ -1,35 +1,35 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  DndContext, 
-  DragOverlay, 
-  closestCorners, 
-  KeyboardSensor, 
-  PointerSensor, 
-  useSensor, 
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
   useSensors,
   DragStartEvent,
   DragOverEvent,
   DragEndEvent,
   defaultDropAnimationSideEffects
 } from '@dnd-kit/core';
-import { 
-  arrayMove, 
-  SortableContext, 
-  sortableKeyboardCoordinates, 
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   horizontalListSortingStrategy,
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { 
-  MoreVertical, 
-  Plus, 
-  Phone, 
-  MessageCircle, 
-  Mail, 
-  Baby, 
-  Clock, 
-  Trash2, 
+import {
+  MoreVertical,
+  Plus,
+  Phone,
+  MessageCircle,
+  Mail,
+  Baby,
+  Clock,
+  Trash2,
   Edit2,
   X,
   Calendar,
@@ -76,10 +76,22 @@ export interface KanbanRequest {
 }
 
 export interface KanbanColumn {
-  id: string;
+  id: string; // Will match API board_status "In Matching", etc.
   title: string;
   color: string;
 }
+
+const calculateTotalHours = (schedules: any[] = []) => {
+  return schedules.reduce((total, s) => {
+    return total + (s.slots || []).reduce((slotTotal: number, slot: any) => {
+      if (!slot.start_time || !slot.end_time) return slotTotal;
+      const [startH, startM] = slot.start_time.split(':').map(Number);
+      const [endH, endM] = slot.end_time.split(':').map(Number);
+      const duration = (endH * 60 + (endM || 0)) - (startH * 60 + (startM || 0));
+      return slotTotal + Math.max(0, duration / 60);
+    }, 0);
+  }, 0);
+};
 
 // --- Helpers ---
 
@@ -89,70 +101,56 @@ const calculateAge = (dob: string) => {
   const today = new Date('2026-03-04');
   let years = today.getFullYear() - birthDate.getFullYear();
   let months = today.getMonth() - birthDate.getMonth();
-  
+
   if (months < 0 || (months === 0 && today.getDate() < birthDate.getDate())) {
     years--;
     months += 12;
   }
-  
+
   if (years > 0) {
     return `${years} ${years === 1 ? 'year' : 'years'}${months > 0 ? ` ${months}m` : ''}`;
   }
   return `${months} ${months === 1 ? 'month' : 'months'}`;
 };
 
-const calculateTotalHours = (schedules: KanbanRequest['schedules']) => {
-  return schedules.reduce((total, s) => {
-    return total + s.slots.reduce((slotTotal, slot) => {
-      if (!slot.start_time || !slot.end_time) return slotTotal;
-      const [startH, startM] = slot.start_time.split(':').map(Number);
-      const [endH, endM] = slot.end_time.split(':').map(Number);
-      const diff = (endH * 60 + (startM || 0)) - (startH * 60 + (endM || 0));
-      // Wait, start - end? No, end - start.
-      const duration = (endH * 60 + (endM || 0)) - (startH * 60 + (startM || 0));
-      return slotTotal + Math.max(0, duration / 60);
-    }, 0);
-  }, 0);
-};
-
-// --- Mock Data ---
+// --- Column Config ---
 
 const INITIAL_COLUMNS: KanbanColumn[] = [
-  { id: 'matching', title: 'In Matching', color: 'bg-blue-500' },
-  { id: 'matched', title: 'Matched', color: 'bg-purple-500' },
-  { id: 'contract', title: 'Contract Signed', color: 'bg-emerald-500' },
-  { id: 'lost', title: 'Lost Clients', color: 'bg-slate-400' },
+  { id: 'In Matching', title: 'In Matching', color: 'bg-blue-500' },
+  { id: 'Matched', title: 'Matched', color: 'bg-purple-500' },
+  { id: 'Contract Signed', title: 'Contract Signed', color: 'bg-emerald-500' },
+  { id: 'Lost Clients', title: 'Lost Clients', color: 'bg-slate-400' },
 ];
 
 const INITIAL_REQUESTS: KanbanRequest[] = [
-  { 
-    id: '1', 
-    family: 'Smith Family', 
+  {
+    id: '1',
+    family: 'Smith Family',
     first_name: 'John',
     last_name: 'Smith',
     email: 'john.smith@example.com',
     parent_address: '123 Main St, Paris',
-    children: 2, 
+    children: 2,
     childrenDOBs: ['2023-03-15', '2021-05-20'],
-    hours: 16, 
+    hours: 16,
     status: 'matching',
     lastContact: { whatsapp: '20/03/2026 10:30', phone: '18/03/2026 14:20', email: '21/03/2026 09:15' },
     schedules: [
-      { 
-        schedule_date: '2026-03-12', 
-        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }] 
+      {
+        schedule_date: '2026-03-12',
+        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }]
       },
-      { 
-        schedule_date: '2026-03-13', 
-        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }] 
+      {
+        schedule_date: '2026-03-13',
+        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }]
       },
-      { 
-        schedule_date: '2026-03-14', 
-        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }] 
+      {
+        schedule_date: '2026-03-14',
+        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }]
       },
-      { 
-        schedule_date: '2026-03-15', 
-        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }] 
+      {
+        schedule_date: '2026-03-15',
+        slots: [{ start_time: '14:00:00', end_time: '18:00:00' }]
       },
     ],
     babysitters: [
@@ -160,30 +158,30 @@ const INITIAL_REQUESTS: KanbanRequest[] = [
     ],
     notes: 'Family prefers someone who speaks English.'
   },
-  { 
-    id: '2', 
-    family: 'Dupont Family', 
+  {
+    id: '2',
+    family: 'Dupont Family',
     first_name: 'Marie',
     last_name: 'Dupont',
     email: 'marie.dupont@example.com',
     parent_address: '45 Ave des Champs, Paris',
-    children: 1, 
+    children: 1,
     childrenDOBs: ['2024-02-10'],
-    hours: 12, 
+    hours: 12,
     status: 'matched',
     lastContact: { whatsapp: '19/03/2026 16:45', phone: '17/03/2026 11:00', email: '20/03/2026 15:30' },
     schedules: [
-      { 
-        schedule_date: '2026-03-18', 
-        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }] 
+      {
+        schedule_date: '2026-03-18',
+        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }]
       },
-      { 
-        schedule_date: '2026-03-19', 
-        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }] 
+      {
+        schedule_date: '2026-03-19',
+        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }]
       },
-      { 
-        schedule_date: '2026-03-20', 
-        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }] 
+      {
+        schedule_date: '2026-03-20',
+        slots: [{ start_time: '09:00:00', end_time: '13:00:00' }]
       },
     ],
     babysitters: [
@@ -191,34 +189,34 @@ const INITIAL_REQUESTS: KanbanRequest[] = [
     ],
     notes: 'Needs help with meal prep.'
   },
-  { 
-    id: '3', 
-    family: 'Miller Family', 
+  {
+    id: '3',
+    family: 'Miller Family',
     first_name: 'Robert',
     last_name: 'Miller',
     email: 'robert.miller@example.com',
     parent_address: '78 Rue de Rivoli, Paris',
-    children: 3, 
+    children: 3,
     childrenDOBs: ['2025-01-05', '2022-04-12', '2019-08-30'],
-    hours: 36, 
+    hours: 36,
     status: 'contract',
     lastContact: { whatsapp: '21/03/2026 11:20', phone: '19/03/2026 10:00', email: '22/03/2026 08:45' },
     schedules: [
-      { 
-        schedule_date: '2026-03-22', 
-        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }] 
+      {
+        schedule_date: '2026-03-22',
+        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }]
       },
-      { 
-        schedule_date: '2026-03-23', 
-        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }] 
+      {
+        schedule_date: '2026-03-23',
+        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }]
       },
-      { 
-        schedule_date: '2026-03-24', 
-        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }] 
+      {
+        schedule_date: '2026-03-24',
+        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }]
       },
-      { 
-        schedule_date: '2026-03-25', 
-        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }] 
+      {
+        schedule_date: '2026-03-25',
+        slots: [{ start_time: '08:00:00', end_time: '17:00:00' }]
       },
     ],
     babysitters: [
@@ -226,38 +224,38 @@ const INITIAL_REQUESTS: KanbanRequest[] = [
     ],
     notes: 'Regular weekly booking.'
   },
-  { 
-    id: '4', 
-    family: 'Brown Family', 
+  {
+    id: '4',
+    family: 'Brown Family',
     first_name: 'Sarah',
     last_name: 'Brown',
     email: 'sarah.brown@example.com',
     parent_address: '101 Blvd Saint-Germain, Paris',
-    children: 2, 
+    children: 2,
     childrenDOBs: ['2022-06-15', '2020-02-20'],
-    hours: 20, 
+    hours: 20,
     status: 'lost',
     lastContact: { whatsapp: '15/03/2026 09:00', phone: '14/03/2026 16:00', email: '16/03/2026 10:30' },
     schedules: [
-      { 
-        schedule_date: '2026-04-01', 
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }] 
+      {
+        schedule_date: '2026-04-01',
+        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
       },
-      { 
-        schedule_date: '2026-04-02', 
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }] 
+      {
+        schedule_date: '2026-04-02',
+        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
       },
-      { 
-        schedule_date: '2026-04-03', 
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }] 
+      {
+        schedule_date: '2026-04-03',
+        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
       },
-      { 
-        schedule_date: '2026-04-04', 
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }] 
+      {
+        schedule_date: '2026-04-04',
+        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
       },
-      { 
-        schedule_date: '2026-04-05', 
-        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }] 
+      {
+        schedule_date: '2026-04-05',
+        slots: [{ start_time: '15:00:00', end_time: '19:00:00' }]
       },
     ],
     babysitters: [],
@@ -267,23 +265,23 @@ const INITIAL_REQUESTS: KanbanRequest[] = [
 
 // --- Components ---
 
-const SortableColumn = ({ 
-  column, 
-  requests, 
-  onRename, 
-  onDelete, 
+const SortableColumn = ({
+  column,
+  requests,
+  onRename,
+  onDelete,
   onCardClick,
   onContactClick,
   onAddCard
-}: { 
-  column: KanbanColumn; 
-  requests: KanbanRequest[]; 
+}: {
+  column: KanbanColumn;
+  requests: import('../services/api').ParentRequest[];
   onRename: (id: string, newTitle: string) => void;
   onDelete: (id: string) => void;
-  onCardClick: (req: KanbanRequest) => void;
-  onContactClick: (reqId: string, type: 'whatsapp' | 'phone' | 'email') => void;
+  onCardClick: (req: import('../services/api').ParentRequest) => void;
+  onContactClick: (reqId: number, type: 'whatsapp' | 'phone' | 'email') => void;
   onAddCard: (colId: string) => void;
-  key?: string;
+  key?: string | number;
 }) => {
   const {
     attributes,
@@ -332,7 +330,7 @@ const SortableColumn = ({
       className="w-80 flex flex-col h-full shrink-0"
     >
       {/* Column Header */}
-      <div 
+      <div
         {...attributes}
         {...listeners}
         className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-t-2xl border-b-0 cursor-grab active:cursor-grabbing"
@@ -349,7 +347,7 @@ const SortableColumn = ({
               className="text-sm font-bold text-slate-900 bg-slate-50 border-none outline-none px-1 rounded"
             />
           ) : (
-            <h3 
+            <h3
               className="text-sm font-bold text-slate-900 cursor-text"
               onClick={(e) => {
                 e.stopPropagation();
@@ -364,7 +362,7 @@ const SortableColumn = ({
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               onAddCard(column.id);
@@ -374,7 +372,7 @@ const SortableColumn = ({
           >
             <Plus size={16} />
           </button>
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(column.id);
@@ -388,11 +386,11 @@ const SortableColumn = ({
 
       {/* Column Content */}
       <div className="flex-1 bg-slate-50/50 border border-slate-200 rounded-b-2xl p-3 space-y-3 overflow-y-auto min-h-[200px]">
-        <SortableContext items={requests.map(r => r.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={requests.map(r => r.id.toString())} strategy={verticalListSortingStrategy}>
           {requests.map((req) => (
-            <SortableCard 
-              key={req.id} 
-              request={req} 
+            <SortableCard
+              key={req.id}
+              request={req}
               onClick={() => onCardClick(req)}
               onContactClick={onContactClick}
             />
@@ -403,15 +401,15 @@ const SortableColumn = ({
   );
 };
 
-const SortableCard = ({ 
-  request, 
+const SortableCard = ({
+  request,
   onClick,
   onContactClick
-}: { 
-  request: KanbanRequest; 
+}: {
+  request: import('../services/api').ParentRequest;
   onClick: () => void;
-  onContactClick: (reqId: string, type: 'whatsapp' | 'phone' | 'email') => void;
-  key?: string;
+  onContactClick: (reqId: number, type: 'whatsapp' | 'phone' | 'email') => void;
+  key?: string | number;
 }) => {
   const {
     attributes,
@@ -421,7 +419,7 @@ const SortableCard = ({
     transition,
     isDragging
   } = useSortable({
-    id: request.id,
+    id: request.id.toString(),
     data: {
       type: 'Request',
       request
@@ -454,43 +452,28 @@ const SortableCard = ({
     >
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="font-bold text-slate-900">{request.family}</h4>
+          <h4 className="font-bold text-slate-900">{request.user.first_name} {request.user.last_name}</h4>
           <span className="text-[10px] font-bold text-slate-400">#{request.id}</span>
         </div>
 
         <div className="flex items-center gap-4 text-xs text-slate-500">
           <div className="flex items-center gap-1">
             <Baby size={12} className="text-slate-400" />
-            <span>{request.children} {request.children === 1 ? 'Child' : 'Children'}</span>
+            <span>{request.children.length} {request.children.length === 1 ? 'Child' : 'Children'}</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock size={12} className="text-slate-400" />
-            <span>{request.hours}h</span>
+            <span>{calculateTotalHours(request.schedules)}h</span>
           </div>
         </div>
 
         <div className="h-px bg-slate-100" />
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="text-slate-400 uppercase tracking-wider font-bold">WhatsApp</span>
-            <span className="text-slate-600 font-medium">{request.lastContact.whatsapp}</span>
-          </div>
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="text-slate-400 uppercase tracking-wider font-bold">Phone</span>
-            <span className="text-slate-600 font-medium">{request.lastContact.phone}</span>
-          </div>
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="text-slate-400 uppercase tracking-wider font-bold">Email</span>
-            <span className="text-slate-600 font-medium">{request.lastContact.email}</span>
-          </div>
-        </div>
-
         <div className="flex items-center gap-2 pt-1">
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
-              onContactClick(request.id, 'phone');
+              if (request.user.user_phone) window.location.href = `tel:${request.user.user_phone}`;
             }}
             className="p-2 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all group/btn relative"
             title="Call Family"
@@ -500,10 +483,13 @@ const SortableCard = ({
               Call Family
             </span>
           </button>
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
-              onContactClick(request.id, 'whatsapp');
+              if (request.user.user_phone) {
+                const formattedPhone = request.user.user_phone.replace(/\D/g, '');
+                window.open(`https://wa.me/${formattedPhone}`, '_blank');
+              }
             }}
             className="p-2 bg-slate-50 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-all group/btn relative"
             title="WhatsApp Message"
@@ -513,10 +499,10 @@ const SortableCard = ({
               WhatsApp
             </span>
           </button>
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
-              onContactClick(request.id, 'email');
+              if (request.user.email) window.location.href = `mailto:${request.user.email}`;
             }}
             className="p-2 bg-slate-50 text-slate-400 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-all group/btn relative"
             title="Send Email"
@@ -534,10 +520,14 @@ const SortableCard = ({
 
 // --- Main Kanban Component ---
 
-export const KanbanBoard: React.FC = () => {
+export const KanbanBoard: React.FC<{ initialRequests: import('../services/api').ParentRequest[] }> = ({ initialRequests }) => {
   const [columns, setColumns] = useState<KanbanColumn[]>(INITIAL_COLUMNS);
-  const [requests, setRequests] = useState<KanbanRequest[]>(INITIAL_REQUESTS);
-  const [activeRequest, setActiveRequest] = useState<KanbanRequest | null>(null);
+  const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>(initialRequests);
+  const [activeRequest, setActiveRequest] = useState<any | null>(null);
+
+  React.useEffect(() => {
+    setRequests(initialRequests);
+  }, [initialRequests]);
   const [isAddingToColumn, setIsAddingToColumn] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<'Column' | 'Request' | null>(null);
@@ -576,12 +566,12 @@ export const KanbanBoard: React.FC = () => {
     // Dropping a Request over another Request
     if (isActiveARequest && isOverARequest) {
       setRequests((prev) => {
-        const activeIndex = prev.findIndex((r) => r.id === activeId);
-        const overIndex = prev.findIndex((r) => r.id === overId);
+        const activeIndex = prev.findIndex((r) => r.id.toString() === activeId);
+        const overIndex = prev.findIndex((r) => r.id.toString() === overId);
 
-        if (prev[activeIndex].status !== prev[overIndex].status) {
+        if (prev[activeIndex].board_status !== prev[overIndex].board_status) {
           const newRequests = [...prev];
-          newRequests[activeIndex] = { ...newRequests[activeIndex], status: prev[overIndex].status };
+          newRequests[activeIndex] = { ...newRequests[activeIndex], board_status: prev[overIndex].board_status };
           return arrayMove(newRequests, activeIndex, overIndex);
         }
 
@@ -593,9 +583,9 @@ export const KanbanBoard: React.FC = () => {
     const isOverAColumn = over.data.current?.type === 'Column';
     if (isActiveARequest && isOverAColumn) {
       setRequests((prev) => {
-        const activeIndex = prev.findIndex((r) => r.id === activeId);
+        const activeIndex = prev.findIndex((r) => r.id.toString() === activeId);
         const newRequests = [...prev];
-        newRequests[activeIndex] = { ...newRequests[activeIndex], status: overId };
+        newRequests[activeIndex] = { ...newRequests[activeIndex], board_status: overId };
         return arrayMove(newRequests, activeIndex, activeIndex);
       });
     }
@@ -637,10 +627,10 @@ export const KanbanBoard: React.FC = () => {
     setColumns(columns.filter(c => c.id !== id));
     // Reassign requests to the first available column
     const firstColId = columns.find(c => c.id !== id)?.id || '';
-    setRequests(requests.map(r => r.status === id ? { ...r, status: firstColId } : r));
+    setRequests(requests.map(r => r.board_status === id ? { ...r, board_status: firstColId } : r));
   };
 
-  const handleContactClick = (reqId: string, type: 'whatsapp' | 'phone' | 'email') => {
+  const handleContactClick = (reqId: number, type: 'whatsapp' | 'phone' | 'email') => {
     const now = new Date();
     const day = String(now.getDate()).padStart(2, '0');
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -648,14 +638,14 @@ export const KanbanBoard: React.FC = () => {
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
-    
+
     setRequests(requests.map(r => r.id === reqId ? {
       ...r,
       lastContact: { ...r.lastContact, [type]: formattedDate }
     } : r));
   };
 
-  const handleUpdateRequest = (reqId: string, updatedFields: Partial<KanbanRequest>) => {
+  const handleUpdateRequest = (reqId: number, updatedFields: any) => {
     setRequests(requests.map(r => r.id === reqId ? { ...r, ...updatedFields } : r));
     if (activeRequest?.id === reqId) {
       setActiveRequest({ ...activeRequest, ...updatedFields });
@@ -667,14 +657,14 @@ export const KanbanBoard: React.FC = () => {
       const token = api.getToken();
       const response = await fetch('https://punctual.bloom-buddies.fr/backend/public/api/parent-requests', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(newReq)
       });
-      
+
       const id = (requests.length + 1).toString();
       const fullReq: KanbanRequest = {
         id,
@@ -746,10 +736,10 @@ export const KanbanBoard: React.FC = () => {
           <div className="flex h-full gap-6 px-1">
             <SortableContext items={columns.map(c => c.id)} strategy={horizontalListSortingStrategy}>
               {columns.map((col) => (
-                <SortableColumn 
-                  key={col.id} 
-                  column={col} 
-                  requests={requests.filter(r => r.status === col.id)}
+                <SortableColumn
+                  key={col.id}
+                  column={col}
+                  requests={requests.filter(r => r.board_status === col.id)}
                   onRename={handleRenameColumn}
                   onDelete={handleDeleteColumn}
                   onCardClick={setActiveRequest}
@@ -798,14 +788,14 @@ export const KanbanBoard: React.FC = () => {
       {/* Details Modal */}
       <AnimatePresence>
         {activeRequest && (
-          <RequestDetailsModal 
-            request={activeRequest} 
-            onClose={() => setActiveRequest(null)} 
+          <RequestDetailsModal
+            request={activeRequest}
+            onClose={() => setActiveRequest(null)}
             onUpdate={(updatedFields) => handleUpdateRequest(activeRequest.id, updatedFields)}
           />
         )}
         {isAddingToColumn && (
-          <NewRequestModal 
+          <NewRequestModal
             onClose={() => setIsAddingToColumn(null)}
             onCreate={handleCreateRequest}
             onUpdateDraft={handleUpdateDraft}
@@ -818,12 +808,12 @@ export const KanbanBoard: React.FC = () => {
 
 // --- Modal Components ---
 
-const NewRequestModal = ({ 
-  onClose, 
+const NewRequestModal = ({
+  onClose,
   onCreate,
-  onUpdateDraft 
-}: { 
-  onClose: () => void; 
+  onUpdateDraft
+}: {
+  onClose: () => void;
   onCreate: (req: any) => void;
   onUpdateDraft: (req: any) => void;
 }) => {
@@ -834,9 +824,9 @@ const NewRequestModal = ({
     parent_address: '',
     children: [{ child_dob: '' }],
     schedules: [
-      { 
-        schedule_date: '', 
-        slots: [{ start_time: '09:00:00', end_time: '17:00:00' }] 
+      {
+        schedule_date: '',
+        slots: [{ start_time: '09:00:00', end_time: '17:00:00' }]
       }
     ]
   });
@@ -865,10 +855,10 @@ const NewRequestModal = ({
 
   const handleAddSchedule = () => {
     const newSchedules = [
-      ...formData.schedules, 
-      { 
-        schedule_date: '', 
-        slots: [{ start_time: '09:00:00', end_time: '17:00:00' }] 
+      ...formData.schedules,
+      {
+        schedule_date: '',
+        slots: [{ start_time: '09:00:00', end_time: '17:00:00' }]
       }
     ];
     handleChange('schedules', newSchedules);
@@ -904,23 +894,23 @@ const NewRequestModal = ({
     const newSchedules = [...formData.schedules];
     // Ensure value is in HH:mm:ss format if it's just HH:mm
     const formattedValue = value.length === 5 ? `${value}:00` : value;
-    newSchedules[scheduleIndex].slots[slotIndex] = { 
-      ...newSchedules[scheduleIndex].slots[slotIndex], 
-      [field]: formattedValue 
+    newSchedules[scheduleIndex].slots[slotIndex] = {
+      ...newSchedules[scheduleIndex].slots[slotIndex],
+      [field]: formattedValue
     };
     handleChange('schedules', newSchedules);
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
       />
-      
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -951,8 +941,8 @@ const NewRequestModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">First Name</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="e.g. Ahmed"
                   value={formData.first_name}
                   onChange={(e) => handleChange('first_name', e.target.value)}
@@ -961,8 +951,8 @@ const NewRequestModal = ({
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Last Name</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="e.g. Khan"
                   value={formData.last_name}
                   onChange={(e) => handleChange('last_name', e.target.value)}
@@ -971,8 +961,8 @@ const NewRequestModal = ({
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Email Address</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   placeholder="ahmedkhan@gmail.com"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
@@ -981,8 +971,8 @@ const NewRequestModal = ({
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Parent Address</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="DHA Phase 6, Lahore"
                   value={formData.parent_address}
                   onChange={(e) => handleChange('parent_address', e.target.value)}
@@ -998,7 +988,7 @@ const NewRequestModal = ({
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Baby size={14} /> Children
               </h3>
-              <button 
+              <button
                 onClick={handleAddChild}
                 className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
               >
@@ -1008,7 +998,7 @@ const NewRequestModal = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {formData.children.map((child, idx) => (
                 <div key={idx} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2 relative group">
-                  <button 
+                  <button
                     onClick={() => handleRemoveChild(idx)}
                     className="absolute top-2 right-2 p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                   >
@@ -1020,8 +1010,8 @@ const NewRequestModal = ({
                       {calculateAge(child.child_dob) || 'Enter DOB'}
                     </span>
                   </div>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     value={child.child_dob}
                     onChange={(e) => handleChildDOBChange(idx, e.target.value)}
                     className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
@@ -1037,7 +1027,7 @@ const NewRequestModal = ({
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Calendar size={14} /> Dynamic Schedule
               </h3>
-              <button 
+              <button
                 onClick={handleAddSchedule}
                 className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
               >
@@ -1047,17 +1037,17 @@ const NewRequestModal = ({
             <div className="space-y-6">
               {formData.schedules.map((schedule, sIdx) => (
                 <div key={sIdx} className="p-6 bg-slate-50 border border-slate-100 rounded-[24px] relative group space-y-4">
-                  <button 
+                  <button
                     onClick={() => handleRemoveSchedule(sIdx)}
                     className="absolute top-4 right-4 p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                   >
                     <Trash2 size={16} />
                   </button>
-                  
+
                   <div className="w-full sm:w-1/2 space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Schedule Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={schedule.schedule_date}
                       onChange={(e) => handleScheduleDateChange(sIdx, e.target.value)}
                       className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
@@ -1067,21 +1057,21 @@ const NewRequestModal = ({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Time Slots</label>
-                      <button 
+                      <button
                         onClick={() => handleAddSlot(sIdx)}
                         className="text-[9px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
                       >
                         <Plus size={10} /> Add Slot
                       </button>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {schedule.slots.map((slot, tIdx) => (
                         <div key={tIdx} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-200 relative group/slot">
                           <div className="flex-1 space-y-1">
                             <label className="text-[8px] font-bold text-slate-400 uppercase">Start</label>
-                            <input 
-                              type="time" 
+                            <input
+                              type="time"
                               value={slot.start_time.substring(0, 5)}
                               onChange={(e) => handleSlotChange(sIdx, tIdx, 'start_time', e.target.value)}
                               className="w-full bg-transparent border-none outline-none text-xs font-bold text-slate-900"
@@ -1090,15 +1080,15 @@ const NewRequestModal = ({
                           <div className="w-px h-8 bg-slate-100" />
                           <div className="flex-1 space-y-1">
                             <label className="text-[8px] font-bold text-slate-400 uppercase">End</label>
-                            <input 
-                              type="time" 
+                            <input
+                              type="time"
                               value={slot.end_time.substring(0, 5)}
                               onChange={(e) => handleSlotChange(sIdx, tIdx, 'end_time', e.target.value)}
                               className="w-full bg-transparent border-none outline-none text-xs font-bold text-slate-900"
                             />
                           </div>
                           {schedule.slots.length > 1 && (
-                            <button 
+                            <button
                               onClick={() => handleRemoveSlot(sIdx, tIdx)}
                               className="p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover/slot:opacity-100 transition-all"
                             >
@@ -1118,13 +1108,13 @@ const NewRequestModal = ({
         <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <p className="text-[10px] text-slate-400 font-medium italic">All fields are required for a complete lead profile</p>
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={onClose}
               className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all"
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={() => onCreate(formData)}
               className="px-8 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
             >
@@ -1137,12 +1127,12 @@ const NewRequestModal = ({
   );
 };
 
-const RequestDetailsModal = ({ 
-  request, 
+const RequestDetailsModal = ({
+  request,
   onClose,
   onUpdate
-}: { 
-  request: KanbanRequest; 
+}: {
+  request: KanbanRequest;
   onClose: () => void;
   onUpdate: (updatedFields: Partial<KanbanRequest>) => void;
 }) => {
@@ -1216,11 +1206,11 @@ const RequestDetailsModal = ({
   };
 
   const handleAddSitter = () => {
-    handleChange('babysitters', [...formData.babysitters, { 
-      name: '', 
-      rank: formData.babysitters.length + 1, 
-      interviewDate: '', 
-      interviewStatus: 'Scheduled' 
+    handleChange('babysitters', [...formData.babysitters, {
+      name: '',
+      rank: formData.babysitters.length + 1,
+      interviewDate: '',
+      interviewStatus: 'Scheduled'
     }]);
   };
 
@@ -1236,14 +1226,14 @@ const RequestDetailsModal = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
       />
-      
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1261,7 +1251,7 @@ const RequestDetailsModal = ({
               <p className="text-sm text-slate-400 font-medium">Request #{formData.id} • {formData.status.replace('-', ' ')}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-slate-200 rounded-full transition-all text-slate-400 hover:text-slate-900"
           >
@@ -1280,9 +1270,8 @@ const RequestDetailsModal = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`pb-4 text-sm font-bold flex items-center gap-2 transition-all relative ${
-                activeTab === tab.id ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
-              }`}
+              className={`pb-4 text-sm font-bold flex items-center gap-2 transition-all relative ${activeTab === tab.id ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
+                }`}
             >
               <tab.icon size={16} />
               {tab.label}
@@ -1311,7 +1300,7 @@ const RequestDetailsModal = ({
                       <div className="space-y-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Parent Name</label>
-                          <input 
+                          <input
                             type="text"
                             value={formData.family}
                             onChange={(e) => handleChange('family', e.target.value)}
@@ -1326,7 +1315,7 @@ const RequestDetailsModal = ({
                           <div className="space-y-2">
                             {formData.childrenDOBs.map((dob, i) => (
                               <div key={i} className="flex items-center gap-2 bg-white p-2 border border-slate-200 rounded-xl group">
-                                <input 
+                                <input
                                   type="date"
                                   value={dob}
                                   onChange={(e) => handleChildDOBChange(i, e.target.value)}
@@ -1335,7 +1324,7 @@ const RequestDetailsModal = ({
                                 <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded">
                                   {calculateAge(dob)}
                                 </span>
-                                <button 
+                                <button
                                   onClick={() => handleRemoveChild(i)}
                                   className="p-1.5 text-slate-300 hover:text-red-500 transition-all"
                                 >
@@ -1352,7 +1341,7 @@ const RequestDetailsModal = ({
                       <div className="space-y-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp</label>
-                          <input 
+                          <input
                             type="text"
                             value={formData.lastContact.whatsapp}
                             onChange={(e) => handleChange('lastContact', { ...formData.lastContact, whatsapp: e.target.value })}
@@ -1361,7 +1350,7 @@ const RequestDetailsModal = ({
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phone</label>
-                          <input 
+                          <input
                             type="text"
                             value={formData.lastContact.phone}
                             onChange={(e) => handleChange('lastContact', { ...formData.lastContact, phone: e.target.value })}
@@ -1370,7 +1359,7 @@ const RequestDetailsModal = ({
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Email</label>
-                          <input 
+                          <input
                             type="text"
                             value={formData.lastContact.email}
                             onChange={(e) => handleChange('lastContact', { ...formData.lastContact, email: e.target.value })}
@@ -1392,7 +1381,7 @@ const RequestDetailsModal = ({
                         Manage all dates and times for this request. Total: <span className="text-slate-900 font-bold">{formData.hours}h</span>
                       </p>
                     </div>
-                    <button 
+                    <button
                       onClick={handleAddSchedule}
                       className="px-4 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-sm"
                     >
@@ -1403,17 +1392,17 @@ const RequestDetailsModal = ({
                   <div className="space-y-6">
                     {formData.schedules.map((schedule, sIdx) => (
                       <div key={sIdx} className="p-6 bg-slate-50 border border-slate-100 rounded-[24px] relative group space-y-4">
-                        <button 
+                        <button
                           onClick={() => handleRemoveSchedule(sIdx)}
                           className="absolute top-4 right-4 p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <Trash2 size={16} />
                         </button>
-                        
+
                         <div className="w-full sm:w-1/2 space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Schedule Date</label>
-                          <input 
-                            type="date" 
+                          <input
+                            type="date"
                             value={schedule.schedule_date}
                             onChange={(e) => handleScheduleChange(sIdx, 'schedule_date', e.target.value)}
                             className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
@@ -1423,21 +1412,21 @@ const RequestDetailsModal = ({
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Time Slots</label>
-                            <button 
+                            <button
                               onClick={() => handleAddSlot(sIdx)}
                               className="text-[9px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
                             >
                               <Plus size={10} /> Add Slot
                             </button>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {schedule.slots.map((slot, tIdx) => (
                               <div key={tIdx} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-200 relative group/slot">
                                 <div className="flex-1 space-y-1">
                                   <label className="text-[8px] font-bold text-slate-400 uppercase">Start</label>
-                                  <input 
-                                    type="time" 
+                                  <input
+                                    type="time"
                                     value={slot.start_time.substring(0, 5)}
                                     onChange={(e) => handleSlotChange(sIdx, tIdx, 'start_time', e.target.value)}
                                     className="w-full bg-transparent border-none outline-none text-xs font-bold text-slate-900"
@@ -1446,15 +1435,15 @@ const RequestDetailsModal = ({
                                 <div className="w-px h-8 bg-slate-100" />
                                 <div className="flex-1 space-y-1">
                                   <label className="text-[8px] font-bold text-slate-400 uppercase">End</label>
-                                  <input 
-                                    type="time" 
+                                  <input
+                                    type="time"
                                     value={slot.end_time.substring(0, 5)}
                                     onChange={(e) => handleSlotChange(sIdx, tIdx, 'end_time', e.target.value)}
                                     className="w-full bg-transparent border-none outline-none text-xs font-bold text-slate-900"
                                   />
                                 </div>
                                 {schedule.slots.length > 1 && (
-                                  <button 
+                                  <button
                                     onClick={() => handleRemoveSlot(sIdx, tIdx)}
                                     className="p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover/slot:opacity-100 transition-all"
                                   >
@@ -1489,17 +1478,17 @@ const RequestDetailsModal = ({
                     <div className="space-y-4">
                       {formData.babysitters.map((sitter, idx) => (
                         <div key={idx} className="p-6 border border-slate-100 rounded-2xl bg-white shadow-sm flex flex-col gap-4 relative group">
-                          <button 
+                          <button
                             onClick={() => handleRemoveSitter(idx)}
                             className="absolute top-4 right-4 p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                           >
                             <Trash2 size={16} />
                           </button>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">Sitter Name</label>
-                              <input 
+                              <input
                                 type="text"
                                 value={sitter.name}
                                 onChange={(e) => handleSitterChange(idx, 'name', e.target.value)}
@@ -1508,7 +1497,7 @@ const RequestDetailsModal = ({
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">Interview Date</label>
-                              <input 
+                              <input
                                 type="text"
                                 value={sitter.interviewDate}
                                 onChange={(e) => handleSitterChange(idx, 'interviewDate', e.target.value)}
@@ -1516,11 +1505,11 @@ const RequestDetailsModal = ({
                               />
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-4">
                             <div className="flex-1 space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">Status</label>
-                              <select 
+                              <select
                                 value={sitter.interviewStatus}
                                 onChange={(e) => handleSitterChange(idx, 'interviewStatus', e.target.value)}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold"
@@ -1532,7 +1521,7 @@ const RequestDetailsModal = ({
                             </div>
                             <div className="w-24 space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">Rank</label>
-                              <input 
+                              <input
                                 type="number"
                                 value={sitter.rank}
                                 onChange={(e) => handleSitterChange(idx, 'rank', parseInt(e.target.value) || 0)}
@@ -1573,13 +1562,13 @@ const RequestDetailsModal = ({
         <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <p className="text-[10px] text-slate-400 font-medium italic">Changes will be saved to the CRM</p>
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={onClose}
               className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all"
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={handleSave}
               className="px-8 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
             >
