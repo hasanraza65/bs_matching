@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Baby, 
-  Clock, 
-  Euro, 
-  Calendar, 
+import {
+  Baby,
+  Clock,
+  Euro,
+  Calendar,
   CalendarDays,
-  FileText, 
-  Download, 
-  ChevronRight, 
-  CheckCircle2, 
+  FileText,
+  Download,
+  ChevronRight,
+  CheckCircle2,
   Clock3,
   Receipt,
   Award,
@@ -65,7 +65,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   useEffect(() => {
@@ -164,11 +164,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
       <div className="relative mb-16">
         <div className="absolute -top-12 -left-12 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-brand-blue/5 rounded-full blur-3xl" />
-        
+
         <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={onBack}
                 className="inline-flex items-center gap-2 text-slate-400 hover:text-brand-accent transition-all group"
               >
@@ -177,7 +177,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t.common.back}</span>
               </button>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 transition-all group"
               >
@@ -193,7 +193,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
               <span className="block text-2xl md:text-3xl text-slate-400 font-medium mt-1">{t.profilePage.subtitle}</span>
             </h1>
           </div>
-          
+
           <div className="flex items-center gap-4 bg-white/50 backdrop-blur-sm p-2 pr-6 rounded-[32px] border border-white shadow-xl shadow-slate-200/50">
             <div className="w-16 h-16 bg-brand-accent rounded-[24px] flex items-center justify-center text-white shadow-lg shadow-brand-accent/30">
               <UserIcon size={32} />
@@ -230,7 +230,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
 
       {/* Minimal Inline Tab Navigation */}
       <div className="relative mb-12 border-b border-slate-100">
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           .no-scrollbar::-webkit-scrollbar { display: none; }
           .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         ` }} />
@@ -242,14 +243,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 py-4 px-1 transition-all relative whitespace-nowrap group ${
-                  isActive ? 'text-brand-accent' : 'text-slate-400 hover:text-slate-600'
-                }`}
+                className={`flex items-center gap-2 py-4 px-1 transition-all relative whitespace-nowrap group ${isActive ? 'text-brand-accent' : 'text-slate-400 hover:text-slate-600'
+                  }`}
               >
                 <Icon size={16} className={isActive ? 'text-brand-accent' : 'text-slate-400 group-hover:text-slate-500'} />
                 <span className="text-sm font-bold tracking-tight">{tab.label}</span>
                 {isActive && (
-                  <motion.div 
+                  <motion.div
                     layoutId="activeTabUnderline"
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-accent rounded-full"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
@@ -276,153 +276,161 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                 {user?.parent_requests && user.parent_requests.length > 0 ? (
                   user.parent_requests.map((req) => (
                     <div key={req.id} className="group bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
-                        <div className="space-y-8 flex-1">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-brand-accent group-hover:text-white transition-colors">
-                                <Baby size={20} />
-                              </div>
-                              <span className="text-sm font-bold text-slate-900 tracking-tight">REQ-{req.id}</span>
+                      <div className="space-y-10">
+                        {/* Compact Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-slate-50 rounded-[20px] flex items-center justify-center text-slate-400 group-hover:bg-brand-accent group-hover:text-white transition-all duration-500 shadow-sm">
+                              <Baby size={28} />
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-2 px-4 py-1.5 bg-brand-accent/5 rounded-full">
-                                <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
-                                <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">
-                                  {req.status || t.profilePage.requests.pending}
-                                </span>
+                            <div>
+                              <div className="flex items-center gap-3 mb-1">
+                                <span className="text-xl font-display font-bold text-slate-900 tracking-tight">REQ-{req.id}</span>
+                                <div className="flex items-center gap-2 px-3 py-1 bg-brand-accent/5 rounded-full border border-brand-accent/10">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
+                                  <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">
+                                    {req.status || t.profilePage.requests.pending}
+                                  </span>
+                                </div>
                               </div>
-                              <button 
-                                onClick={() => handleRemoveRequest(req.id.toString())}
-                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                title="Remove Request"
-                              >
-                                <Trash2 size={18} />
-                              </button>
+                              <p className="text-xs text-slate-400 font-medium">Created on {req.created_at?.split('T')[0] || '--'}</p>
                             </div>
                           </div>
-                          
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-                              <div className="space-y-2">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.children}</p>
-                                <div className="flex items-baseline gap-1">
-                                  <p className="text-3xl font-display font-bold text-slate-900">{req.children?.length || 0}</p>
-                                  <span className="text-[10px] font-bold text-slate-400 uppercase">Kids</span>
+
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => onModifyRequest(req)}
+                              className="px-6 py-3 bg-slate-900 text-white text-xs font-bold rounded-2xl hover:bg-brand-accent transition-all shadow-lg shadow-slate-900/10 hover:shadow-brand-accent/20 flex items-center gap-2"
+                            >
+                              {t.common.modify} <ChevronRight size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleRemoveRequest(req.id.toString())}
+                              className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
+                              title="Remove Request"
+                            >
+                              <Trash2 size={20} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Main Stats Grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 p-8 bg-slate-50/50 rounded-[32px] border border-slate-100/50">
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.children}</p>
+                            <div className="flex items-baseline gap-1">
+                              <p className="text-3xl font-display font-bold text-slate-900">{req.children?.length || 0}</p>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Kids</span>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.hours}</p>
+                            <div className="flex items-baseline gap-1">
+                              <p className="text-3xl font-display font-bold text-slate-900">{calculateTotalHours(req.schedules)}</p>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Hrs</span>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.amount}</p>
+                            <p className="text-3xl font-display font-bold text-brand-accent">€{(calculateTotalHours(req.schedules) * 28.50).toFixed(2)}</p>
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Schedules</p>
+                            <div className="flex items-baseline gap-1">
+                              <p className="text-3xl font-display font-bold text-slate-900">{req.schedules?.length || 0}</p>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Days</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Booking Calendar Section */}
+                        {req.schedules && req.schedules.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <CalendarDays size={16} className="text-brand-accent" />
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t.profilePage.requests.calendar || 'Booking Calendar'}</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                              {req.schedules.map((s: any) => (
+                                <div key={s.id} className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-brand-accent/20 transition-colors">
+                                  <span className="text-xs font-bold text-slate-900">{s.schedule_date}</span>
+                                  <div className="flex flex-col gap-1">
+                                    {s.slots?.map((slot: any) => (
+                                      <div key={slot.id} className="flex items-center gap-2">
+                                        <Clock size={10} className="text-slate-300" />
+                                        <span className="text-[10px] text-slate-500 font-medium tracking-tight">
+                                          {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Babysitter Interviews Section */}
+                        {req.choices && req.choices.length > 0 && (
+                          <div className="pt-10 border-t border-slate-100">
+                            <div className="flex items-center justify-between mb-8">
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.interviews.title || 'Babysitter Interviews'}</p>
+                                <p className="text-xs text-slate-500">Your selected candidates and scheduled meetings</p>
                               </div>
-                              <div className="space-y-2">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.hours}</p>
-                                <div className="flex items-baseline gap-1">
-                                  <p className="text-3xl font-display font-bold text-slate-900">{calculateTotalHours(req.schedules)}</p>
-                                  <span className="text-[10px] font-bold text-slate-400 uppercase">Hrs</span>
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.amount}</p>
-                                <p className="text-3xl font-display font-bold text-brand-accent">€{(calculateTotalHours(req.schedules) * 28.50).toFixed(2)}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Schedules</p>
-                                <div className="flex items-baseline gap-1">
-                                  <p className="text-3xl font-display font-bold text-slate-900">{req.schedules?.length || 0}</p>
-                                  <span className="text-[10px] font-bold text-slate-400 uppercase">Days</span>
-                                </div>
+                              <div className="px-3 py-1 bg-brand-blue/10 rounded-full">
+                                <span className="text-[9px] font-bold text-brand-blue uppercase tracking-wider">{req.choices.length} Candidates</span>
                               </div>
                             </div>
+                            <div className="grid grid-cols-1 gap-4">
+                              {req.choices.map((choice: any) => (
+                                <div key={choice.id} className="bg-white rounded-[28px] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group/choice relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover/choice:bg-brand-accent/10 transition-colors" />
 
-                            {/* Detailed Schedule Summary */}
-                            {req.schedules && req.schedules.length > 0 && (
-                              <div className="mt-8 p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <CalendarDays size={14} className="text-brand-accent" />
-                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Booking Calendar</span>
-                                </div>
-                                <div className="flex flex-wrap gap-3">
-                                  {req.schedules.map((s: any) => (
-                                    <div key={s.id} className="px-3 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex flex-col gap-1 min-w-[100px]">
-                                      <span className="text-[10px] font-bold text-slate-900">{s.schedule_date}</span>
-                                      <div className="flex flex-col gap-0.5">
-                                        {s.slots?.map((slot: any) => (
-                                          <span key={slot.id} className="text-[9px] text-slate-400 font-medium">
-                                            {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
+                                  <div className="relative flex items-center gap-5 flex-1 min-w-0">
+                                    <div className="w-16 min-w-[64px] h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-accent group-hover/choice:bg-brand-accent group-hover/choice:text-white transition-all duration-500 shadow-inner">
+                                      <UserIcon size={28} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-lg font-display font-bold text-slate-900 truncate mb-1">
+                                        {choice.babysitter_first_name} {choice.babysitter_last_name}
+                                      </p>
+                                      <div className="flex flex-wrap items-center gap-4">
+                                        <div className="px-2.5 py-1 bg-brand-blue/5 rounded-lg flex items-center gap-1.5">
+                                          <Calendar size={12} className="text-brand-blue" />
+                                          <span className="text-[10px] font-bold text-brand-blue uppercase tracking-wider">
+                                            {choice.interview_date} @ {choice.interview_time?.substring(0, 5)}
                                           </span>
-                                        ))}
+                                        </div>
+                                        {choice.babysitter_phone && (
+                                          <div className="flex items-center gap-2 text-slate-400">
+                                            <Phone size={14} className="text-slate-300" />
+                                            <span className="text-xs font-medium">{choice.babysitter_phone}</span>
+                                          </div>
+                                        )}
+                                        {choice.babysitter_email && (
+                                          <div className="flex items-center gap-2 text-slate-400">
+                                            <Mail size={14} className="text-slate-300" />
+                                            <span className="text-xs font-medium truncate">{choice.babysitter_email}</span>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
+                                  </div>
 
-                            {/* Choices / Interviews Section */}
-                            {req.choices && req.choices.length > 0 && (
-                              <div className="mt-8 pt-8 border-t border-slate-100">
-                                <div className="flex items-center justify-between mb-6">
-                                  <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Babysitter Interviews</p>
-                                    <p className="text-xs text-slate-500">Your selected candidates and scheduled meetings</p>
-                                  </div>
-                                  <div className="px-3 py-1 bg-brand-blue/10 rounded-full">
-                                    <span className="text-[9px] font-bold text-brand-blue uppercase tracking-wider">{req.choices.length} Candidates</span>
+                                  <div className="relative z-10 flex items-center gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
+                                    <button className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap">
+                                      {t.profilePage.interviews.finalChoice}
+                                    </button>
+                                    <button className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap">
+                                      {t.profilePage.interviews.reject}
+                                    </button>
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {req.choices.map((choice: any) => (
-                                    <div key={choice.id} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group/choice relative overflow-hidden">
-                                      <div className="absolute top-0 right-0 w-24 h-24 bg-brand-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover/choice:bg-brand-accent/10 transition-colors" />
-                                      
-                                      <div className="relative flex items-start gap-4">
-                                        <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-accent group-hover/choice:bg-brand-accent group-hover/choice:text-white transition-all duration-500 shadow-inner">
-                                          <UserIcon size={24} />
-                                        </div>
-                                        <div className="flex-1 space-y-3">
-                                          <div>
-                                            <p className="text-base font-display font-bold text-slate-900">{choice.babysitter_first_name} {choice.babysitter_last_name}</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                              <div className="px-2 py-0.5 bg-brand-blue/5 rounded-md flex items-center gap-1.5">
-                                                <Clock size={10} className="text-brand-blue" />
-                                                <span className="text-[9px] font-bold text-brand-blue uppercase tracking-wider">
-                                                  {choice.interview_date} @ {choice.interview_time?.substring(0, 5)}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </div>
-                                          
-                                          <div className="grid grid-cols-1 gap-2">
-                                            {choice.babysitter_phone && (
-                                              <div className="flex items-center gap-2 text-slate-400">
-                                                <Phone size={12} />
-                                                <span className="text-[10px] font-medium">{choice.babysitter_phone}</span>
-                                              </div>
-                                            )}
-                                            {choice.babysitter_email && (
-                                              <div className="flex items-center gap-2 text-slate-400">
-                                                <Mail size={12} />
-                                                <span className="text-[10px] font-medium truncate max-w-[150px]">{choice.babysitter_email}</span>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                        </div>
-                        
-                        <div className="flex flex-col sm:flex-row lg:flex-col gap-4 lg:border-l border-slate-100 lg:pl-10 min-w-[200px]">
-                          <div className="flex-1">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">{t.profilePage.requests.date}</p>
-                            <p className="text-lg font-display font-bold text-slate-700">{req.created_at?.split('T')[0] || '--'}</p>
+                              ))}
+                            </div>
                           </div>
-                          <button 
-                            onClick={() => onModifyRequest(req)}
-                            className="flex-1 px-6 py-4 bg-slate-900 text-white text-sm font-bold rounded-2xl hover:bg-brand-accent transition-all shadow-lg shadow-slate-900/10 hover:shadow-brand-accent/20 flex items-center justify-center gap-2"
-                          >
-                            {t.common.modify} <ChevronRight size={18} />
-                          </button>
-                        </div>
+                        )}
                       </div>
                     </div>
                   ))
@@ -541,13 +549,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
               className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl p-8 overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-pink/10 rounded-full -mr-16 -mt-16 blur-3xl" />
-              
+
               <div className="relative">
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
                     <AlertCircle size={24} />
                   </div>
-                  <button 
+                  <button
                     onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
                     className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400"
                   >
