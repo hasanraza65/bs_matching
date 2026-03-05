@@ -236,6 +236,7 @@ export default function App() {
         try {
           const response = await api.getUser();
           if (response.status && response.data) {
+            console.log('email: '+response.data?.email || '');
             setIsLoggedIn(true);
             setUser(response.data);
             setView('profile');
@@ -1403,6 +1404,8 @@ export default function App() {
                     )}
                   </div>
 
+                  
+
                   {/* Email */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -1988,7 +1991,7 @@ export default function App() {
 
                 {/* Age Group Filter */}
                 <div className="flex flex-wrap gap-2">
-                  {['Infant', 'Toddler', 'Child'].map(age => (
+                  {['Infants', 'Toddlers', 'Preschoolers','Young Learners'].map(age => (
                     <button
                       key={age}
                       onClick={() => {

@@ -528,14 +528,24 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         interview_time: c.interview_time
       }));
 
+       // ✅ Clean schedules payload
+      const schedulesPayload = (updatedFields.schedules || []).map((s: any) => ({
+        schedule_date: s.schedule_date,
+        slots: (s.slots || []).map((slot: any) => ({
+          start_time: slot.start_time,
+          end_time: slot.end_time
+        }))
+      }));
+
       const response = await api.updateParentRequest(reqId, {
         first_name: updatedFields.user?.first_name || '',
         last_name: updatedFields.user?.last_name || '',
         parent_address: updatedFields.parent_address || '',
         children: childrenPayload,
         choices: choicesPayload,
+        schedules: schedulesPayload, // TS will complain unless we fix the type
         _method: 'put'
-      });
+      } as any); 
 
       if (response.status && response.data) {
         const fullReq = transformToKanbanRequest(response.data);
@@ -995,8 +1005,8 @@ const RequestDetailsModal = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters' | 'notes'>('overview');
   const [formData, setFormData] = useState<KanbanRequest>({ ...request,
-     schedules: request.schedules || [],
-  choices: request.choices || [],  
+      schedules: request.schedules || [],
+      choices: request.choices || [],  
    });
 
   const handleChange = (field: string, value: any) => {
