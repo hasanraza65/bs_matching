@@ -2011,82 +2011,105 @@ export default function App() {
                         )}
                       </AnimatePresence>
 
-                      {/* Filters */}
-                      <div className="flex flex-wrap items-center gap-4 mb-8 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
-                        <div className="flex items-center gap-2 text-slate-500 mr-2">
-                          <Filter size={16} />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.common.filters || 'Filters'}</span>
-                        </div>
+                      {/* Filters Section */}
+                      <div className="p-4 bg-slate-50/50 rounded-3xl border border-slate-100 mb-10">
+                        <div className="flex items-center gap-8">
+                          {/* Main Filters Icon/Title */}
+                          <div className="flex items-center gap-2 text-slate-500 shrink-0 py-1 self-start pt-3">
+                            <Filter size={16} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">{t.common.filters || 'Filters'}</span>
+                          </div>
 
-                        {/* Language Filter */}
-                        <div className="flex flex-wrap gap-2">
-                          {['English', 'French'].map(lang => (
-                            <button
-                              key={lang}
-                              onClick={() => {
-                                setFilters(prev => ({
-                                  ...prev,
-                                  language: prev.language.includes(lang)
-                                    ? prev.language.filter(l => l !== lang)
-                                    : [...prev.language, lang]
-                                }));
-                              }}
-                              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${filters.language.includes(lang)
-                                ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
-                                }`}
-                            >
-                              {lang}
-                            </button>
-                          ))}
-                        </div>
+                          <div className="h-12 w-px bg-slate-200 shrink-0 self-center" />
 
-                        <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block" />
+                          {/* Categories Container */}
+                          <div className="flex flex-1 items-start gap-12 overflow-hidden">
+                            {/* By Languages Category */}
+                            <div className="flex flex-col gap-2 min-w-[120px] max-w-[150px]">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">By Languages</span>
+                              <div className="overflow-x-auto no-scrollbar scroll-smooth">
+                                <div className="flex gap-2 pb-1">
+                                  {['English', 'French'].map(lang => (
+                                    <button
+                                      key={lang}
+                                      onClick={() => {
+                                        setFilters(prev => ({
+                                          ...prev,
+                                          language: prev.language.includes(lang)
+                                            ? prev.language.filter(l => l !== lang)
+                                            : [...prev.language, lang]
+                                        }));
+                                      }}
+                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.language.includes(lang)
+                                        ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
+                                        : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
+                                        }`}
+                                    >
+                                      {lang}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
 
-                        {/* Age Group Filter */}
-                        <div className="flex flex-wrap gap-2">
-                          {['Infants', 'Toddlers', 'Preschoolers', 'Young Learners'].map(age => (
-                            <button
-                              key={age}
-                              onClick={() => {
-                                setFilters(prev => ({
-                                  ...prev,
-                                  age_group: prev.age_group.includes(age)
-                                    ? prev.age_group.filter(a => a !== age)
-                                    : [...prev.age_group, age]
-                                }));
-                              }}
-                              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${filters.age_group.includes(age)
-                                ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
-                                }`}
-                            >
-                              {age}
-                            </button>
-                          ))}
-                        </div>
+                            <div className="h-10 w-px bg-slate-100 shrink-0 self-center mt-4" />
 
-                        <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block" />
+                            {/* By Age Group Category */}
+                            <div className="flex flex-col gap-2 flex-1 min-w-[200px] max-w-[300px]">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">By Age Group</span>
+                              <div className="overflow-x-auto no-scrollbar scroll-smooth">
+                                <div className="flex gap-2 pb-1">
+                                  {['Infants', 'Toddlers', 'Preschoolers', 'Young Learners'].map(age => (
+                                    <button
+                                      key={age}
+                                      onClick={() => {
+                                        setFilters(prev => ({
+                                          ...prev,
+                                          age_group: prev.age_group.includes(age)
+                                            ? prev.age_group.filter(a => a !== age)
+                                            : [...prev.age_group, age]
+                                        }));
+                                      }}
+                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.age_group.includes(age)
+                                        ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
+                                        : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
+                                        }`}
+                                    >
+                                      {age}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
 
-                        {/* Experience Filter */}
-                        <div className="flex flex-wrap gap-2">
-                          {['1+', '3+', '5+', '10+'].map(exp => (
-                            <button
-                              key={exp}
-                              onClick={() => {
-                                setFilters(prev => ({
-                                  ...prev,
-                                  experience: prev.experience === exp ? '' : exp
-                                }));
-                              }}
-                              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${filters.experience === exp
-                                ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
-                                }`}
-                            >
-                              {exp} {t.step4.exp}
-                            </button>
-                          ))}
+                            <div className="h-10 w-px bg-slate-100 shrink-0 self-center mt-4" />
+
+                            {/* By Experience Category */}
+                            <div className="flex flex-col gap-2 min-w-[150px]">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">By Experience</span>
+                              <div className="overflow-x-auto no-scrollbar scroll-smooth">
+                                <div className="flex gap-2 pb-1">
+                                  {['1+', '3+', '5+', '10+'].map(exp => (
+                                    <button
+                                      key={exp}
+                                      onClick={() => {
+                                        setFilters(prev => ({
+                                          ...prev,
+                                          experience: prev.experience === exp ? '' : exp
+                                        }));
+                                      }}
+                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.experience === exp
+                                        ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
+                                        : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
+                                        }`}
+                                    >
+                                      {exp} {t.step4.exp}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
 

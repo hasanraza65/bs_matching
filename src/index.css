@@ -1,18 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Quicksand:wght@500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Quicksand:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Quicksand", sans-serif;
-  
-  --color-brand-beige: #FDFBF7;
+
+  --color-brand-beige: #fdfbf7;
   --color-brand-blue: #29a09a;
-  --color-brand-pink: #FCE4EC;
-  --color-brand-accent: #80CBC4;
+  --color-brand-pink: #fce4ec;
+  --color-brand-accent: #80cbc4;
 }
 
-@layer base {
-  body {
-    @apply bg-brand-beige text-slate-800 font-sans antialiased;
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
