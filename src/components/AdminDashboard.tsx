@@ -43,7 +43,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'requests', label: 'All Requests', icon: ClipboardList },
-    { id: 'interviews', label: 'Interviews', icon: Calendar },
+    // { id: 'interviews', label: 'Interviews', icon: Calendar },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
     { id: 'tax', label: 'Tax Certificates', icon: FileText },
     { id: 'users', label: 'All Users', icon: Users },
