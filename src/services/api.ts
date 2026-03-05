@@ -235,6 +235,7 @@ export const api = {
     children: { child_dob: string }[];
     schedules: any[];
     board_status?: string;
+    from_admin?: boolean;
   }): Promise<ParentRequestResponse> => {
     const response = await apiClient.post("/parent-requests", data);
     return {

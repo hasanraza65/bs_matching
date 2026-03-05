@@ -513,7 +513,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         // Find the correct index in the newly sorted array and add 1
         const newOrder = columnRequests.findIndex((r) => r.id === request.id) + 1;
 
-       
+
 
         api.updateBoardStatus({
           parent_request_id: request.id,
@@ -620,6 +620,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         children: newReq.children.map((c: any) => ({ child_dob: c.child_dob })),
         schedules: newReq.schedules,
         board_status: isAddingToColumn || 'In Matching',
+        from_admin: true,
       });
 
       if (response.status && response.data) {

@@ -30,8 +30,8 @@ export const fr = {
       we: "Mer",
       th: "Jeu",
       fr: "Ven",
-      sa: "Sam"
-    }
+      sa: "Sam",
+    },
   },
   steps: {
     familyInfo: "Informations Famille",
@@ -40,7 +40,8 @@ export const fr = {
   },
   step1: {
     title: "Informations Famille",
-    subtitle: "Parlez-nous de votre famille pour personnaliser votre expérience.",
+    subtitle:
+      "Parlez-nous de votre famille pour personnaliser votre expérience.",
     firstName: "Prénom",
     lastName: "Nom",
     email: "Adresse Email",
@@ -54,13 +55,15 @@ export const fr = {
       email: "jean.dupont@email.com",
       phone: "06 12 34 56 78",
       address: "123 Rue de Rivoli, 75001 Paris",
-    }
+    },
   },
   step2: {
     title: "Planning & Devis",
-    subtitle: "Sélectionnez vos dates et visualisez votre devis personnalisé instantanément.",
+    subtitle:
+      "Sélectionnez vos dates et visualisez votre devis personnalisé instantanément.",
     calendarTitle: "Sélectionner les dates",
-    calendarSubtitle: "Choisissez les jours où vous avez besoin d'une babysitter.",
+    calendarSubtitle:
+      "Choisissez les jours où vous avez besoin d'une babysitter.",
     noDates: "Veuillez sélectionner au moins une date de garde.",
     startTime: "Heure de début",
     endTime: "Heure de fin",
@@ -77,24 +80,26 @@ export const fr = {
     finalCostSubtitle: "Votre coût réel après toutes aides",
     howItWorks: "Comment ça marche",
     cmgEligible: "Basé sur vos {h} heures, vous êtes éligible au CMG.",
-    cmgNotEligible: "Le CMG est disponible à partir de 16 heures de garde mensuelles.",
+    cmgNotEligible:
+      "Le CMG est disponible à partir de 16 heures de garde mensuelles.",
     validateButton: "Commencer la mise en relation",
-    validationNote: "Commencez la mise en relation avec des babysitters premium basés sur votre planning et devis personnalisé.",
+    validationNote:
+      "Commencez la mise en relation avec des babysitters premium basés sur votre planning et devis personnalisé.",
     tooltips: {
       caf: {
         title: "Complément de libre choix du Mode de Garde",
         profile: "Basé sur votre profil :",
         youngest: "Enfant le plus jeune :",
         ceiling: "Plafond :",
-        note: "La CAF prend en charge 85% de la facture, vous ne payez que 15%."
+        note: "La CAF prend en charge 85% de la facture, vous ne payez que 15%.",
       },
       tax: {
         title: "Crédit d'Impôt Services à la Personne",
         calculation: "Calcul :",
         annualLimit: "Plafond annuel :",
-        monthlyLimit: "Plafond de crédit mensuel :"
-      }
-    }
+        monthlyLimit: "Plafond de crédit mensuel :",
+      },
+    },
   },
   step3: {
     title: "Devis Détaillé",
@@ -102,9 +107,11 @@ export const fr = {
   },
   step4: {
     title: "Sélectionnez vos candidates",
-    subtitle: "Choisissez jusqu'à 4 babysitters que vous souhaitez interviewer.",
+    subtitle:
+      "Choisissez jusqu'à 4 babysitters que vous souhaitez interviewer.",
     selectedTitle: "Vos candidates sélectionnées",
-    noSelected: "Aucune babysitter sélectionnée. Choisissez jusqu'à 4 candidates dans la liste ci-dessous.",
+    noSelected:
+      "Aucune babysitter sélectionnée. Choisissez jusqu'à 4 candidates dans la liste ci-dessous.",
     maxCandidates: "Max 4 candidates",
     selectCandidate: "Sélectionner comme candidate",
     selectFirst: "Sélectionner 1ère candidate",
@@ -113,7 +120,8 @@ export const fr = {
     selectFourth: "Sélectionner 4e candidate",
     selected: "Sélectionnée",
     submitSelection: "Envoyer ma sélection",
-    paymentNote: "La finalisation de votre sélection nécessite un petit paiement de confirmation de {amount}.",
+    paymentNote:
+      "La finalisation de votre sélection nécessite un petit paiement de confirmation de {amount}.",
     years: "ans",
     exp: "ans d'exp.",
     rankLabels: ["1er", "2e", "3e", "4e"],
@@ -151,18 +159,20 @@ export const fr = {
     },
     success: {
       title: "Demande de réservation envoyée !",
-      subtitle: "Nous avons reçu votre sélection de candidats et votre planning. Nous vous contacterons prochainement pour finaliser les entretiens.",
+      subtitle:
+        "Nous avons reçu votre sélection de candidats et votre planning. Nous vous contacterons prochainement pour finaliser les entretiens.",
       backToStart: "Retour au début",
-    }
+    },
   },
   profilePage: {
     title: "Mon Compte",
     subtitle: "Gérez vos demandes, entretiens et documents.",
+    createRequest: "Créer une demande",
     tabs: {
       requests: "Demandes Actives",
       interviews: "Entretiens",
       invoices: "Factures",
-      tax: "Attestations Fiscales"
+      tax: "Attestations Fiscales",
     },
     requests: {
       id: "ID Demande",
@@ -173,7 +183,7 @@ export const fr = {
       date: "Créée le",
       pending: "En attente de matching",
       confirmed: "Confirmée",
-      noRequests: "Vous n'avez aucune demande active."
+      noRequests: "Vous n'avez aucune demande active.",
     },
     interviews: {
       with: "Entretien avec",
@@ -182,21 +192,23 @@ export const fr = {
       status: "Statut",
       scheduled: "Planifié",
       completed: "Terminé",
-      noInterviews: "Aucun entretien planifié."
+      finalChoice: "Choix Final",
+      reject: "Refuser",
+      noInterviews: "Aucun entretien planifié.",
     },
     invoices: {
       number: "Facture n°",
       date: "Date",
       amount: "Montant",
       download: "Télécharger PDF",
-      noInvoices: "Aucune facture disponible."
+      noInvoices: "Aucune facture disponible.",
     },
     tax: {
       year: "Année",
       type: "Type d'attestation",
       download: "Télécharger",
-      noCertificates: "Aucune attestation fiscale disponible pour le moment."
-    }
+      noCertificates: "Aucune attestation fiscale disponible pour le moment.",
+    },
   },
   login: {
     title: "Bon retour !",
@@ -212,35 +224,46 @@ export const fr = {
     backToEmail: "Changer d'email",
     noAccount: "Pas encore de compte ?",
     startBooking: "Commencer une demande",
-    existingAccount: "Déjà un compte ? Connectez-vous ici"
+    existingAccount: "Déjà un compte ? Connectez-vous ici",
   },
   footer: {
     assistance: "Si vous avez besoin d'aide, contactez-nous via WhatsApp",
   },
   sitters: {
     amelie: {
-      description: "Douce et créative, j'adore organiser des activités artistiques pour les enfants.",
-      fullBio: "Je travaille comme babysitter depuis plus de 5 ans. Je suis actuellement étudiante en Éducation de la Petite Enfance. J'adore raconter des histoires, peindre et les jeux de plein air. Je suis certifiée en premiers secours et j'ai ma propre voiture.",
+      description:
+        "Douce et créative, j'adore organiser des activités artistiques pour les enfants.",
+      fullBio:
+        "Je travaille comme babysitter depuis plus de 5 ans. Je suis actuellement étudiante en Éducation de la Petite Enfance. J'adore raconter des histoires, peindre et les jeux de plein air. Je suis certifiée en premiers secours et j'ai ma propre voiture.",
     },
     thomas: {
-      description: "Énergique et patient, je me spécialise dans les jeux actifs et l'aide aux devoirs.",
-      fullBio: "Avec 7 ans d'expérience, j'ai travaillé avec des enfants de tous âges. Ancien animateur de centre de vacances, j'adore le sport. Je peux aussi aider pour les devoirs de maths et de sciences. Je suis très fiable et ponctuel.",
+      description:
+        "Énergique et patient, je me spécialise dans les jeux actifs et l'aide aux devoirs.",
+      fullBio:
+        "Avec 7 ans d'expérience, j'ai travaillé avec des enfants de tous âges. Ancien animateur de centre de vacances, j'adore le sport. Je peux aussi aider pour les devoirs de maths et de sciences. Je suis très fiable et ponctuel.",
     },
     chloe: {
-      description: "Responsable et attentionnée, j'aime cuisiner des repas sains et raconter des histoires.",
-      fullBio: "Je suis étudiante en soins infirmiers avec une passion pour la garde d'enfants. J'ai de l'expérience avec les nourrissons et les tout-petits. J'adore cuisiner et je peux préparer des collations et des repas sains. Je suis très attentive à la sécurité et à l'hygiène.",
+      description:
+        "Responsable et attentionnée, j'aime cuisiner des repas sains et raconter des histoires.",
+      fullBio:
+        "Je suis étudiante en soins infirmiers avec une passion pour la garde d'enfants. J'ai de l'expérience avec les nourrissons et les tout-petits. J'adore cuisiner et je peux préparer des collations et des repas sains. Je suis très attentive à la sécurité et à l'hygiène.",
     },
     lucas: {
       description: "Patient et musicien, je peux initier vos enfants au piano.",
-      fullBio: "Je suis professeur de musique et babysitter à temps partiel. J'adore partager ma passion pour la musique avec les enfants. Je suis calme, patient et très organisé. J'ai de l'expérience avec les enfants de 4 à 12 ans.",
+      fullBio:
+        "Je suis professeur de musique et babysitter à temps partiel. J'adore partager ma passion pour la musique avec les enfants. Je suis calme, patient et très organisé. J'ai de l'expérience avec les enfants de 4 à 12 ans.",
     },
     sophie: {
-      description: "Nounou expérimentée axée sur les jeux éducatifs et le développement.",
-      fullBio: "J'ai 10 ans d'expérience professionnelle en tant que nounou. Je me spécialise dans le développement de la petite enfance et les méthodes Montessori. Je parle couramment trois langues et j'adore enseigner le vocabulaire de base aux enfants.",
+      description:
+        "Nounou expérimentée axée sur les jeux éducatifs et le développement.",
+      fullBio:
+        "J'ai 10 ans d'expérience professionnelle en tant que nounou. Je me spécialise dans le développement de la petite enfance et les méthodes Montessori. Je parle couramment trois langues et j'adore enseigner le vocabulaire de base aux enfants.",
     },
     nicolas: {
-      description: "Amusant et fiable, j'adore les expériences scientifiques et les tours de magie.",
-      fullBio: "Je suis étudiant en sciences et j'adore rendre l'apprentissage amusant. Je peux faire des tours de magie simples et des expériences scientifiques que les enfants adorent. Je suis très énergique et j'apporte toujours une attitude positive.",
-    }
-  }
+      description:
+        "Amusant et fiable, j'adore les expériences scientifiques et les tours de magie.",
+      fullBio:
+        "Je suis étudiant en sciences et j'adore rendre l'apprentissage amusant. Je peux faire des tours de magie simples et des expériences scientifiques que les enfants adorent. Je suis très énergique et j'apporte toujours une attitude positive.",
+    },
+  },
 };
