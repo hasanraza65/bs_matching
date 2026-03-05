@@ -277,6 +277,8 @@ export default function App() {
           const data = await api.getSingleParentRequest(id);
           if (data) {
             mapRequestToState(data);
+            // Clear the URL to prevent re-triggering this hook on re-renders/navigation
+            window.history.replaceState({}, '', '/');
           }
         } catch (error) {
           console.error('Failed to fetch parent request from URL:', error);
@@ -1137,8 +1139,8 @@ export default function App() {
                   }
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-sm transition-all ${view === 'profile' || view === 'login'
-                    ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-accent hover:text-brand-accent'
+                  ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-accent hover:text-brand-accent'
                   }`}
               >
                 <UserIcon size={18} />
