@@ -794,8 +794,24 @@ export default function App() {
         }
       }
     } else if (currentStep === 3) {
-      setCurrentStep(4);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (parentRequestId) {
+        try {
+          setIsRegistering(true);
+          await api.acceptPriceQuote(parentRequestId);
+          setCurrentStep(4);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+          console.error('Failed to accept price quote:', error);
+          // Fallback to next step even if API fails to avoid blocking user
+          setCurrentStep(4);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } finally {
+          setIsRegistering(false);
+        }
+      } else {
+        setCurrentStep(4);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } else if (currentStep === 4) {
       if (validateStep4()) {
         if (parentRequestId) {

@@ -334,4 +334,11 @@ export const api = {
       data: Array.isArray(data) ? data : [],
     };
   },
+
+  acceptPriceQuote: async (
+    id: number,
+  ): Promise<{ status: boolean; message: string }> => {
+    const response = await apiClient.post(`/accept-price-quote/${id}`);
+    return response.data;
+  },
 };
