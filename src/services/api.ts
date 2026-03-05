@@ -218,6 +218,15 @@ export const api = {
     };
   },
 
+  updateBoardStatus: async (data: {
+    parent_request_id: number;
+    board_status: string;
+    board_order: number;
+  }): Promise<{ status: boolean; message: string }> => {
+    const response = await apiClient.post("/update-board-status", data);
+    return response.data;
+  },
+
   createParentRequest: async (data: {
     first_name: string;
     last_name: string;
