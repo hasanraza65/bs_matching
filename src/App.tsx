@@ -197,8 +197,12 @@ export default function App() {
     }));
   }, [t.sitters, externalSitters]);
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [view, setView] = useState<'booking' | 'profile' | 'login' | 'admin-dashboard'>('booking');
+  const [currentStep, setCurrentStep] = useState(() => {
+    return typeof window !== 'undefined' && window.location.pathname.match(/\/price\/\d+/) ? 3 : 1;
+  });
+  const [view, setView] = useState<'booking' | 'profile' | 'login' | 'admin-dashboard'>(() => {
+    return typeof window !== 'undefined' && window.location.pathname.match(/\/price\/\d+/) ? 'booking' : 'booking';
+  });
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -223,7 +227,9 @@ export default function App() {
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(() => {
+    return typeof window !== 'undefined' && window.location.pathname.match(/\/price\/\d+/) ? true : false;
+  });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [parentRequestId, setParentRequestId] = useState<number | null>(null);
   const [isModifying, setIsModifying] = useState(false);
@@ -1815,6 +1821,14 @@ export default function App() {
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-blue/20 rounded-full -ml-32 -mb-32 blur-3xl" />
 
                     <div className="relative z-10">
+                      {isRegistering && (
+                        <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-[2px] flex items-center justify-center rounded-[32px] -m-6 md:-m-10">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
+                            <p className="text-slate-500 font-bold animate-pulse">{t.common.loading}</p>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-center gap-4 mb-8">
                         <button
                           onClick={handleBackStep}
