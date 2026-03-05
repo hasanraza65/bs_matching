@@ -243,6 +243,11 @@ export const api = {
     };
   },
 
+  getSingleParentRequest: async (id: number): Promise<ParentRequest> => {
+    const response = await apiClient.get(`/parent-requests/${id}`);
+    return response.data;
+  },
+
   getParentSchedules: async (
     parentRequestId: number,
   ): Promise<{ status: boolean; data: any[] }> => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from './i18n/LanguageContext';
-import { api, User } from './services/api';
+import { api, User, ParentRequest } from './services/api';
 import {
   MessageCircle,
   ChevronRight,
@@ -263,6 +263,75 @@ export default function App() {
     checkAuth();
   }, []);
 
+  // Handle URL Routing for /price/:id
+  useEffect(() => {
+    const handleUrlRoute = async () => {
+      const path = window.location.pathname;
+      const priceMatch = path.match(/\/price\/(\d+)/);
+
+      if (priceMatch) {
+        const id = parseInt(priceMatch[1]);
+
+        try {
+          setIsRegistering(true);
+          const data = await api.getSingleParentRequest(id);
+          if (data) {
+            mapRequestToState(data);
+          }
+        } catch (error) {
+          console.error('Failed to fetch parent request from URL:', error);
+        } finally {
+          setIsRegistering(false);
+        }
+      }
+    };
+    handleUrlRoute();
+  }, [localizedSitters]);
+
+  const mapRequestToState = (data: ParentRequest) => {
+    setParentRequestId(data.id);
+    setFormData({
+      firstName: data.user.first_name,
+      lastName: data.user.last_name,
+      email: data.user.email,
+      address: data.parent_address,
+      numChildren: data.children?.length || 1,
+      childDOBs: data.children?.map(c => c.child_dob) || [''],
+      telephone: data.user.user_phone || '',
+      countryCode: '+1',
+    });
+
+    if (data.schedules) {
+      const mappedSchedules = data.schedules.map(s => ({
+        id: s.schedule_date,
+        date: new Date(s.schedule_date),
+        dbId: s.id,
+        slots: s.slots.map(slot => ({
+          id: Math.random().toString(36).substr(2, 9),
+          dbId: slot.id,
+          startTime: slot.start_time,
+          endTime: slot.end_time
+        }))
+      }));
+      setDateSchedule(mappedSchedules);
+    }
+
+    if (data.choices && data.choices.length > 0) {
+      setSelectedCandidates(data.choices.map(c => ({
+        sitterId: 0,
+        dbId: c.id,
+        interview: {
+          date: c.interview_date || '',
+          time: c.interview_time || '',
+          skipped: !c.interview_date
+        }
+      })));
+    }
+
+    setCurrentStep(3);
+    setView('booking');
+  };
+
   useEffect(() => {
     const fetchSchedules = async () => {
       if (currentStep === 2 && parentRequestId) {
@@ -330,8 +399,9 @@ export default function App() {
     fetchChoices();
   }, [currentStep, parentRequestId]);
 
-  const handleLoginSuccess = (isAdmin?: boolean) => {
+  const handleLoginSuccess = async (isAdmin?: boolean) => {
     setIsLoggedIn(true);
+
     if (isAdmin) {
       setView('admin-dashboard');
     } else {
@@ -1059,14 +1129,24 @@ export default function App() {
               </div>
 
               <button
-                onClick={() => setView(view === 'profile' ? 'booking' : 'profile')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-sm transition-all ${view === 'profile'
+                onClick={() => {
+                  if (view === 'profile' || view === 'login') {
+                    setView('booking');
+                  } else {
+                    setView(isLoggedIn ? 'profile' : 'login');
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-sm transition-all ${view === 'profile' || view === 'login'
                     ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
                     : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-accent hover:text-brand-accent'
                   }`}
               >
                 <UserIcon size={18} />
-                <span className="hidden md:inline">{view === 'profile' ? 'Booking' : t.profilePage.title}</span>
+                <span className="hidden md:inline">
+                  {view === 'profile' || view === 'login'
+                    ? t.common.back || 'Booking'
+                    : (isLoggedIn ? t.profilePage.title : t.login.title)}
+                </span>
               </button>
             </div>
           </div>
@@ -1435,17 +1515,6 @@ export default function App() {
                             {!isRegistering && <ChevronRight size={20} />}
                           </motion.button>
 
-                          {!isLoggedIn && (
-                            <div className="pt-8 border-t border-slate-50 text-center">
-                              <button
-                                onClick={() => setView('login')}
-                                className="text-sm font-bold text-slate-400 hover:text-brand-accent flex items-center justify-center gap-2 mx-auto transition-colors group"
-                              >
-                                <Lock size={16} className="group-hover:scale-110 transition-transform" />
-                                {t.login.existingAccount}
-                              </button>
-                            </div>
-                          )}
 
                           {isModifying && (
                             <div className="pt-4 text-center">
@@ -1541,10 +1610,10 @@ export default function App() {
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => toggleDateSelection(date)}
                                     className={`aspect-square rounded-xl flex flex-col items-center justify-center text-sm font-bold transition-all relative ${isSelected
-                                        ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
-                                        : isToday
-                                          ? 'bg-brand-blue/30 text-brand-accent border border-brand-blue'
-                                          : 'hover:bg-white text-slate-600 border border-transparent hover:border-slate-200'
+                                      ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
+                                      : isToday
+                                        ? 'bg-brand-blue/30 text-brand-accent border border-brand-blue'
+                                        : 'hover:bg-white text-slate-600 border border-transparent hover:border-slate-200'
                                       }`}
                                   >
                                     {i + 1}
@@ -1688,8 +1757,8 @@ export default function App() {
                               disabled={isRegistering || dateSchedule.length === 0 || Object.keys(errors).some(k => k.includes('_time'))}
                               onClick={handleNextStep}
                               className={`w-full font-display font-bold py-5 rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all text-lg ${isRegistering || dateSchedule.length === 0 || Object.keys(errors).some(k => k.includes('_time'))
-                                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                                  : 'bg-brand-accent hover:bg-[#66B2AC] text-white shadow-brand-accent/30'
+                                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                                : 'bg-brand-accent hover:bg-[#66B2AC] text-white shadow-brand-accent/30'
                                 }`}
                             >
                               {isRegistering ? (
@@ -1961,8 +2030,8 @@ export default function App() {
                                 }));
                               }}
                               className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${filters.language.includes(lang)
-                                  ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                  : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
+                                ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
                                 }`}
                             >
                               {lang}
@@ -1986,8 +2055,8 @@ export default function App() {
                                 }));
                               }}
                               className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${filters.age_group.includes(age)
-                                  ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                  : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
+                                ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
                                 }`}
                             >
                               {age}
@@ -2009,8 +2078,8 @@ export default function App() {
                                 }));
                               }}
                               className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${filters.experience === exp
-                                  ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                  : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
+                                ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
                                 }`}
                             >
                               {exp} {t.step4.exp}
@@ -2030,15 +2099,15 @@ export default function App() {
                               key={sitter.id}
                               whileHover={{ y: -5 }}
                               className={`group relative bg-white rounded-3xl border transition-all duration-300 ${isSelected
-                                  ? 'border-brand-accent ring-4 ring-brand-accent/5 shadow-xl'
-                                  : 'border-slate-100 hover:border-brand-accent/30 hover:shadow-lg'
+                                ? 'border-brand-accent ring-4 ring-brand-accent/5 shadow-xl'
+                                : 'border-slate-100 hover:border-brand-accent/30 hover:shadow-lg'
                                 }`}
                             >
                               {/* Status Badge */}
                               <div className="absolute top-4 right-4 z-10">
                                 <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${sitter.status === 'Online'
-                                    ? 'bg-green-100 text-green-600'
-                                    : 'bg-blue-100 text-blue-600'
+                                  ? 'bg-green-100 text-green-600'
+                                  : 'bg-blue-100 text-blue-600'
                                   }`}>
                                   <span className={`w-1.5 h-1.5 rounded-full ${sitter.status === 'Online' ? 'bg-green-500 animate-pulse' : 'bg-blue-500'}`} />
                                   {sitter.status === 'Online' ? t.common.online : t.common.available}
@@ -2111,8 +2180,8 @@ export default function App() {
                                       onClick={() => setSchedulingSitter(sitter)}
                                       disabled={isMaxReached}
                                       className={`w-full py-2.5 text-xs font-bold rounded-xl transition-all shadow-lg ${isMaxReached
-                                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
-                                          : 'bg-slate-800 hover:bg-slate-900 text-white shadow-slate-200'
+                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                                        : 'bg-slate-800 hover:bg-slate-900 text-white shadow-slate-200'
                                         }`}
                                     >
                                       {isMaxReached ? t.step4.maxCandidates : (
@@ -2165,8 +2234,8 @@ export default function App() {
                           onClick={handleNextStep}
                           disabled={isRegistering || selectedCandidates.length === 0}
                           className={`flex-[2] font-display font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all ${isRegistering || selectedCandidates.length === 0
-                              ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
-                              : 'bg-brand-accent hover:bg-[#66B2AC] text-white shadow-brand-accent/30'
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                            : 'bg-brand-accent hover:bg-[#66B2AC] text-white shadow-brand-accent/30'
                             }`}
                         >
                           {isRegistering ? (
@@ -2563,8 +2632,8 @@ export default function App() {
                           }}
                           disabled={selectedCandidates.length >= 4}
                           className={`w-full py-4 rounded-2xl font-bold transition-all ${selectedCandidates.length >= 4
-                              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                              : 'bg-brand-accent text-white hover:bg-[#66B2AC] shadow-lg shadow-brand-accent/20'
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            : 'bg-brand-accent text-white hover:bg-[#66B2AC] shadow-lg shadow-brand-accent/20'
                             }`}
                         >
                           {selectedCandidates.length >= 4 ? t.step4.maxCandidates : t.step4.selectCandidate}
