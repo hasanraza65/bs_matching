@@ -218,6 +218,15 @@ export const api = {
     };
   },
 
+  updateBoardStatus: async (data: {
+    parent_request_id: number;
+    board_status: string;
+    board_order: number;
+  }): Promise<{ status: boolean; message: string }> => {
+    const response = await apiClient.post("/update-board-status", data);
+    return response.data;
+  },
+
   createParentRequest: async (data: {
     first_name: string;
     last_name: string;
@@ -232,6 +241,11 @@ export const api = {
       ...response.data,
       code: response.status,
     };
+  },
+
+  getSingleParentRequest: async (id: number): Promise<ParentRequest> => {
+    const response = await apiClient.get(`/parent-requests/${id}`);
+    return response.data;
   },
 
   getParentSchedules: async (
@@ -319,5 +333,12 @@ export const api = {
       status: response.status >= 200 && response.status < 300,
       data: Array.isArray(data) ? data : [],
     };
+  },
+
+  acceptPriceQuote: async (
+    id: number,
+  ): Promise<{ status: boolean; message: string }> => {
+    const response = await apiClient.post(`/accept-price-quote/${id}`);
+    return response.data;
   },
 };

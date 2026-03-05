@@ -459,20 +459,69 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
     setActiveType(null);
 
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    if (activeId === overId) return;
-
     const isActiveAColumn = active.data.current?.type === 'Column';
-    if (!isActiveAColumn) return;
 
-    setColumns((prev) => {
-      const activeIndex = prev.findIndex((c) => c.id === activeId);
-      const overIndex = prev.findIndex((c) => c.id === overId);
-      return arrayMove(prev, activeIndex, overIndex);
+    // 1. If it's a Column being dragged, reorder columns
+    if (isActiveAColumn) {
+      if (activeId === overId) return;
+      setColumns((prev) => {
+        const activeIndex = prev.findIndex((c) => c.id === activeId);
+        const overIndex = prev.findIndex((c) => c.id === overId);
+        return arrayMove(prev, activeIndex, overIndex);
+      });
+      return;
+    }
+
+    // 2. If it's a Request being dragged, `onDragOver` has ALREADY updated the `requests` state.
+    // HOWEVER, we need to ensure the final ordering if it dropped on the exact same place in the new column or reordered.
+    setRequests((prev) => {
+      let finalRequests = [...prev];
+      const activeIndex = finalRequests.findIndex((r) => r.id.toString() === activeId);
+
+      if (activeIndex !== -1) {
+        if (activeId !== overId) {
+          const isOverARequest = over.data.current?.type === 'Request';
+          const isOverAColumn = over.data.current?.type === 'Column';
+
+          if (isOverARequest) {
+            const overIndex = finalRequests.findIndex((r) => r.id.toString() === overId);
+            if (overIndex !== -1) {
+              if (finalRequests[activeIndex].board_status !== finalRequests[overIndex].board_status) {
+                finalRequests[activeIndex] = { ...finalRequests[activeIndex], board_status: finalRequests[overIndex].board_status };
+              }
+              finalRequests = arrayMove(finalRequests, activeIndex, overIndex);
+            }
+          } else if (isOverAColumn) {
+            finalRequests[activeIndex] = { ...finalRequests[activeIndex], board_status: overId };
+          }
+        }
+
+        // Make API Call with the finalized status and order
+        const request = finalRequests.find(r => r.id.toString() === activeId);
+        if (!request) return finalRequests;
+
+        const newStatus = request.board_status;
+        const columnRequests = finalRequests.filter((r) => r.board_status === newStatus);
+
+        // Find the correct index in the newly sorted array and add 1
+        const newOrder = columnRequests.findIndex((r) => r.id === request.id) + 1;
+
+       
+
+        api.updateBoardStatus({
+          parent_request_id: request.id,
+          board_status: newStatus,
+          board_order: newOrder,
+        }).catch(err => console.error("API Error updating board status:", err));
+      }
+      return finalRequests;
     });
   };
 
@@ -528,7 +577,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         interview_time: c.interview_time
       }));
 
-       // ✅ Clean schedules payload
+      // ✅ Clean schedules payload
       const schedulesPayload = (updatedFields.schedules || []).map((s: any) => ({
         schedule_date: s.schedule_date,
         slots: (s.slots || []).map((slot: any) => ({
@@ -545,7 +594,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         choices: choicesPayload,
         schedules: schedulesPayload, // TS will complain unless we fix the type
         _method: 'put'
-      } as any); 
+      } as any);
 
       if (response.status && response.data) {
         const fullReq = transformToKanbanRequest(response.data);
@@ -1004,10 +1053,11 @@ const RequestDetailsModal = ({
   onUpdate: (updatedFields: Partial<KanbanRequest>) => void;
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters' | 'notes'>('overview');
-  const [formData, setFormData] = useState<KanbanRequest>({ ...request,
-      schedules: request.schedules || [],
-      choices: request.choices || [],  
-   });
+  const [formData, setFormData] = useState<KanbanRequest>({
+    ...request,
+    schedules: request.schedules || [],
+    choices: request.choices || [],
+  });
 
   const handleChange = (field: string, value: any) => {
     const newData = { ...formData, [field]: value };
