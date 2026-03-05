@@ -164,6 +164,7 @@ export const en = {
   profilePage: {
     title: "My Account",
     subtitle: "Manage your requests, interviews, and documents.",
+    createRequest: "Create Request",
     tabs: {
       requests: "Active Requests",
       interviews: "Interviews",

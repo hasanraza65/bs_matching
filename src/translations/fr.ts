@@ -167,6 +167,7 @@ export const fr = {
   profilePage: {
     title: "Mon Compte",
     subtitle: "Gérez vos demandes, entretiens et documents.",
+    createRequest: "Créer une demande",
     tabs: {
       requests: "Demandes Actives",
       interviews: "Entretiens",

@@ -22,7 +22,8 @@ import {
   X,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Plus
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { api, User } from '../services/api';
@@ -32,9 +33,10 @@ interface ProfilePageProps {
   onLogout: () => void;
   onModifyRequest: (request: any) => void;
   onGoToAdmin: () => void;
+  onCreateRequest: () => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onModifyRequest, onGoToAdmin }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onModifyRequest, onGoToAdmin, onCreateRequest }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax'>('requests');
   const [user, setUser] = useState<User | null>(null);
@@ -185,6 +187,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                   <LogOut size={14} />
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Logout</span>
+              </button>
+              <button
+                onClick={onCreateRequest}
+                className="inline-flex items-center gap-3 px-6 py-2.5 bg-brand-accent text-white rounded-full shadow-lg shadow-brand-accent/20 hover:bg-[#66B2AC] hover:-translate-y-0.5 transition-all group"
+              >
+                <Plus size={16} />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t.profilePage.createRequest}</span>
               </button>
             </div>
             <h1 className="text-5xl md:text-6xl font-display font-bold text-slate-900 tracking-tight">

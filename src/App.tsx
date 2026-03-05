@@ -223,9 +223,6 @@ export default function App() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
-  const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
   const [isRegistering, setIsRegistering] = useState(() => {
     return typeof window !== 'undefined' && window.location.pathname.match(/\/price\/\d+/) ? true : false;
@@ -234,6 +231,24 @@ export default function App() {
   const [parentRequestId, setParentRequestId] = useState<number | null>(null);
   const [isModifying, setIsModifying] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+
+  // Step 4 State (Babysitter Matching)
+  const [selectedCandidates, setSelectedCandidates] = useState<Array<{
+    sitterId: number,
+    dbId?: number,
+    interview: { date: string, time: string, skipped: boolean }
+  }>>([]);
+  const [viewingBabysitter, setViewingBabysitter] = useState<Babysitter | null>(null);
+  const [schedulingSitter, setSchedulingSitter] = useState<Babysitter | null>(null);
+  const [modalInterviewConfig, setModalInterviewConfig] = useState({
+    date: '',
+    time: '10:00',
+    skipped: false
+  });
+  const [modalError, setModalError] = useState('');
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+  const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -435,8 +450,8 @@ export default function App() {
               if (item.french_language > 0) languages.push('French');
 
               return {
-                id: item.id,
-                key: `external-${item.id}`,
+                id: item.user_id,
+                key: `external-${item.user_id}`,
                 name: item.name || item.first_name || 'Babysitter',
                 lastName: item.user_last_name || '',
                 age: calculateAgeFromDOB(item.user_dob),
@@ -529,21 +544,26 @@ export default function App() {
     setView('booking');
     setCurrentStep(1);
   };
-
-  // Step 4 State (Babysitter Matching)
-  const [selectedCandidates, setSelectedCandidates] = useState<Array<{
-    sitterId: number,
-    dbId?: number,
-    interview: { date: string, time: string, skipped: boolean }
-  }>>([]);
-  const [viewingBabysitter, setViewingBabysitter] = useState<Babysitter | null>(null);
-  const [schedulingSitter, setSchedulingSitter] = useState<Babysitter | null>(null);
-  const [modalInterviewConfig, setModalInterviewConfig] = useState({
-    date: '',
-    time: '10:00',
-    skipped: false
-  });
-  const [modalError, setModalError] = useState('');
+  const handleCreateNewRequest = () => {
+    setParentRequestId(null);
+    setIsModifying(false);
+    setFormData({
+      firstName: user?.first_name || '',
+      lastName: user?.last_name || '',
+      address: '',
+      numChildren: 1,
+      childDOBs: [''],
+      countryCode: '+1',
+      telephone: user?.user_phone || '',
+      email: user?.email || '',
+    });
+    setDateSchedule([]);
+    setSelectedCandidates([]);
+    setIsSubmitted(false);
+    setErrors({});
+    setView('booking');
+    setCurrentStep(1);
+  };
 
   const filteredCountries = COUNTRY_CODES.filter(c =>
     c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
@@ -1152,26 +1172,28 @@ export default function App() {
                 </button>
               </div>
 
-              <button
-                onClick={() => {
-                  if (view === 'profile' || view === 'login') {
-                    setView('booking');
-                  } else {
-                    setView(isLoggedIn ? 'profile' : 'login');
-                  }
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-sm transition-all ${view === 'profile' || view === 'login'
-                  ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-accent hover:text-brand-accent'
-                  }`}
-              >
-                <UserIcon size={18} />
-                <span className="hidden md:inline">
-                  {view === 'profile' || view === 'login'
-                    ? t.common.back || 'Booking'
-                    : (isLoggedIn ? t.profilePage.title : t.login.title)}
-                </span>
-              </button>
+              {view !== 'profile' && (
+                <button
+                  onClick={() => {
+                    if (view === 'profile' || view === 'login') {
+                      setView('booking');
+                    } else {
+                      setView(isLoggedIn ? 'profile' : 'login');
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-sm transition-all ${view === 'profile' || view === 'login'
+                    ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-accent hover:text-brand-accent'
+                    }`}
+                >
+                  <UserIcon size={18} />
+                  <span className="hidden md:inline">
+                    {view === 'profile' || view === 'login'
+                      ? t.common.back || 'Booking'
+                      : (isLoggedIn ? t.profilePage.title : t.login.title)}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </header>
@@ -1220,6 +1242,7 @@ export default function App() {
                 }}
                 onModifyRequest={handleModifyRequest}
                 onGoToAdmin={() => setView('admin-dashboard')}
+                onCreateRequest={handleCreateNewRequest}
               />
             </motion.div>
           ) : view === 'login' ? (
