@@ -1533,6 +1533,17 @@ export default function App() {
                             {!isRegistering && <ChevronRight size={20} />}
                           </motion.button>
 
+                          {!isLoggedIn && !isModifying && (
+                            <div className="pt-2 text-center">
+                              <button
+                                onClick={() => setView('login')}
+                                className="text-sm font-bold text-slate-400 hover:text-brand-accent transition-colors"
+                              >
+                                {t.login.existingAccount}
+                              </button>
+                            </div>
+                          )}
+
 
                           {isModifying && (
                             <div className="pt-4 text-center">
