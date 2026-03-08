@@ -53,6 +53,7 @@ export interface Choice {
   babysitter_email: string;
   babysitter_phone: string;
   babysitter_address: string;
+  zoom_meeting_link?: string;
 }
 
 export interface ParentRequest {

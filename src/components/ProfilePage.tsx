@@ -23,7 +23,8 @@ import {
   Phone,
   Mail,
   MapPin,
-  Plus
+  Plus,
+  Video
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { api, User } from '../services/api';
@@ -427,7 +428,26 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                                     </div>
                                   </div>
 
-                                  <div className="relative z-10 flex items-center gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
+                                  <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
+                                    {choice.zoom_meeting_link ? (
+                                      <a
+                                        href={choice.zoom_meeting_link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-blue/10 text-brand-blue font-bold rounded-2xl hover:bg-brand-blue hover:text-white transition-all shadow-sm hover:shadow-brand-blue/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                      >
+                                        <Video size={16} />
+                                        {t.profilePage.interviews.joinMeeting}
+                                      </a>
+                                    ) : (
+                                      <button
+                                        disabled
+                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                      >
+                                        <Video size={16} />
+                                        {t.profilePage.interviews.joinMeeting}
+                                      </button>
+                                    )}
                                     <button className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap">
                                       {t.profilePage.interviews.finalChoice}
                                     </button>

@@ -249,6 +249,8 @@ export default function App() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirmModalProcessing, setIsConfirmModalProcessing] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -863,7 +865,7 @@ export default function App() {
                 })
               });
 
-              setIsPaymentModalOpen(true);
+              setIsConfirmModalOpen(true);
 
             } catch (error) {
               console.error('Failed to save babysitter choices:', error);
@@ -874,10 +876,19 @@ export default function App() {
           };
           saveChoices();
         } else {
-          setIsPaymentModalOpen(true);
+          setIsConfirmModalOpen(true);
         }
       }
     }
+  };
+
+  const handleConfirmSubmission = () => {
+    setIsConfirmModalProcessing(true);
+    setTimeout(() => {
+      setIsConfirmModalProcessing(false);
+      setIsConfirmModalOpen(false);
+      setIsSubmitted(true);
+    }, 1500);
   };
 
   const handleBackStep = () => {
@@ -2076,102 +2087,93 @@ export default function App() {
                       </AnimatePresence>
 
                       {/* Filters Section */}
-                      <div className="p-4 bg-slate-50/50 rounded-3xl border border-slate-100 mb-10">
-                        <div className="flex items-center gap-8">
-                          {/* Main Filters Icon/Title */}
-                          <div className="flex items-center gap-2 text-slate-500 shrink-0 py-1 self-start pt-3">
-                            <Filter size={16} />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">{t.common.filters || 'Filters'}</span>
+                      <div className="p-6 bg-gradient-to-br from-slate-50 to-white rounded-[32px] border border-slate-100 mb-10 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+
+                        {/* Header */}
+                        <div className="flex items-center gap-2 text-slate-400 mb-6 border-b border-slate-100 pb-4 relative z-10">
+                          <Filter size={18} className="text-brand-accent" />
+                          <span className="text-[11px] font-bold uppercase tracking-widest">{t.common.filters}</span>
+                        </div>
+
+                        {/* Categories Container */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+                          {/* By Languages Category */}
+                          <div className="flex flex-col gap-3">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byLanguages}</span>
+                            <div className="flex flex-wrap gap-2">
+                              {['English', 'French'].map(lang => (
+                                <button
+                                  key={lang}
+                                  onClick={() => {
+                                    setFilters(prev => ({
+                                      ...prev,
+                                      language: prev.language.includes(lang)
+                                        ? prev.language.filter(l => l !== lang)
+                                        : [...prev.language, lang]
+                                    }));
+                                  }}
+                                  className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.language.includes(lang)
+                                    ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
+                                    }`}
+                                >
+                                  {lang}
+                                </button>
+                              ))}
+                            </div>
                           </div>
 
-                          <div className="h-12 w-px bg-slate-200 shrink-0 self-center" />
-
-                          {/* Categories Container */}
-                          <div className="flex flex-1 items-start gap-12 overflow-hidden">
-                            {/* By Languages Category */}
-                            <div className="flex flex-col gap-2 min-w-[120px] max-w-[150px]">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">By Languages</span>
-                              <div className="overflow-x-auto no-scrollbar scroll-smooth">
-                                <div className="flex gap-2 pb-1">
-                                  {['English', 'French'].map(lang => (
-                                    <button
-                                      key={lang}
-                                      onClick={() => {
-                                        setFilters(prev => ({
-                                          ...prev,
-                                          language: prev.language.includes(lang)
-                                            ? prev.language.filter(l => l !== lang)
-                                            : [...prev.language, lang]
-                                        }));
-                                      }}
-                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.language.includes(lang)
-                                        ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                        : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
-                                        }`}
-                                    >
-                                      {lang}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
+                          {/* By Age Group Category */}
+                          <div className="flex flex-col gap-3">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byAgeGroup}</span>
+                            <div className="flex flex-wrap gap-2">
+                              {['Infants', 'Toddlers', 'Preschoolers', 'Young Learners'].map(age => (
+                                <button
+                                  key={age}
+                                  onClick={() => {
+                                    setFilters(prev => ({
+                                      ...prev,
+                                      age_group: prev.age_group.includes(age)
+                                        ? prev.age_group.filter(a => a !== age)
+                                        : [...prev.age_group, age]
+                                    }));
+                                  }}
+                                  className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.age_group.includes(age)
+                                    ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
+                                    }`}
+                                >
+                                  {age === 'Infants' ? t.common.infants :
+                                    age === 'Toddlers' ? t.common.toddlers :
+                                      age === 'Preschoolers' ? t.common.preschoolers :
+                                        t.common.youngLearners}
+                                </button>
+                              ))}
                             </div>
+                          </div>
 
-                            <div className="h-10 w-px bg-slate-100 shrink-0 self-center mt-4" />
-
-                            {/* By Age Group Category */}
-                            <div className="flex flex-col gap-2 flex-1 min-w-[200px] max-w-[300px]">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">By Age Group</span>
-                              <div className="overflow-x-auto no-scrollbar scroll-smooth">
-                                <div className="flex gap-2 pb-1">
-                                  {['Infants', 'Toddlers', 'Preschoolers', 'Young Learners'].map(age => (
-                                    <button
-                                      key={age}
-                                      onClick={() => {
-                                        setFilters(prev => ({
-                                          ...prev,
-                                          age_group: prev.age_group.includes(age)
-                                            ? prev.age_group.filter(a => a !== age)
-                                            : [...prev.age_group, age]
-                                        }));
-                                      }}
-                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.age_group.includes(age)
-                                        ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                        : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
-                                        }`}
-                                    >
-                                      {age}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="h-10 w-px bg-slate-100 shrink-0 self-center mt-4" />
-
-                            {/* By Experience Category */}
-                            <div className="flex flex-col gap-2 min-w-[150px]">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">By Experience</span>
-                              <div className="overflow-x-auto no-scrollbar scroll-smooth">
-                                <div className="flex gap-2 pb-1">
-                                  {['1+', '3+', '5+', '10+'].map(exp => (
-                                    <button
-                                      key={exp}
-                                      onClick={() => {
-                                        setFilters(prev => ({
-                                          ...prev,
-                                          experience: prev.experience === exp ? '' : exp
-                                        }));
-                                      }}
-                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.experience === exp
-                                        ? 'bg-brand-accent border-brand-accent text-white shadow-md shadow-brand-accent/20'
-                                        : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/30'
-                                        }`}
-                                    >
-                                      {exp} {t.step4.exp}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
+                          {/* By Experience Category */}
+                          <div className="flex flex-col gap-3">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byExperience}</span>
+                            <div className="flex flex-wrap gap-2">
+                              {['1+', '3+', '5+', '10+'].map(exp => (
+                                <button
+                                  key={exp}
+                                  onClick={() => {
+                                    setFilters(prev => ({
+                                      ...prev,
+                                      experience: prev.experience === exp ? '' : exp
+                                    }));
+                                  }}
+                                  className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.experience === exp
+                                    ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
+                                    }`}
+                                >
+                                  {exp} {t.step4.exp}
+                                </button>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -2348,6 +2350,58 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {isConfirmModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isConfirmModalProcessing && setIsConfirmModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden p-8 text-center"
+            >
+              <div className="w-20 h-20 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center mx-auto mb-6">
+                <Check size={40} />
+              </div>
+              <h3 className="text-2xl font-display font-bold text-slate-800 mb-2">
+                {t.modals.confirmSelection.title}
+              </h3>
+              <p className="text-slate-500 mb-8">
+                {t.modals.confirmSelection.subtitle}
+              </p>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setIsConfirmModalOpen(false)}
+                  disabled={isConfirmModalProcessing}
+                  className="flex-1 py-4 px-6 rounded-2xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 transition-colors"
+                >
+                  {t.modals.confirmSelection.cancel}
+                </button>
+                <button
+                  onClick={handleConfirmSubmission}
+                  disabled={isConfirmModalProcessing}
+                  className="flex-1 py-4 px-6 bg-brand-accent hover:bg-[#66B2AC] text-white font-bold rounded-2xl shadow-lg shadow-brand-accent/20 flex items-center justify-center gap-2 transition-all"
+                >
+                  {isConfirmModalProcessing ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    t.modals.confirmSelection.confirm
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Payment Modal */}
       <AnimatePresence>
@@ -2775,6 +2829,7 @@ export default function App() {
               <button
                 onClick={() => {
                   setIsSubmitted(false);
+                  setView('profile');
                   setCurrentStep(1);
                   setSelectedCandidates([]);
                   setSchedulingSitter(null);
