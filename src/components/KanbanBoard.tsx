@@ -47,6 +47,7 @@ import { api, ParentRequest } from '../services/api';
 export interface KanbanRequest extends ParentRequest {
   family: string;
   hours: number;
+  email: string;
   lastContact: {
     whatsapp: string;
     phone: string;
@@ -60,6 +61,7 @@ export interface KanbanRequest extends ParentRequest {
     interviewStatus: 'Scheduled' | 'Completed' | 'Cancelled';
   }>;
   notes: string;
+  from_admin: boolean;
 }
 
 export interface KanbanColumn {
@@ -72,6 +74,7 @@ const transformToKanbanRequest = (req: ParentRequest): KanbanRequest => ({
   ...req,
   family: `${req.user.first_name} ${req.user.last_name}`,
   hours: calculateTotalHours(req.schedules || []),
+  email: `${req.user.email}`,
   lastContact: {
     whatsapp: '-',
     phone: '-',
@@ -84,7 +87,8 @@ const transformToKanbanRequest = (req: ParentRequest): KanbanRequest => ({
     interviewDate: c.interview_date,
     interviewStatus: 'Scheduled' // Default or map from somewhere if available
   })),
-  notes: ''
+  notes: '',
+  from_admin: true
 });
 
 const calculateTotalHours = (schedules: any[] = []) => {
@@ -590,6 +594,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         first_name: updatedFields.user?.first_name || '',
         last_name: updatedFields.user?.last_name || '',
         parent_address: updatedFields.parent_address || '',
+        email: updatedFields.email || '',
         children: childrenPayload,
         choices: choicesPayload,
         schedules: schedulesPayload, // TS will complain unless we fix the type
@@ -1319,6 +1324,15 @@ const RequestDetailsModal = ({
                               </div>
                             ))}
                           </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Email</label>
+                          <input
+                            type="text"
+                            value={formData.email}
+                            onChange={(e) => handleChange('email', e.target.value)}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                          />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Parent Address</label>

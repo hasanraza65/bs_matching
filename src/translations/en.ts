@@ -158,7 +158,7 @@ export const en = {
       title: "Booking Request Sent!",
       subtitle:
         "We've received your candidate selection and schedule. We'll contact you shortly to finalize the interviews.",
-      backToStart: "Back to Start",
+      backToStart: "Go To My Account",
     },
   },
   profilePage: {
