@@ -23,6 +23,14 @@ export const en = {
     children: "Children",
     noInterview: "No Interview",
     yearsOld: "years old",
+    filters: "Filters",
+    byLanguages: "By Languages",
+    byAgeGroup: "By Age Group",
+    byExperience: "By Experience",
+    infants: "Infants",
+    toddlers: "Toddlers",
+    preschoolers: "Preschoolers",
+    youngLearners: "Young Learners",
     days: {
       su: "Su",
       mo: "Mo",
@@ -158,7 +166,14 @@ export const en = {
       title: "Booking Request Sent!",
       subtitle:
         "We've received your candidate selection and schedule. We'll contact you shortly to finalize the interviews.",
-      backToStart: "Back to Start",
+      backToStart: "Go to Dashboard",
+    },
+    confirmSelection: {
+      title: "Confirm Selection",
+      subtitle:
+        "Are you sure you want to submit your selection? This will send your request to our team.",
+      confirm: "Submit",
+      cancel: "Cancel",
     },
   },
   profilePage: {
@@ -183,6 +198,8 @@ export const en = {
       noRequests: "You have no active requests.",
     },
     interviews: {
+      title: "Babysitter Interviews",
+      joinMeeting: "Join Meeting",
       with: "Interview with",
       date: "Date",
       time: "Time",

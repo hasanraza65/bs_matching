@@ -23,6 +23,14 @@ export const fr = {
     children: "Enfants",
     noInterview: "Pas d'entretien",
     yearsOld: "ans",
+    filters: "Filtres",
+    byLanguages: "Par Langues",
+    byAgeGroup: "Par Groupe d'Âge",
+    byExperience: "Par Expérience",
+    infants: "Nourrissons",
+    toddlers: "Tout-petits",
+    preschoolers: "Maternelle",
+    youngLearners: "Jeunes Apprenants",
     days: {
       su: "Dim",
       mo: "Lun",
@@ -161,7 +169,14 @@ export const fr = {
       title: "Demande de réservation envoyée !",
       subtitle:
         "Nous avons reçu votre sélection de candidats et votre planning. Nous vous contacterons prochainement pour finaliser les entretiens.",
-      backToStart: "Retour au début",
+      backToStart: "Aller au tableau de bord",
+    },
+    confirmSelection: {
+      title: "Confirmer la sélection",
+      subtitle:
+        "Êtes-vous sûr de vouloir envoyer votre sélection ? Cela enverra votre demande à notre équipe.",
+      confirm: "Envoyer",
+      cancel: "Annuler",
     },
   },
   profilePage: {
@@ -186,6 +201,8 @@ export const fr = {
       noRequests: "Vous n'avez aucune demande active.",
     },
     interviews: {
+      title: "Entretiens Babysitter",
+      joinMeeting: "Rejoindre l'entretien",
       with: "Entretien avec",
       date: "Date",
       time: "Heure",
