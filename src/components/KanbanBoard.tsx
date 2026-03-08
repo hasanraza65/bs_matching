@@ -36,10 +36,12 @@ import {
   CheckCircle2,
   AlertCircle,
   User,
-  Info
+  Info,
+  Video
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api, ParentRequest } from '../services/api';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // --- Types ---
 
@@ -386,6 +388,7 @@ const SortableCard = ({
 // --- Main Kanban Component ---
 
 export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ initialRequests }) => {
+  const { t } = useLanguage();
   const [columns, setColumns] = useState<KanbanColumn[]>(INITIAL_COLUMNS);
   const [requests, setRequests] = useState<KanbanRequest[]>(() =>
     initialRequests.map(transformToKanbanRequest)
@@ -1058,6 +1061,7 @@ const RequestDetailsModal = ({
   onClose: () => void;
   onUpdate: (updatedFields: Partial<KanbanRequest>) => void;
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters' | 'notes'>('overview');
   const [formData, setFormData] = useState<KanbanRequest>({
     ...request,
@@ -1568,6 +1572,27 @@ const RequestDetailsModal = ({
                                   className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold"
                                 />
                               </div>
+                            </div>
+                            <div className="md:col-span-2 pt-2 border-t border-slate-50">
+                              {choice.zoom_meeting_link ? (
+                                <a
+                                  href={choice.zoom_meeting_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-blue/10 text-brand-blue font-bold rounded-xl hover:bg-brand-blue hover:text-white transition-all text-xs"
+                                >
+                                  <Video size={14} />
+                                  Join Meeting
+                                </a>
+                              ) : (
+                                <button
+                                  disabled
+                                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-50 text-slate-300 font-bold rounded-xl cursor-not-allowed text-xs"
+                                >
+                                  <Video size={14} />
+                                  Join Meeting
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
