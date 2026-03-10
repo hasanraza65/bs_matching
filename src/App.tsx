@@ -253,6 +253,16 @@ export default function App() {
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmModalProcessing, setIsConfirmModalProcessing] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+
+  const getAvailableMonths = () => {
+    const monthsSet = new Set<string>();
+    dateSchedule.forEach(item => {
+      const monthStr = item.date.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+      monthsSet.add(monthStr);
+    });
+    return Array.from(monthsSet);
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -314,6 +324,15 @@ export default function App() {
     };
     handleUrlRoute();
   }, [localizedSitters]);
+
+  useEffect(() => {
+    if (currentStep === 3 && !selectedMonth && dateSchedule.length > 0) {
+      const months = getAvailableMonths();
+      if (months.length > 0) {
+        setSelectedMonth(months[0]);
+      }
+    }
+  }, [currentStep, dateSchedule, selectedMonth]);
 
   const mapRequestToState = (data: ParentRequest) => {
     setParentRequestId(data.id);
@@ -965,6 +984,11 @@ export default function App() {
 
   const calculateTotalHours = () => {
     return dateSchedule
+      .filter(item => {
+        if (!selectedMonth) return true;
+        const monthStr = item.date.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+        return monthStr === selectedMonth;
+      })
       .reduce((total, item) => {
         const dayTotal = item.slots.reduce((daySum, slot) => {
           if (!slot.startTime || !slot.endTime) return daySum;
@@ -1932,23 +1956,29 @@ export default function App() {
                           <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                               <Calendar size={16} className="text-brand-accent" />
-                              Schedule Summary
+                              Schedule Summary {selectedMonth && `(${selectedMonth})`}
                             </h3>
                             <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                              {dateSchedule.map(item => (
-                                <div key={item.id} className="flex justify-between items-center py-2 border-b border-slate-200 last:border-0">
-                                  <span className="text-xs font-medium text-slate-600">
-                                    {item.date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' })}
-                                  </span>
-                                  <div className="flex flex-col items-end">
-                                    {item.slots.map(slot => (
-                                      <span key={slot.id} className="text-[10px] text-slate-400">
-                                        {slot.startTime} - {slot.endTime}
-                                      </span>
-                                    ))}
+                              {dateSchedule
+                                .filter(item => {
+                                  if (!selectedMonth) return true;
+                                  const monthStr = item.date.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+                                  return monthStr === selectedMonth;
+                                })
+                                .map(item => (
+                                  <div key={item.id} className="flex justify-between items-center py-2 border-b border-slate-200 last:border-0">
+                                    <span className="text-xs font-medium text-slate-600">
+                                      {item.date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' })}
+                                    </span>
+                                    <div className="flex flex-col items-end">
+                                      {item.slots.map(slot => (
+                                        <span key={slot.id} className="text-[10px] text-slate-400">
+                                          {slot.startTime} - {slot.endTime}
+                                        </span>
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
                             </div>
                           </div>
                         </div>
@@ -1960,6 +1990,17 @@ export default function App() {
                                 <Receipt size={16} className="text-brand-accent" />
                                 {t.step2.priceBreakdown}
                               </h3>
+                              {getAvailableMonths().length > 1 && (
+                                <select
+                                  value={selectedMonth}
+                                  onChange={(e) => setSelectedMonth(e.target.value)}
+                                  className="text-xs font-bold text-brand-accent bg-brand-accent/5 px-3 py-1.5 rounded-xl border border-brand-accent/20 focus:outline-none transition-all cursor-pointer"
+                                >
+                                  {getAvailableMonths().map(month => (
+                                    <option key={month} value={month}>{month}</option>
+                                  ))}
+                                </select>
+                              )}
                             </div>
 
                             <div className="space-y-6">
