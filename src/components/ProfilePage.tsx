@@ -35,9 +35,10 @@ interface ProfilePageProps {
   onModifyRequest: (request: any) => void;
   onGoToAdmin: () => void;
   onCreateRequest: () => void;
+  onViewContract?: (choiceId: number) => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onModifyRequest, onGoToAdmin, onCreateRequest }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onModifyRequest, onGoToAdmin, onCreateRequest, onViewContract }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax'>('requests');
   const [user, setUser] = useState<User | null>(null);
@@ -459,7 +460,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
 
                                   <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
                                     {choice.final_choice === 1 ? (
-                                      <button className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2">
+                                      <button
+                                        onClick={() => onViewContract?.(choice.id)}
+                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                      >
                                         <FileText size={16} />
                                         {t.profilePage.interviews.viewContract}
                                       </button>

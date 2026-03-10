@@ -284,4 +284,67 @@ export const fr = {
         "Je suis étudiant en sciences et j'adore rendre l'apprentissage amusant. Je peux faire des tours de magie simples et des expériences scientifiques que les enfants adorent. Je suis très énergique et j'apporte toujours une attitude positive.",
     },
   },
+  contract: {
+    title: "Contrat de Garde d'Enfant(s)",
+    between: "ENTRE LES SOUSSIGNÉS",
+    agency:
+      "La société BLOOM BUDDIES BABYSITTING SAS, au capital de 1000 euros, ayant son siège social au 7 Rue Meyerbeer, 75009 Paris, immatriculée sous le numéro 885130682 au registre du commerce et des sociétés de Paris.",
+    part1: "D'une part,",
+    part2: "ET",
+    domiciledAt: "domicilié au",
+    reachableAt: "joignable au",
+    clientDesignation: "Ci-après désignée le Client.",
+    partOther: "D'autre part,",
+    agreedFollowing: "Il a été convenu et arrêté ce qui suit :",
+    article1: {
+      title: "Article 1 - Objet du contrat",
+      content:
+        "Le présent contrat a pour objet la garde les enfants du Client selon l'emploi du temps suivant :",
+      totalMonth: "Total pour {month} :",
+      totalPeriod: "Nombre total d'heures (Période) :",
+    },
+    article2: {
+      title: "Article 2 - Lieu d'exécution des prestations",
+      content:
+        "Les prestations objet du contrat seront principalement exécutées au domicile du Client. Cependant, il est convenu que l’intervenant pourra également se rendre aux endroits suivants, tels que la crèche, l'école, les cabinets médicaux, les centres musicaux, les centres sportifs ou tout autre lieu situé à proximité du domicile du Client et dans la même ville.",
+    },
+    article3: {
+      title: "Article 3 - Durée et Engagement",
+      content:
+        "Le présent contrat est conclu pour une durée déterminée avec engagement ferme, du {start} au {end}.",
+      subTitle: "3.1. Irrévocabilité de l'engagement",
+      subContent:
+        "Pendant cette période initiale, le contrat est ferme et définitif. Les parties s'interdisent toute résiliation unilatérale anticipée. Le contrat ne pourra être rompu avant son terme, sauf en cas de faute grave de l'une des parties ou de force majeure reconnue.",
+    },
+    article4: {
+      title: "Article 4 - Tarification et Modalités de Paiement",
+      content:
+        "En contrepartie des prestations définies à l’Article 1 du présent contrat, le Client s’engage à verser au Prestataire la rémunération suivante :",
+      period: "Période (Mois)",
+      hrTotal: "Hr total",
+      amountTtc: "Montant (TTC)",
+      hourlyRate: "Taux Horaire :",
+      taxNote: "* Tarifs avant déduction fiscale ou crédit d’impôt.",
+    },
+    actions: {
+      accept: "Accepter",
+      refuse: "Refuser",
+      slide: "Glisser pour accepter",
+      back: "Retour au profil",
+      success: "Contrat accepté avec succès !",
+      loading: "Chargement des détails du contrat...",
+    },
+    article5: {
+      title: "Article 5 - Pénalités",
+      content:
+        "En cas de retard de paiement, l'intégralité des prélèvements restants pourra être exigée immédiatement.",
+    },
+    article18: {
+      title: "Article 18 - Accords privés",
+      content:
+        "Le client s'engage à ne pas traiter en direct avec la baby-sitter en contournant Bloom Buddies.",
+    },
+    signatureLocationDate: "Fait à Paris, le {date}",
+    electronicSignature: "Signature électronique sécurisée",
+  },
 };

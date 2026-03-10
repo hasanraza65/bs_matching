@@ -42,6 +42,7 @@ import {
 import { ProfilePage } from './components/ProfilePage';
 import { LoginScreen } from './components/LoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
+import { ContractView } from './components/ContractView';
 
 const HOURLY_RATE = 28.50;
 
@@ -200,7 +201,7 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState(() => {
     return typeof window !== 'undefined' && window.location.pathname.match(/\/price\/\d+/) ? 3 : 1;
   });
-  const [view, setView] = useState<'booking' | 'profile' | 'login' | 'admin-dashboard'>(() => {
+  const [view, setView] = useState<'booking' | 'profile' | 'login' | 'admin-dashboard' | 'contract'>(() => {
     return typeof window !== 'undefined' && window.location.pathname.match(/\/price\/\d+/) ? 'booking' : 'booking';
   });
   const [formData, setFormData] = useState<FormData>({
@@ -231,6 +232,7 @@ export default function App() {
   const [parentRequestId, setParentRequestId] = useState<number | null>(null);
   const [isModifying, setIsModifying] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [selectedChoiceId, setSelectedChoiceId] = useState<number | null>(null);
 
   // Step 4 State (Babysitter Matching)
   const [selectedCandidates, setSelectedCandidates] = useState<Array<{
@@ -1254,6 +1256,10 @@ export default function App() {
                 onModifyRequest={handleModifyRequest}
                 onGoToAdmin={() => setView('admin-dashboard')}
                 onCreateRequest={handleCreateNewRequest}
+                onViewContract={(choiceId) => {
+                  setSelectedChoiceId(choiceId);
+                  setView('contract');
+                }}
               />
             </motion.div>
           ) : view === 'login' ? (
@@ -1269,6 +1275,26 @@ export default function App() {
                 onBackToBooking={() => setView('booking')}
                 initialEmail={formData.email}
               />
+            </motion.div>
+          ) : view === 'contract' ? (
+            <motion.div
+              key="contract"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full"
+            >
+              {user && (
+                <ContractView
+                  choiceId={selectedChoiceId || 0}
+                  userName={`${user.first_name} ${user.last_name}`}
+                  onBack={() => setView('profile')}
+                  onAccept={() => {
+                    setView('profile');
+                  }}
+                  onRefuse={() => setView('profile')}
+                />
+              )}
             </motion.div>
           ) : (
             <motion.div
