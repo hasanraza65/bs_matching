@@ -54,6 +54,7 @@ export interface Choice {
   babysitter_phone: string;
   babysitter_address: string;
   zoom_meeting_link?: string;
+  final_choice?: number;
 }
 
 export interface ParentRequest {
@@ -118,6 +119,17 @@ export interface UserResponse {
 export interface LogoutResponse {
   status: boolean;
   message: string;
+}
+
+export interface ContractResponse {
+  status: boolean;
+  contract_id: number;
+  hourly_rate: string;
+  user: User;
+  start_date: string;
+  end_date: string;
+  format1: Record<string, Record<string, string[]>>;
+  format2: Record<string, number>;
 }
 
 export interface BabysitterChoicePayload {
@@ -341,6 +353,18 @@ export const api = {
     id: number,
   ): Promise<{ status: boolean; message: string }> => {
     const response = await apiClient.post(`/accept-price-quote/${id}`);
+    return response.data;
+  },
+
+  selectFinalChoice: async (
+    choiceId: number,
+  ): Promise<{ status: boolean; message: string }> => {
+    const response = await apiClient.post(`/select-final-choice/${choiceId}`);
+    return response.data;
+  },
+
+  getContract: async (choiceId: number): Promise<ContractResponse> => {
+    const response = await apiClient.get(`/contract/${choiceId}`);
     return response.data;
   },
 };

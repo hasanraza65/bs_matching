@@ -208,6 +208,7 @@ export const en = {
       completed: "Completed",
       finalChoice: "Final Choice",
       reject: "Reject",
+      viewContract: "View Contract",
       noInterviews: "No interviews scheduled.",
     },
     invoices: {
@@ -280,5 +281,68 @@ export const en = {
       fullBio:
         "I'm a science student who loves making learning fun. I can perform simple magic tricks and science experiments that kids love. I'm very energetic and always bring a positive attitude.",
     },
+  },
+  contract: {
+    title: "Childcare Service Contract",
+    between: "BETWEEN THE UNDERSIGNED",
+    agency:
+      "The company BLOOM BUDDIES BABYSITTING SAS, with a capital of 1000 euros, having its registered office at 7 Rue Meyerbeer, 75009 Paris, registered under number 885130682 at the Paris Trade and Companies Register.",
+    part1: "On one hand,",
+    part2: "AND",
+    domiciledAt: "domiciled at",
+    reachableAt: "reachable at",
+    clientDesignation: "Hereinafter referred to as the Client.",
+    partOther: "On the other hand,",
+    agreedFollowing: "It has been agreed and settled as follows:",
+    article1: {
+      title: "Article 1 - Subject of the contract",
+      content:
+        "The purpose of this contract is the care of the Client's children according to the following schedule:",
+      totalMonth: "Total for {month}:",
+      totalPeriod: "Total number of hours (Period):",
+    },
+    article2: {
+      title: "Article 2 - Place of performance of services",
+      content:
+        "The services covered by the contract will be mainly performed at the Client's home. However, it is agreed that the childcare provider may also go to the following places, such as the daycare, school, medical offices, music centers, sports centers or any other place located near the Client's home and in the same city.",
+    },
+    article3: {
+      title: "Article 3 - Duration and Commitment",
+      content:
+        "This contract is concluded for a fixed term with a firm commitment, from {start} to {end}.",
+      subTitle: "3.1. Irrevocability of commitment",
+      subContent:
+        "During this initial period, the contract is firm and final. The parties are prohibited from any early unilateral termination. The contract may not be terminated before its term, except in case of gross negligence of one of the parties or recognized force majeure.",
+    },
+    article4: {
+      title: "Article 4 - Pricing and Payment Terms",
+      content:
+        "In return for the services defined in Article 1 of this contract, the Client agrees to pay the Provider the following remuneration:",
+      period: "Period (Month)",
+      hrTotal: "Hr total",
+      amountTtc: "Amount (Incl. Tax)",
+      hourlyRate: "Hourly Rate:",
+      taxNote: "* Rates before tax deduction or tax credit.",
+    },
+    actions: {
+      accept: "Accept",
+      refuse: "Refuse",
+      slide: "Slide to accept",
+      back: "Back to Profile",
+      success: "Contract Accepted Successfully!",
+      loading: "Loading contract details...",
+    },
+    article5: {
+      title: "Article 5 - Penalties",
+      content:
+        "In case of late payment, the full amount of the remaining installments may be required immediately.",
+    },
+    article18: {
+      title: "Article 18 - Private Agreements",
+      content:
+        "The client agrees not to deal directly with the babysitter by bypassing Bloom Buddies.",
+    },
+    signatureLocationDate: "Done in Paris, on {date}",
+    electronicSignature: "Secure electronic signature",
   },
 };
