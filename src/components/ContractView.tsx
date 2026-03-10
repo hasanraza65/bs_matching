@@ -250,52 +250,223 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
                                     <span className="w-8 h-8 rounded-lg bg-brand-blue/10 flex items-center justify-center text-brand-blue text-sm">4</span>
                                     {t.article4.title}
                                 </h3>
-                                <p className="mb-6 text-sm sm:text-base">{t.article4.content}</p>
 
-                                <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm mb-6 bg-white">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-50">
-                                                <th className="px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">{t.article4.period}</th>
-                                                <th className="px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">{t.article4.hrTotal}</th>
-                                                <th className="px-5 py-4 text-[10px] font-bold text-brand-blue uppercase tracking-widest border-b border-slate-200">{t.article4.amountTtc}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {contractData && Object.keys(contractData.format2).map((month) => {
-                                                const monthData = (contractData.format1 as Record<string, Record<string, string[]>>)[month];
-                                                const monthlyHours = monthData ? getMonthlyHours(monthData) : 0;
-                                                return (
-                                                    <tr key={month} className="hover:bg-slate-50/50 transition-colors">
-                                                        <td className="px-5 py-5 text-sm font-bold text-slate-700">{month}</td>
-                                                        <td className="px-5 py-5 text-sm font-medium text-slate-500">{monthlyHours.toFixed(2)} h</td>
-                                                        <td className="px-5 py-5 text-sm font-bold text-slate-900 font-display">
-                                                            {contractData.format2[month]?.toFixed(2) || "0.00"} €
+                                <div className="space-y-6">
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle41}</h4>
+                                        <p className="mb-4 text-sm sm:text-base leading-relaxed">{t.article4.content}</p>
+
+                                        <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
+                                            <table className="w-full text-left text-sm">
+                                                <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-widest font-bold">
+                                                    <tr>
+                                                        <th className="px-6 py-4">{t.article4.period}</th>
+                                                        <th className="px-6 py-4">{t.article4.hrTotal}</th>
+                                                        <th className="px-6 py-4">{t.article4.amountTtc}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50">
+                                                    {contractData && contractData.format2 ? (
+                                                        Object.entries(contractData.format2 as Record<string, number>).map(([month, total]) => (
+                                                            <tr key={month} className="hover:bg-slate-50/50 transition-colors">
+                                                                <td className="px-6 py-4 font-medium text-slate-700">{month}</td>
+                                                                <td className="px-6 py-4 text-slate-500">
+                                                                    {getMonthlyHours(contractData.format1[month]).toFixed(2)}h
+                                                                </td>
+                                                                <td className="px-6 py-4 font-bold text-brand-blue">{total.toFixed(2)} €</td>
+                                                            </tr>
+                                                        ))
+                                                    ) : (
+                                                        <tr>
+                                                            <td colSpan={3} className="px-6 py-8 text-center text-slate-400 italic">
+                                                                {t.actions.loading}
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                                <tfoot className="bg-brand-blue/5 border-t border-brand-blue/10">
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-bold text-slate-900">{t.article4.hourlyRate}</td>
+                                                        <td colSpan={2} className="px-6 py-4 text-right font-display font-black text-brand-blue text-lg italic">
+                                                            {contractData?.hourly_rate ? `${contractData.hourly_rate} €/h` : '-- €/h'}
                                                         </td>
                                                     </tr>
-                                                );
-                                            })}
-                                            <tr className="bg-brand-blue/[0.03]">
-                                                <td colSpan={2} className="px-5 py-4 text-xs font-bold text-slate-400 text-right uppercase tracking-[0.25em]">{t.article4.hourlyRate}</td>
-                                                <td className="px-5 py-4 text-sm font-bold text-brand-blue font-display">{contractData?.hourly_rate || "0.00"} € / h</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                        <p className="mt-3 text-[10px] text-slate-400 italic italic">{t.article4.taxNote}</p>
+                                    </div>
+
+                                    <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                        <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle42}</h4>
+                                        <p className="text-xs sm:text-sm text-slate-500 italic leading-relaxed">{t.article4.content42}</p>
+                                    </div>
+
+                                    <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                        <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle43}</h4>
+                                        <p className="text-xs sm:text-sm text-slate-500 italic leading-relaxed">{t.article4.content43}</p>
+                                    </div>
                                 </div>
-                                <p className="text-[10px] text-slate-400 italic mb-4">{t.article4.taxNote}</p>
                             </section>
 
-                            {/* Additional Articles */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-8 border-t border-slate-100 mb-10">
-                                <section>
-                                    <h4 className="font-bold text-slate-900 mb-3 text-xs uppercase tracking-widest">{t.article5.title}</h4>
-                                    <p className="text-[11px] leading-relaxed text-slate-500 italic">{t.article5.content}</p>
-                                </section>
-                                <section>
-                                    <h4 className="font-bold text-slate-900 mb-3 text-xs uppercase tracking-widest">{t.article18.title}</h4>
-                                    <p className="text-[11px] leading-relaxed text-slate-500 italic">{t.article18.content}</p>
-                                </section>
-                            </div>
+                            {/* Articles 5 to 19 systematically */}
+                            {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((num) => {
+                                const art = (t as any)[`article${num}`];
+                                if (!art) return null;
+
+                                return (
+                                    <section key={num}>
+                                        <h3 className="text-lg font-display font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                            <span className="w-8 h-8 rounded-lg bg-brand-blue/10 flex items-center justify-center text-brand-blue text-sm">{num}</span>
+                                            {art.title}
+                                        </h3>
+                                        <div className="space-y-4 text-sm sm:text-base text-slate-600 leading-relaxed">
+                                            {/* Article specific complex rendering */}
+                                            {num === 6 && (
+                                                <>
+                                                    <p>{art.content1}</p>
+                                                    <p>{art.content2}</p>
+                                                    <p>{art.content3}</p>
+                                                </>
+                                            )}
+                                            {num === 9 && (
+                                                <>
+                                                    <p>{art.content1}</p>
+                                                    <p>{art.content2}</p>
+                                                    <p>{art.content3}</p>
+                                                    <p>{art.content4}</p>
+                                                </>
+                                            )}
+                                            {num === 11 && (
+                                                <>
+                                                    <p>{art.content}</p>
+                                                    <ul className="list-disc pl-5 space-y-2">
+                                                        <li>{art.item1}</li>
+                                                        <li>{art.item2}</li>
+                                                        <li>{art.item3}</li>
+                                                    </ul>
+                                                </>
+                                            )}
+                                            {num === 13 && (
+                                                <>
+                                                    <p>{art.content1}</p>
+                                                    <p>{art.content2}</p>
+                                                    <p>{art.content3}</p>
+                                                </>
+                                            )}
+                                            {num === 14 && (
+                                                <>
+                                                    <p>{art.content1}</p>
+                                                    <p>{art.content2}</p>
+                                                    <p>{art.content3}</p>
+                                                    <p>{art.content4}</p>
+                                                    <p>{art.content5}</p>
+                                                    <p className="italic font-medium">{art.content6}</p>
+                                                </>
+                                            )}
+                                            {num === 15 && (
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle151}</h4>
+                                                        <p>{art.content151}</p>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle152}</h4>
+                                                        <p>{art.content152}</p>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle153}</h4>
+                                                        <p>{art.content153}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {num === 16 && (
+                                                <>
+                                                    <p>{art.content1}</p>
+                                                    <p>{art.content2}</p>
+                                                    <p>{art.content3}</p>
+                                                    <p>{art.content4}</p>
+                                                    <p>{art.content5}</p>
+                                                    <p className="italic font-medium">{art.content6}</p>
+                                                </>
+                                            )}
+                                            {num === 17 && (
+                                                <>
+                                                    <p>{art.content1}</p>
+                                                    <div className="pl-4 space-y-3">
+                                                        <p>{art.itemA}</p>
+                                                        <p>{art.itemB}</p>
+                                                    </div>
+                                                    <p>{art.content2}</p>
+                                                    <p>{art.content3}</p>
+                                                    <p>{art.content4}</p>
+                                                    <p className="italic font-medium">{art.content5}</p>
+                                                </>
+                                            )}
+                                            {num === 18 && (
+                                                <>
+                                                    <p>{art.content1}</p>
+                                                    <p>{art.content2}</p>
+                                                    <p>{art.content3}</p>
+                                                    <p>{art.content4}</p>
+                                                </>
+                                            )}
+                                            {num === 19 && (
+                                                <div className="space-y-6">
+                                                    <div className="space-y-3">
+                                                        <p>{art.contentA}</p>
+                                                        <p>{art.contentB}</p>
+                                                        <p>{art.contentC}</p>
+                                                    </div>
+                                                    <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                                        <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{art.subTitle1}</h4>
+                                                        <div className="space-y-2 text-xs sm:text-sm text-slate-500 italic">
+                                                            <p>{art.subContent1A}</p>
+                                                            <p>{art.subContent1B}</p>
+                                                            <p>{art.subContent1C}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                                        <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{art.subTitle2}</h4>
+                                                        <div className="space-y-2 text-xs sm:text-sm text-slate-500 italic">
+                                                            <p>{art.subContent2A}</p>
+                                                            <p>{art.subContent2B}</p>
+                                                            <p>{art.subContent2C}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {/* Simple content for other articles (5, 7, 8, 10, 12) */}
+                                            {art.content && ![6, 9, 11, 13, 14, 15, 16, 17, 18, 19].includes(num) && (
+                                                <p>{art.content}</p>
+                                            )}
+                                        </div>
+                                    </section>
+                                );
+                            })}
+
+                            {/* Annex */}
+                            <section className="mt-12 pt-12 border-t border-slate-100">
+                                <h3 className="text-xl font-display font-bold text-slate-900 mb-6 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-brand-blue/10 flex items-center justify-center text-brand-blue">
+                                        <FileText size={20} />
+                                    </div>
+                                    {t.annexe.title}
+                                </h3>
+                                <div className="space-y-4 text-sm sm:text-base text-slate-600 leading-relaxed">
+                                    <p>{t.annexe.content1}</p>
+                                    <p>{t.annexe.content2}</p>
+                                    <ul className="list-disc pl-5 space-y-2">
+                                        <li>{t.annexe.item1}</li>
+                                        <li>{t.annexe.item2}</li>
+                                        <li>{t.annexe.item3}</li>
+                                        <li>{t.annexe.item4}</li>
+                                        <li>{t.annexe.item5}</li>
+                                    </ul>
+                                    <p className="italic text-slate-500">{t.annexe.content3}</p>
+                                    <p>{t.annexe.content4}</p>
+                                </div>
+                            </section>
 
                             {/* Signature Line */}
                             <div className="pt-10 border-t border-slate-100 flex flex-col items-end gap-2 text-slate-500">
