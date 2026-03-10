@@ -63,11 +63,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
     isOpen: boolean;
     title: string;
     message: string;
+    confirmColor?: string;
     onConfirm: () => void;
   }>({
     isOpen: false,
     title: '',
     message: '',
+    confirmColor: 'bg-red-500',
     onConfirm: () => { },
   });
 
@@ -96,6 +98,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
       isOpen: true,
       title: 'Logout',
       message: 'Are you sure you want to logout?',
+      confirmColor: 'bg-red-500',
       onConfirm: async () => {
         try {
           await api.logout();
@@ -113,12 +116,38 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
       isOpen: true,
       title: 'Remove Request',
       message: 'Are you sure you want to remove this request?',
+      confirmColor: 'bg-red-500',
       onConfirm: () => {
         if (user) {
           setUser({
             ...user,
             parent_requests: user.parent_requests?.filter(req => req.id.toString() !== id)
           });
+        }
+      }
+    });
+  };
+
+  const handleFinalChoice = (choiceId: number) => {
+    setConfirmModal({
+      isOpen: true,
+      title: t.modals.confirmSelection.title,
+      message: t.modals.confirmSelection.subtitle,
+      confirmColor: 'bg-brand-accent',
+      onConfirm: async () => {
+        try {
+          setIsLoading(true);
+          const response = await api.selectFinalChoice(choiceId);
+          if (response.status) {
+            const userResponse = await api.getUser();
+            if (userResponse.status && userResponse.data) {
+              setUser(userResponse.data);
+            }
+          }
+        } catch (error) {
+          console.error('Final choice selection failed:', error);
+        } finally {
+          setIsLoading(false);
         }
       }
     });
@@ -429,31 +458,45 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                                   </div>
 
                                   <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
-                                    {choice.zoom_meeting_link ? (
-                                      <a
-                                        href={choice.zoom_meeting_link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-blue/10 text-brand-blue font-bold rounded-2xl hover:bg-brand-blue hover:text-white transition-all shadow-sm hover:shadow-brand-blue/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                      >
-                                        <Video size={16} />
-                                        {t.profilePage.interviews.joinMeeting}
-                                      </a>
-                                    ) : (
-                                      <button
-                                        disabled
-                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                      >
-                                        <Video size={16} />
-                                        {t.profilePage.interviews.joinMeeting}
+                                    {choice.final_choice === 1 ? (
+                                      <button className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2">
+                                        <FileText size={16} />
+                                        {t.profilePage.interviews.viewContract}
                                       </button>
+                                    ) : req.choices?.some((c: any) => c.final_choice === 1) ? null : (
+                                      <>
+                                        {choice.zoom_meeting_link ? (
+                                          <a
+                                            href={choice.zoom_meeting_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                          >
+                                            <Video size={16} />
+                                            {t.profilePage.interviews.joinMeeting}
+                                          </a>
+                                        ) : (
+                                          <button
+                                            disabled
+                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                          >
+                                            <Video size={16} />
+                                            {t.profilePage.interviews.joinMeeting}
+                                          </button>
+                                        )}
+                                        <button
+                                          onClick={() => handleFinalChoice(choice.id)}
+                                          className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                        >
+                                          <CheckCircle2 size={16} />
+                                          {t.profilePage.interviews.finalChoice}
+                                        </button>
+                                        <button className="flex-1 sm:flex-none px-6 py-3.5 bg-red-500/10 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap flex items-center justify-center gap-2">
+                                          <X size={16} />
+                                          {t.profilePage.interviews.reject}
+                                        </button>
+                                      </>
                                     )}
-                                    <button className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap">
-                                      {t.profilePage.interviews.finalChoice}
-                                    </button>
-                                    <button className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap">
-                                      {t.profilePage.interviews.reject}
-                                    </button>
                                   </div>
                                 </div>
                               ))}
@@ -607,7 +650,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                       confirmModal.onConfirm();
                       setConfirmModal(prev => ({ ...prev, isOpen: false }));
                     }}
-                    className="flex-1 px-6 py-3 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                    className={`flex-1 px-6 py-3 ${confirmModal.confirmColor || 'bg-red-500'} text-white font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg`}
                   >
                     Confirm
                   </button>

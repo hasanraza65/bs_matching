@@ -211,6 +211,7 @@ export const fr = {
       completed: "Terminé",
       finalChoice: "Choix Final",
       reject: "Refuser",
+      viewContract: "Voir le contrat",
       noInterviews: "Aucun entretien planifié.",
     },
     invoices: {

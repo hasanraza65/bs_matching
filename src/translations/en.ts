@@ -208,6 +208,7 @@ export const en = {
       completed: "Completed",
       finalChoice: "Final Choice",
       reject: "Reject",
+      viewContract: "View Contract",
       noInterviews: "No interviews scheduled.",
     },
     invoices: {
