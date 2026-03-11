@@ -90,6 +90,17 @@ export interface Invoice {
   deleted_at: string | null;
 }
 
+export interface PaymentMethod {
+  id: string;
+  card: {
+    brand: string;
+    last4: string;
+    exp_month: number;
+    exp_year: number;
+    funding: string;
+  };
+}
+
 export interface User {
   id: number;
   first_name: string;
@@ -98,9 +109,13 @@ export interface User {
   user_phone: string;
   user_address: string;
   user_role: number;
+  stripe_customer_id?: string;
   children?: Child[];
   parent_requests?: ParentRequest[];
   invoices?: Invoice[];
+  cards?: {
+    data: PaymentMethod[];
+  };
 }
 
 export interface RegisterResponse {
@@ -132,6 +147,9 @@ export interface ParentRequestResponse {
 export interface UserResponse {
   status: boolean;
   data?: User;
+  cards?: {
+    data: PaymentMethod[];
+  };
   message?: string;
 }
 
