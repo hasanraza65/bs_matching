@@ -283,239 +283,240 @@ export const en = {
     },
   },
   contract: {
-    title: "Childcare Service Contract",
-    between: "BETWEEN THE UNDERSIGNED",
+    title: "Contrat de Garde d'Enfant(s)",
+    between: "ENTRE LES SOUSSIGNÉS",
     agency:
-      "The company BLOOM BUDDIES BABYSITTING SAS, with a capital of 1000 euros, having its registered office at 7 Rue Meyerbeer, 75009 Paris, registered under number 885130682 at the Paris Trade and Companies Register.",
-    part1: "ON ONE PART,",
-    part2: "AND",
-    domiciledAt: "domiciled at",
-    reachableAt: "reachable at",
-    clientDesignation: "Hereinafter designated the Client.",
-    partOther: "ON THE OTHER PART,",
-    agreedFollowing: "It has been agreed and settled as follows:",
+      "La société BLOOM BUDDIES BABYSITTING SAS, au capital de 1000 euros, ayant son siège social au 7 Rue Meyerbeer, 75009 Paris, immatriculée sous le numéro 885130682 au registre du commerce et des sociétés de Paris.",
+    part1: "D'UNE PART,",
+    part2: "ET",
+    domiciledAt: "domicilié au",
+    reachableAt: "joignable au",
+    clientDesignation: "Ci-après désignée le Client.",
+    partOther: "D'AUTRE PART,",
+    agreedFollowing: "Il a été convenu et arrêté ce qui suit :",
     article1: {
-      title: "Article 1 - Purpose of the contract",
+      title: "Article 1 - Objet du contrat",
       content:
-        "The purpose of this contract is the care of the Client's children according to the following schedule:",
-      totalMonth: "Total for {month}:",
-      totalPeriod: "Total number of hours (Period):",
+        "Le présent contrat a pour objet la garde les enfants du Client selon l'emploi du temps suivant :",
+      totalMonth: "Total pour {month} :",
+      totalPeriod: "Nombre total d'heures (Période) :",
     },
     article2: {
-      title: "Article 2 - Place of performance of services",
+      title: "Article 2 - Lieu d'exécution des prestations",
       content:
-        "The services covered by the contract will be mainly performed at the Client's home. However, it is agreed that the childcare provider may also go to the following places, such as the daycare, school, medical offices, music centers, sports centers or any other place located near the Client's home and in the same city. These displacements will be carried out within the framework of the child's needs and in accordance with the instructions given by the Client.",
+        "Les prestations objet du contrat seront principalement exécutées au domicile du Client. Cependant, il est convenu que l’intervenant pourra également se rendre aux endroits suivants, tels que la crèche, l'école, les cabinets médicaux, les centres musicaux, les centres sportifs ou tout autre lieu situé à proximité du domicile du Client et dans la même ville. Ces déplacements seront effectués dans le cadre des besoins de l'enfant et conformément aux instructions données par le Client.",
     },
     article3: {
-      title: "Article 3 - Duration and Commitment",
+      title: "Article 3 - Durée et Engagement",
       content:
-        "This contract is concluded for a fixed term with a firm commitment, from {start} to {end}.",
-      subTitle: "3.1. Irrevocability of commitment",
+        "Le présent contrat est conclu pour une durée déterminée avec engagement ferme, du {start} au {end}.",
+      subTitle: "3.1. Irrévocabilité de l'engagement",
       subContent:
-        "During this initial period, the contract is firm and final. The parties are prohibited from any early unilateral termination. The contract may not be terminated before its term, except in case of gross negligence of one of the parties or recognized force majeure. In case of cessation of the execution of the contract by the Parent before the scheduled term, the entirety of the sums remaining due until the end date of the contract (indicated above) will become immediately exigible as compensation for breach of commitment.",
+        "Pendant cette période initiale, le contrat est ferme et définitif. Les parties s'interdisent toute résiliation unilatérale anticipée. Le contrat ne pourra être rompu avant son terme, sauf en cas de faute grave de l'une des parties ou de force majeure reconnue. En cas d'arrêt de l'exécution du contrat par le Parent avant le terme prévu, la totalité des sommes restant dues jusqu'à la date de fin du contrat (indiquée ci-dessus) deviendra immédiatement exigible à titre d'indemnité de rupture de l'engagement.",
     },
     article4: {
-      title: "Article 4 - Pricing and Payment Terms",
-      subTitle41: "4.1. Fees and Monthly Breakdown:",
+      title: "Article 4 - Tarification et Modalités de Paiement",
+      subTitle41: "4.1. Honoraires et Ventilation Mensuelle :",
       content:
-        "In return for the services defined in Article 1 of this contract, the Client agrees to pay the Provider the following remuneration. The rates indicated below are understood before any tax deduction or eventual tax credit.",
-      subTitle42: "4.2. Precision on tax deduction:",
+        "En contrepartie des prestations définies à l’Article 1 du présent contrat, le Client s’engage à verser au Prestataire la rémunération suivante. Les tarifs indiqués ci-dessous sont entendus avant toute déduction fiscale ou crédit d’impôt éventuel.",
+      subTitle42: "4.2. Précision sur la défiscalisation :",
       content42:
-        "The Client acknowledges that the prices indicated correspond to the sums actually due and cashed by the Provider. Tax benefits (such as tax credit or deduction) depend on the legislation in force and the Client's personal situation; they do not affect the obligation to pay all invoices at their maturity.",
-      subTitle43: "4.3. Direct Debit Mandate:",
+        "Le Client reconnaît que les prix indiqués correspondent aux sommes réellement dues et encaissées par le Prestataire. Les avantages fiscaux (type crédit d’impôt ou déduction) sont dépendants de la législation en vigueur et de la situation personnelle du Client ; ils n'affectent en rien l'obligation de paiement de l'intégralité des factures à leur échéance.",
+      subTitle43: "4.3. Mandat de Prélèvement Automatique :",
       content43:
-        "Payment is made monthly by direct debit. By signing this contract, the Client expressly authorizes the Provider to transmit instructions to their bank to debit their account for the amount of the invoices at each maturity on the 31st of the month.",
-      period: "Period (Month)",
+        "Le paiement s'effectue mensuellement par prélèvement automatique. Par la signature du présent contrat, le Client autorise expressément le Prestataire à transmettre des instructions à sa banque pour débiter son compte du montant des factures à chaque échéance le 31 du mois.",
+      period: "Période (Mois)",
       hrTotal: "Hr total",
-      amountTtc: "Amount (Incl. Tax)",
-      hourlyRate: "Hourly Rate:",
-      taxNote: "* Rates before tax deduction or tax credit.",
+      amountTtc: "Montant (TTC)",
+      hourlyRate: "Tarif horaire :",
+      taxNote: "* Tarifs avant déduction fiscale ou crédit d'impôt.",
     },
     article5: {
-      title: "Article 5 - Late payment penalties",
+      title: "Article 5 - Pénalités de retard de paiement",
       content:
-        "In case of rejection of the direct debit or late payment, and in accordance with the firm commitment stipulated in Article 3, the entirety of the sums remaining due for the commitment period may be required immediately.",
+        "En cas de rejet du prélèvement ou de retard de paiement, et conformément à l'engagement ferme stipulé à l'Article 3, l'intégralité des sommes restant dues pour la période d'engagement pourra être exigée immédiatement.",
     },
     article6: {
-      title: "Article 6 - Provider's Obligations",
+      title: "Article 6 - Obligations du prestataire",
       content1:
-        "The Provider agrees to perform the services defined in the article titled 'Purpose of the contract' above, within the timeframes and under the conditions agreed by the parties.",
+        "Le Prestataire s'engage à exécuter les prestations définies à l'article intitulé 'Objet du contrat' ci-dessus, dans les délais et aux conditions convenues par les parties.",
       content2:
-        "The Provider is required to inquire about the Client's needs and to provide all necessary information concerning the characteristics of the services provided.",
+        "Le Prestataire est tenu de se renseigner sur les besoins du Client et de fournir toutes les informations nécessaires concernant les caractéristiques des prestations fournies.",
       content3:
-        "The Provider may not subcontract the services of this contract to a third party without the prior written authorization of the Client.",
+        "Le Prestataire ne peut pas sous-traiter les prestations du présent contrat à un tiers sans l'autorisation préalable et écrite du Client.",
     },
     article7: {
-      title: "Article 7 - Client's Obligations",
+      title: "Article 7 - Obligations du client",
       content:
-        "The Client must provide the Provider with all necessary information for the proper realization of the object of the contract. The Client agrees to pay the price of the services within the timeframes provided by the contract. For the execution of the services, the Client must allow access to the Provider at their home or establishment. The Client assumes full responsibility for ensuring that their home is secure for children and free from any danger or risk.",
+        "Le Client doit fournir au Prestataire toutes les informations nécessaires pour la bonne réalisation de l'objet du contrat. Le Client s'engage à payer le prix des prestations dans les délais prévus par le contrat. Pour l'exécution des prestations, le Client doit permettre l'accès au Prestataire à son domicile ou à son établissement. Le Client assume l'entière responsabilité de veiller à ce que son domicile soit sécurisé pour les enfants et exempt de tout danger ou risque.",
     },
     article8: {
-      title: "Article 8 - Obligation of Renegotiation",
+      title: "Article 8 - Obligation de renégociation",
       content:
-        "In case of occurrence of unforeseeable events leading to an imbalance of the reciprocal benefits of the parties, they agree to enter into a renegotiation of the contract. The party invoking the change in circumstances must address their request for renegotiation to the other party by registered letter with acknowledgment of receipt. Renegotiation must be initiated within one month following the sending of the registered mail. During the renegotiation phase, the parties must continue to execute the contract as it was concluded. In case of failure of negotiations, the aggrieved party may seize the judge so that he adapts the contract. Failing possible adaptation, the judge may order the termination of the contract.",
+        "En cas de survenance d'événements imprévisibles entraînant un déséquilibre des prestations réciproques des parties, celles-ci s'engagent à entamer une renégociation du contrat. La partie invoquant le changement de circonstances doit adresser sa demande de renégociation à l'autre partie par lettre recommandée avec accusé de réception. La renégociation doit être entamée dans un délai d'un mois suivant l'envoi du courrier recommandé. Pendant la phase de renégociation, les parties doivent continuer à exécuter le contrat tel qu'il a été conclu. En cas d'échec des négociations, la partie lésée peut saisir le juge afin qu'il adapte le contrat. À défaut d'adaptation possible, le juge peut ordonner la résiliation du contrat.",
     },
     article9: {
-      title: "Article 9 - Force Majeure",
+      title: "Article 9 - Force majeure",
       content1:
-        "No party can be held responsible for the non-execution of its obligations in case of force majeure. Force majeure corresponds to any unforeseeable event independent of the will of the parties, making the total or partial execution of the contractual obligations impossible.",
+        "Aucune partie ne pourra être tenue responsable de l'inexécution de ses obligations en cas de force majeure. La force majeure correspond à tout événement imprévisible et indépendant de la volonté des parties, rendant impossible l'exécution totale ou partielle des obligations contractuelles.",
       content2:
-        "In case of occurrence of a force majeure event, the concerned party must immediately inform the other party. The execution of the contract will then be suspended until the cessation of the force majeure event.",
+        "En cas de survenance d'un événement de force majeure, la partie concernée devra en informer immédiatement l'autre partie. L'exécution du contrat sera alors suspendue jusqu'à la cessation de l'événement de force majeure.",
       content3:
-        "The parties agree to seek in good faith solutions to alleviate the difficulties created by force majeure and to implement them as soon as possible.",
+        "Les parties s'engagent à rechercher de bonne foi des solutions pour pallier les difficultés créées par la force majeure et à les mettre en œuvre dès que possible.",
       content4:
-        "However, if the force majeure event persists for a duration exceeding two months, the parties may terminate the contract by right, without any compensation being due.",
+        "Cependant, si l'événement de force majeure persiste pendant une durée supérieure à deux mois, les parties pourront mettre fin au contrat de plein droit, sans qu'aucune indemnité ne soit due.",
     },
     article10: {
-      title: "Article 10 - Insurance",
+      title: "Article 10 - Assurance",
       content:
-        "The Provider declares to be covered by professional civil liability insurance with a solvent insurance company. This insurance covers all material and immaterial damages resulting from the execution of the services.",
+        "Le Prestataire déclare être couvert par une assurance responsabilité civile professionnelle auprès d'une compagnie d'assurance solvable. Cette assurance couvre tous les dommages matériels et immatériels découlant de l'exécution des prestations.",
     },
     article11: {
-      title: "Article 11 - Confidentiality",
+      title: "Article 11 - Confidentialité",
       content:
-        "The Provider agrees to maintain the confidentiality of all information, documents and data to which they may have access during the negotiation or execution of this contract. Information will not be considered confidential in the following cases:",
+        "Le Prestataire s'engage à maintenir la confidentialité de toutes les informations, documents et données auxquels il pourrait avoir accès lors de la négociation ou de l'exécution du présent contrat. Les informations ne seront pas considérées comme confidentielles dans les cas suivants :",
       item1:
-        "Information already known to the Provider or the Client before the conclusion of the contract.",
-      item2: "Information obtained legally from a third party.",
-      item3: "Information that must be disclosed under a law or regulation.",
+        "Les informations déjà connues du Prestataire ou du Client avant la conclusion du contrat.",
+      item2: "Les informations obtenues légalement auprès d'un tiers.",
+      item3:
+        "Les informations qui doivent être divulguées en vertu d'une loi ou d'une réglementation.",
     },
     article12: {
-      title: "Article 12 - Assignment of Contract",
+      title: "Article 12 - Cession du contrat",
       content:
-        "This contract is concluded in consideration of the person of the Provider, and it is strictly personal. Thus, the Provider may not assign, transfer or delegate the contract to a third party without the prior written authorization of the Client.",
+        "Le présent contrat est conclu en considération de la personne du Prestataire, et il est strictement personnel. Ainsi, le Prestataire ne pourra pas céder, trancher ou déléguer le contrat à un tiers sans l'autorisation préalable et écrite du Client.",
     },
     article13: {
-      title: "Article 13 - Mediation",
+      title: "Article 13 - Médiation",
       content1:
-        "In case of dispute relating to the validity, interpretation, execution, non-execution, interruption or termination of this contract, the parties agree to resort to mediation before seizing a court. The party wishing to initiate the mediation process must inform the other party by registered letter with acknowledgment of receipt, specifying the points of disagreement and proposing, if applicable, the name of a mediator.",
+        "En cas de différend relatif à la validité, l'interprétation, l'exécution, l'inexécution, l'interruption ou la résiliation du présent contrat, les parties s'engagent à recourir à la médiation avant de saisir un tribunal. La partie souhaitant entamer le processus de médiation devra informer l'autre partie par lettre recommandée avec accusé de réception, en précisant les points de désaccord et en proposant, le cas échéant, le nom d'un médiateur.",
       content2:
-        "If the parties fail to agree on the choice of a mediator, one of the parties may seize the competent court so that it proceeds with the designation of a mediator.",
+        "Si les parties ne parviennent pas à s'entendre sur le choix d'un médiateur, l'une des parties pourra saisir le tribunal compétent afin qu'il procède à la désignation d'un médiateur.",
       content3:
-        "During the mediation procedure, the limitation period for legal actions will be suspended. The suspension will end on the date of signature of the mediation report. Mediation costs will be split equally between the parties.",
+        "Pendant la procédure de médiation, la prescription des actions en justice sera suspendue. La suspension prendra fin à la date de signature du procès-verbal de médiation. Les frais de médiation seront partagés à parts égales entre les parties.",
     },
     article14: {
-      title: "Article 14 - Care and Services",
+      title: "Article 14 - Soins et services",
       content1:
-        "Childcare providers are responsible for preparing meals, baths and distributing snacks to your child, in accordance with your instructions. We are committed to providing trained professionals who are capable of providing all necessary care to your child.",
+        "Les intervenants sont responsables de la préparation des repas, des bains et de la distribution des goûters à votre enfant, conformément à vos instructions. Nous nous engageons à fournir des professionnels formés qui sont capables d'assurer tous les soins nécessaires à votre enfant.",
       content2:
-        "Specific instructions regarding bathing and feeding can be discussed during the interview with your provider. We encourage open and clear communication to ensure that the care provided meets your child's needs and preferences.",
+        "Les instructions spécifiques concernant le bain et l'alimentation peuvent être discutées lors de l'entretien avec votre intervenant. Nous encourageons une communication ouverte et claire pour garantir que les soins prodigués répondent aux besoins et préférences de votre enfant.",
       content3:
-        "Our providers will work closely with you to ensure that meals, baths and snacks are carried out appropriately and in accordance with your expectations.",
+        "Nos intervenants travailleront en étroite collaboration avec vous pour assurer que les repas, les bains et les goûters sont effectués de manière appropriée et en accord avec vos attentes.",
       content4:
-        "In case of concerns or specific requests regarding care and services, please inform us so that we can take the necessary measures to meet your needs and ensure your child's well-being.",
+        "En cas de préoccupations ou de demandes particulières concernant les soins et services, veuillez nous en informer afin que nous puissions prendre les mesures nécessaires pour répondre à vos besoins et garantir le bien-être de votre enfant.",
       content5:
-        "We are committed to maintaining the confidentiality of information shared during discussions on care and services, in accordance with Article 11 of this contract.",
+        "Nous nous engageons à maintenir la confidentialité des informations partagées lors des discussions sur les soins et services, conformément à l'article 11 du présent contrat.",
       content6:
-        "This article is an integral part of the contract and is subject to the general conditions and provisions set forth in the other articles.",
+        "Le présent article est une partie intégrante du contrat et est soumis aux conditions et dispositions générales énoncées dans les autres articles.",
     },
     article15: {
-      title: "Article 15 - Modification and Maintenance of Sessions",
-      subTitle151: "15.1. Firm Commitment:",
+      title: "Article 15 - Modification et Maintien des Sessions",
+      subTitle151: "15.1. Engagement ferme :",
       content151:
-        "All babysitting sessions planned in the monthly schedule are firm and mandatory. No session can be canceled or deducted from billing.",
-      subTitle152: "15.2. Possibility of Postponement:",
+        "Toutes les sessions de baby-sitting prévues au planning mensuel sont fermes et obligatoires. Aucune session ne peut être annulée ou déduite de la facturation.",
+      subTitle152: "15.2. Possibilité de report :",
       content152:
-        "If the Client cannot honor a session, they have the possibility of requesting its postponement to another date during the same month. This postponement is strictly subject to the prior agreement and availability of the provider.",
-      subTitle153: "15.3. Sessions not performed:",
+        "Si le Client ne peut pas honorer une session, il a la possibilité de demander son report à une autre date au cours du même mois. Ce report est strictement soumis à l’accord préalable et à la disponibilité de l’intervenant.",
+      subTitle153: "15.3. Sessions non effectuées :",
       content153:
-        "Any session that has not been performed due to the Client (absence, early return, oversight, etc.) and which has not been subject to a postponement validated by the provider will be considered consumed. It will remain fully billed and cannot give rise to any refund or postponement to the following month.",
+        "Toute session qui n'aura pas été effectuée du fait du Client (absence, retour anticipé, oubli, etc.) et qui n'aura pas fait l'objet d'un report validé par l'intervenant sera considérée comme consommée. Elle restera intégralement facturée et ne pourra donner lieu à aucun remboursement ou report sur le mois suivant.",
     },
     article16: {
-      title: "Article 16 - Replacement of the Provider and Absences",
+      title: "Article 16 - Remplacement de l'intervenant et des absences",
       content1:
-        "If you are not satisfied with the skills of the babysitter you have chosen to validate, and you wish to replace them, this is possible upon fulfillment of a two-week notice to the babysitter to whom the previously mentioned billing will apply. During this time, the Provider agrees to find an adequate replacement; we commit to providing you with another Bloom Buddies provider as soon as possible. Your satisfaction is our priority and we strive to meet your expectations in terms of service quality.",
+        "Si vous n'êtes pas satisfait des compétences de la baby-sitter qui vous avez choisi à valider, et vous souhaitez la remplacer, ceci est possible sur respect d’un préavis de deux semaines à la baby-sitter à laquelle la facturation mentionnée précédemment sera appliquée. Pendant ce temps, le Prestataire s’engage à trouver un remplacement adéquat, nous nous engageons à vous fournir un autre intervenant de Bloom Buddies dans les meilleurs délais. Votre satisfaction est notre priorité et nous nous efforçons de répondre à vos attentes en termes de qualité de service.",
       content2:
-        "In case of absence of the provider, we commit to informing you as soon as possible and to proposing appropriate replacement solutions. We will make every effort to ensure the continuity of our service and minimize disruptions for you and your child.",
+        "En cas d'absence de l'intervenant, nous nous engageons à vous informer dès que possible et à vous proposer des solutions de remplacement appropriées. Nous mettrons tout en œuvre pour assurer la continuité de notre service et minimiser les perturbations pour vous et votre enfant.",
       content3:
-        "To request a provider replacement or report an absence, please contact us by phone or in writing, providing the relevant details. We will do our best to respond to your request as soon as possible.",
+        "Pour demander un remplacement d'intervenant ou signaler une absence, veuillez nous contacter par téléphone ou par écrit, en nous fournissant les détails pertinents. Nous ferons tout notre possible pour répondre à votre demande dans les meilleurs délais.",
       content4:
-        "Please note that provider replacements will be made according to the availability and capacities of our staff. We will strive to find the best possible match in terms of skills and profile to meet your specific needs.",
+        "Veuillez noter que les remplacements d'intervenants seront effectués en fonction des disponibilités et des capacités de notre personnel. Nous nous efforcerons de trouver le meilleur match possible en termes de compétences et de profil pour répondre à vos besoins spécifiques.",
       content5:
-        "The exact terms of replacement of the provider and management of absences may be specified in the individual contract signed between the parties, if applicable.",
+        "Les modalités exactes de remplacement de l'intervenant et de gestion des absences peuvent être spécifiées dans le contrat individuel signé entre les parties, le cas échéant.",
       content6:
-        "In case of discrepancy, the specific provisions of the contract will prevail over the general provisions of this article.",
+        "En cas de divergence, les dispositions spécifiques du contrat prévaudront sur les dispositions générales de cet article.",
     },
     article17: {
-      title: "Article 17 - Validation of the Contract",
+      title: "Article 17 - Validation du Contrat",
       content1:
-        "After the conclusion of this contract, it is agreed that the contract will be considered read, accepted and validated in the following cases:",
+        "Après la conclusion du présent contrat, il est convenu que le contrat sera considéré comme lu, accepté et validé dans les cas suivants :",
       itemA:
-        "a) Payment of the invoice: The client agrees to pay the invoice issued by Bloom Buddies Babysitting according to the agreed terms. Once the full payment of the invoice has been received by Bloom Buddies Babysitting, the contract will be considered read, accepted and validated.",
+        "a) Règlement de la facture : Le client s'engage à régler la facture émise par Bloom Buddies Babysitting selon les modalités convenues. Une fois que le paiement intégral de la facture a été reçu par Bloom Buddies Babysitting, le contrat sera considéré comme lu, accepté et validé.",
       itemB:
-        "b) Start of the babysitting service: If the client has engaged the babysitting services provided by Bloom Buddies Babysitting without having previously signed the contract, the fact of starting the babysitting service will be considered as tacit acceptance and validation of the contract.",
+        "b) Début de la prestation de babysitting : Si le client a engagé les services de la baby-sitter fournis par Bloom Buddies Babysitting sans avoir préalablement signé le contrat, le fait de démarrer la prestation de babysitting sera considéré comme une acceptation tacite et la validation du contrat.",
       content2:
-        "This article is in compliance with the legal provisions in force and aims to guarantee the legal security of the parties involved. It is the responsibility of the client to read the contract and ensure their understanding and acceptance before proceeding with the payment of the invoice or the start of the babysitting service.",
+        "Le présent article est conforme aux dispositions légales en vigueur et vise à garantir la sécurité juridique des parties concernées. Il est de la responsabilité du client de prendre connaissance du contrat et de s'assurer de sa compréhension et de son acceptation avant de procéder au règlement de la facture ou au début de la prestation de babysitting.",
       content3:
-        "The client is reminded that it is preferable to sign the contract before the start of the babysitting service in order to clearly establish the rights, duties and responsibilities of each party. Signing the contract avoids any confusion or later discrepancy in interpretation.",
+        "Il est rappelé au client qu'il est préférable de signer le contrat avant le début de la prestation de babysitting afin d'établir clairement les droits, les devoirs et les responsabilités de chaque partie. La signature du contrat permet d'éviter toute confusion ou divergence d'interprétation ultérieure.",
       content4:
-        "In case of dispute or subsequent challenge to the terms and conditions of the contract, the parties agree to refer to the content of the contract itself, as it was established, and to respect the obligations defined therein.",
+        "En cas de litige ou de contestation ultérieure sur les termes et conditions du contrat, les parties conviennent de se référer au contenu du contrat lui-même, tel qu'il a été établi, et de respecter les obligations qui y sont définies.",
       content5:
-        "These provisions are in addition to the other clauses and conditions stipulated in the contract and in no way affect their validity and applicability.",
+        "Les présentes dispositions s'ajoutent aux autres clauses et conditions stipulées dans le contrat et n'affectent en aucun cas leur validité et leur applicabilité.",
     },
     article18: {
       title:
-        "Article 18 - Interdiction of Private Agreements between the Client and the Babysitter",
+        "Article 18 - Interdiction des accords privés entre le client et la baby-sitter",
       content1:
-        "The client is informed and agrees not to offer childcare hours, excluding the Bloom Buddies Babysitting agency, directly to the babysitter. Any attempt to establish private agreements that would exclude the Provider is strictly prohibited.",
+        "Le client est informé et s'engage à ne pas proposer d'heures de garde, excluant l'agence Bloom Buddies Babysitting, directement à la baby-sitter. Toute tentative d'établir des accords privés qui excluraient le Prestataire est strictement interdite.",
       content2:
-        "It is important to emphasize that childcare providers are trained and responsible professionals who work closely with Bloom Buddies Babysitting to ensure the safety and well-being of your children. Any proposal for private agreements can lead to risks of conflict of interest, non-compliance with safety standards and loss of trust between the parties involved.",
+        "Il est important de souligner que les intervenants sont des professionnels formés et responsables qui travaillent en étroite collaboration avec Bloom Buddies Babysitting pour assurer la sécurité et le bien-être de vos enfants. Toute proposition d'accords privés peut entraîner des risques de conflit d'intérêts, de non-respect des normes de sécurité et de perte de confiance entre les parties impliquées.",
       content3:
-        "Any request for additional childcare hours or outside the planned hours must be communicated to Bloom Buddies Babysitting. Our agency will do its best to meet your needs and find appropriate solutions depending on the availability of our qualified babysitters.",
+        "Toute demande d'heures de garde supplémentaires ou en dehors des horaires prévus doit être communiquée à Bloom Buddies Babysitting. Notre agence fera de son mieux pour répondre à vos besoins et trouver des solutions appropriées en fonction de la disponibilité de nos baby-sitters qualifiés.",
       content4:
-        "In case of reporting by a provider concerning a proposal for a private agreement, the provider reserves the right to take appropriate measures, including banning the client from using our services in the future.",
+        "En cas de signalement par une intervenante concernant une proposition d'accord privé, le prestataire se réserve le droit de prendre les mesures appropriées, y compris l'interdiction du client d'utiliser nos services à l'avenir.",
     },
     article19: {
-      title: "Article 19 - Absences of the Babysitter",
+      title: "Article 19 - Absences de la baby-sitter",
       contentA:
-        "a. The babysitter must inform the Client of any planned absence at least two weeks in advance, except in case of unforeseen circumstances or emergencies. The client must also inform the provider of babysitter absences to allow the provider to find an adequate replacement as soon as possible.",
+        "a. La baby-sitter devra informer le Client de toute absence planifiée au moins deux semaines à l'avance, sauf en cas de circonstances imprévues ou d'urgences. Le client doit également informer le prestataire d’absences de la baby-sitter pour permettre le prestataire à trouver un remplacement adéquat au plus tôt possible.",
       contentB:
-        "b. In case of unforeseen absence, the babysitter will strive to notify the Client as soon as possible and propose an adequate replacement, if available.",
+        "b. En cas d'absence imprévue, la baby-sitter s'efforcera de prévenir le Client dès que possible et de proposer un remplacement adéquat, si disponible.",
       contentC:
-        "c. If an appropriate replacement is not available for a planned absence, the babysitter will propose mutually agreed alternative dates in the same month to compensate for missed hours.",
-      subTitle1: "Temporary Replacement:",
+        "c. Si un remplacement approprié n'est pas disponible pour une absence planifiée, la baby-sitter proposera des dates alternatives convenues mutuellement dans le même mois pour compenser les heures manquées.",
+      subTitle1: "Remplaçante Temporaire :",
       subContent1A:
-        "a. In case of planned or unforeseen absence of the babysitter, Bloom Buddies Babysitting will strive to provide a temporary replacement babysitter with similar qualifications and experience.",
+        "a. En cas d'absence planifiée ou imprévue de la baby-sitter, Bloom Buddies Babysitting s'efforcera de fournir une baby-sitter de remplacement temporaire avec des qualifications et une expérience similaires.",
       subContent1B:
-        "b. The temporary replacement babysitter will follow the same schedule and responsibilities agreed in the initial contract.",
+        "b. La baby-sitter de remplacement temporaire suivra le même horaire et les mêmes responsabilités convenus dans le contrat initial.",
       subContent1C:
-        "c. The services of the temporary replacement babysitter will be provided at no additional cost for the hours covered by the initial contract.",
-      subTitle2: "Permanent Replacement:",
+        "c. Les services de la baby-sitter de remplacement temporaire seront fournis sans frais supplémentaires pour les heures couvertes par le contrat initial.",
+      subTitle2: "Remplaçante Permanente :",
       subContent2A:
-        "a. If the babysitter resigns and a permanent replacement is necessary, Bloom Buddies Babysitting will make every effort to find an appropriate replacement within a reasonable timeframe.",
+        "a. Si la baby-sitter démissionne et qu'un remplacement permanent est nécessaire, Bloom Buddies Babysitting fera tout son possible pour trouver un remplaçant approprié dans un délai raisonnable.",
       subContent2B:
-        "b. The Client will have the right to interview and approve the permanent replacement babysitter before they start their services.",
+        "b. Le Client aura le droit d'interviewer et d'approuver la baby-sitter de remplacement permanente avant qu'elle ne commence ses services.",
       subContent2C:
-        "c. Once the permanent replacement babysitter is accepted and hired, the terms and conditions of the initial contract will apply, including monthly remuneration and other provisions.",
+        "c. Une fois que la baby-sitter de remplacement permanente est acceptée et embauchée, les termes et conditions du contrat initial s'appliqueront, y compris la rémunération mensuelle et les autres dispositions.",
     },
     annexe: {
-      title: "Annex - Mandate of Tele-declaration",
+      title: "Annexe - Mandat de télédéclaration",
       content1:
-        "Parents give mandate to the Bloom Buddies Babysitting establishment to carry out each month, in their name and on their behalf, the monthly declaration allowing the calculation by the Family Allowance Fund (CAF) of the amount of the free choice of childcare supplement (CMG) to which they are entitled under Article L.531-6 of the Social Security Code.",
+        "Les parents donnent mandat à l'établissement Bloom Buddies Babysitting pour effectuer chaque mois, en leur nom et pour leur compte, la déclaration mensuelle permettant le calcul par la Caisse d'Allocations familiales du montant du complément de libre choix du mode de garde (CMG) auquel ils ont droit en vertu de l'article L.531-6 du code de la Sécurité sociale.",
       content2:
-        "This declaration consists of completing and sending monthly to the CAF, by teleprocedure, the following information for each child cared for:",
-      item1: "The first and last names of the child",
-      item2: "His/her date of birth",
+        "Cette déclaration consiste à compléter et à adresser mensuellement à la Caf, par téléprocédure, les informations suivantes pour chaque enfant gardé :",
+      item1: "Les prénom et nom de l'enfant",
+      item2: "Sa date de naissance",
       item3:
-        "The number of hours of care performed during the month considered and the number of specific hours (1), if applicable",
+        "Le nombre d'heures de garde effectuées durant le mois considéré et le nombre d'heures spécifiques (1), le cas échéant",
       item4:
-        "The total amount billed and paid corresponding to the month concerned",
+        "Le montant total facturé et acquitté correspondant au mois concerné",
       item5:
-        "The end of recourse to the services of the establishment, if applicable.",
+        "La fin de recours aux services de l'établissement, le cas échéant.",
       content3:
-        "This mandate is strictly limited to the obligation described above. The CAF does not intervene in the management of this mandate.",
+        "Le présent mandat est strictement limité à l'obligation décrite ci-dessus. La Caf n'intervient pas dans la gestion du présent mandat.",
       content4:
-        "The obligations provided for under the mandate take effect from the date of signature of this care contract and persist until its term or the waiver of the mandate by one of the parties.",
+        "Les obligations prévues au titre du mandat prennent effet à compter de la date de signature du présent contrat d'accueil et perdurent jusqu'à son terme ou à la renonciation au mandat par l'une des parties.",
     },
     actions: {
-      accept: "Accept",
-      refuse: "Refuse",
-      slide: "Slide to accept",
-      back: "Back to Profile",
-      success: "Contract Accepted Successfully!",
-      loading: "Loading contract details...",
+      accept: "Accepter",
+      refuse: "Refuser",
+      slide: "Glisser pour accepter",
+      back: "Retour au profil",
+      success: "Contrat accepté avec succès !",
+      loading: "Chargement des détails du contrat...",
     },
-    signatureLocationDate: "Done in Paris, on {date}",
-    electronicSignature: "Secure electronic signature",
+    signatureLocationDate: "Fait à Paris, le {date}",
+    electronicSignature: "Signature électronique sécurisée",
   },
 };

@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, ArrowLeft, ShieldCheck, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { FileText, ArrowLeft, ShieldCheck, Loader2, AlertCircle, CheckCircle2, CreditCard, Lock } from 'lucide-react';
 import { api, ContractResponse } from '../services/api';
 import { SlideToAccept } from './SlideToAccept';
 import { useLanguage } from '../i18n/LanguageContext';
+import { loadStripe, StripeCardNumberElement } from '@stripe/stripe-js';
+import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY as string);
 
 interface ContractViewProps {
     userName: string;
@@ -13,7 +17,7 @@ interface ContractViewProps {
     choiceId: number;
 }
 
-export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, onAccept, onRefuse, choiceId }) => {
+const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAccept, onRefuse, choiceId }) => {
     const { t: trans, language } = useLanguage();
     const t = trans.contract;
 
@@ -22,6 +26,84 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
     const [error, setError] = useState<string | null>(null);
     const [showAcceptModal, setShowAcceptModal] = useState(false);
     const [isAccepted, setIsAccepted] = useState(false);
+    const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
+
+    const stripe = useStripe();
+    const elements = useElements();
+
+    // Payment translations using the same structure as App.tsx
+    // (We cast to `any` because `t.payment` might not be in the LanguageContext type yet)
+    const paymentT = (trans as any).payment || {
+        cardNumber: "Numéro de carte",
+        expiry: "Expiration",
+        cvc: "CVC",
+        securityNote: "Vos données de paiement sont cryptées et sécurisées",
+        processing: "Traitement en cours...",
+        payButton: "Payer {amount}",
+        checkout: "Payer et Accepter"
+    };
+
+    const getFirstMonthAmount = (): number => {
+        if (!contractData || !contractData.format2) return 57.0;
+        const months = Object.keys(contractData.format2);
+        if (months.length === 0) return 57.0;
+        return contractData.format2[months[0]];
+    };
+
+    const handleSlideToAcceptAndPay = async () => {
+        if (!stripe || !elements || !contractData) return;
+
+        setIsPaymentProcessing(true);
+        setPaymentError(null);
+
+        try {
+            const amount = Math.round(getFirstMonthAmount());
+            
+            // 1. Create Payment Intent
+            const intentResponse = await api.createPaymentIntent(amount);
+            
+            const clientSecret = intentResponse.client_secret || intentResponse.clientSecret;
+            
+            if (!clientSecret) {
+                throw new Error(language === 'fr' ? "Erreur d'initialisation du paiement" : "Payment initialization error");
+            }
+
+            // 2. Confirm Card Payment
+            const cardNumberElement = elements.getElement(CardNumberElement);
+            if (!cardNumberElement) throw new Error("Card element not found");
+
+            const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+                clientSecret,
+                {
+                    payment_method: {
+                        card: cardNumberElement as unknown as StripeCardNumberElement, 
+                    }
+                }
+            );
+
+            if (stripeError) {
+                throw new Error(stripeError.message);
+            }
+
+            if (paymentIntent && paymentIntent.status === 'succeeded') {
+                // 3. Confirm on Backend
+                const confirmResponse = await api.confirmPayment(paymentIntent.id, contractData.contract_id);
+                
+                if (confirmResponse.status) {
+                    setIsPaymentProcessing(false);
+                    setIsAccepted(true);
+                } else {
+                    throw new Error(language === 'fr' ? "Erreur lors de la confirmation du contrat" : "Contract confirmation error");
+                }
+            } else {
+                throw new Error(language === 'fr' ? "Le paiement n'a pas été finalisé" : "Payment was not finalized");
+            }
+        } catch (err: any) {
+            setIsPaymentProcessing(false);
+            setPaymentError(err.message || "Payment failed");
+        }
+    };
 
     useEffect(() => {
         const fetchContract = async () => {
@@ -67,6 +149,17 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
             });
         });
         return total;
+    };
+
+    const formatMonthString = (monthStr: string) => {
+        try {
+            const [monthName, year] = monthStr.split(' ');
+            const date = new Date(Date.parse(`${monthName} 1, ${year}`));
+            if (isNaN(date.getTime())) return monthStr;
+            return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+        } catch {
+            return monthStr;
+        }
     };
 
     if (loading) {
@@ -179,11 +272,12 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
                                     {contractData && contractData.format1 ? (
                                         Object.entries(contractData.format1 as Record<string, Record<string, string[]>>).map(([month, dates]) => {
                                             const monthlyHours = getMonthlyHours(dates);
+                                            const formattedMonth = formatMonthString(month);
                                             return (
                                                 <div key={month} className="bg-slate-50/50 rounded-[24px] p-6 border border-slate-100">
                                                     <h4 className="text-brand-blue font-bold text-xs uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
                                                         <div className="w-1.5 h-1.5 bg-brand-blue rounded-full" />
-                                                        {month}
+                                                        {formattedMonth}
                                                     </h4>
                                                     <div className="space-y-3 mb-4">
                                                         {Object.entries(dates).map(([date, slots]) => (
@@ -198,7 +292,7 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
                                                         ))}
                                                     </div>
                                                     <div className="text-right text-xs font-bold text-slate-400 border-t border-slate-100 pt-4">
-                                                        {t.article1.totalMonth.replace('{month}', month)} <span className="text-brand-blue ml-1 font-display text-sm">{monthlyHours.toFixed(2)} h</span>
+                                                        {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-brand-blue ml-1 font-display text-sm">{monthlyHours.toFixed(2)} h</span>
                                                     </div>
                                                 </div>
                                             );
@@ -269,7 +363,9 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
                                                     {contractData && contractData.format2 ? (
                                                         Object.entries(contractData.format2 as Record<string, number>).map(([month, total]) => (
                                                             <tr key={month} className="hover:bg-slate-50/50 transition-colors">
-                                                                <td className="px-6 py-4 font-medium text-slate-700">{month}</td>
+                                                                <td className="px-6 py-4 font-medium text-slate-700 capitalize">
+                                                                    {formatMonthString(month)}
+                                                                </td>
                                                                 <td className="px-6 py-4 text-slate-500">
                                                                     {getMonthlyHours(contractData.format1[month]).toFixed(2)}h
                                                                 </td>
@@ -523,31 +619,89 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
 
                             {!isAccepted ? (
                                 <>
-                                    <div className="text-center mb-10">
-                                        <div className="w-20 h-20 bg-brand-blue/10 rounded-[32px] flex items-center justify-center text-brand-blue mx-auto mb-6 shadow-inner">
-                                            <ShieldCheck size={42} />
+                                    <div className="text-center mb-6">
+                                        <div className="w-16 h-16 bg-brand-blue/10 rounded-[28px] flex items-center justify-center text-brand-blue mx-auto mb-4 shadow-inner relative">
+                                            {isPaymentProcessing ? (
+                                                <Loader2 size={32} className="animate-spin text-brand-blue" />
+                                            ) : (
+                                                <ShieldCheck size={32} />
+                                            )}
                                         </div>
-                                        <h3 className="text-2xl font-display font-bold text-slate-900 mb-3 uppercase tracking-tight">
-                                            {t.actions.slide}
+                                        <h3 className="text-xl font-display font-bold text-slate-900 mb-2 uppercase tracking-tight">
+                                            {isPaymentProcessing ? paymentT.processing : t.actions.slide}
                                         </h3>
-                                        <p className="text-slate-500 text-sm leading-relaxed px-4">
+                                        <p className="text-slate-500 text-xs leading-relaxed px-4">
                                             {language === 'fr'
-                                                ? "En glissant, vous acceptez les termes et conditions énoncés dans le contrat de service."
-                                                : "By sliding, you agree to the terms and conditions outlined in the service contract."
+                                                ? "En glissant, vous acceptez les termes du contrat et procédez au paiement."
+                                                : "By sliding, you agree to the contract terms and proceed with payment."
                                             }
                                         </p>
                                     </div>
 
-                                    <div className="px-2">
+                                    {/* Invoice Section */}
+                                    {contractData && contractData.format2 && (
+                                        <div className="bg-slate-50 rounded-xl p-4 mb-6 border border-slate-100 flex justify-between items-center relative z-10">
+                                            <div>
+                                                <p className="text-xs text-slate-500 font-medium pb-1">{language === 'fr' ? 'Montant du 1er mois' : 'First month amount'}</p>
+                                                <p className="text-sm font-bold text-slate-800 capitalize">{Object.keys(contractData.format2)[0]}</p>
+                                            </div>
+                                            <div className="text-xl font-display font-bold text-brand-blue">
+                                                {getFirstMonthAmount().toFixed(2)} €
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Payment Fields */}
+                                    <div className={`space-y-4 mb-6 transition-opacity duration-300 relative z-10 ${isPaymentProcessing ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] uppercase font-bold text-slate-400">{paymentT.cardNumber}</label>
+                                            <div className="relative">
+                                                <div className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/20 bg-white transition-all">
+                                                    <CardNumberElement options={{ style: { base: { fontSize: '14px', color: '#334155', '::placeholder': { color: '#94a3b8' } }, invalid: { color: '#ef4444' } }, disabled: isPaymentProcessing }} />
+                                                </div>
+                                                <CreditCard size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] uppercase font-bold text-slate-400">{paymentT.expiry}</label>
+                                                <div className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/20 bg-white transition-all">
+                                                    <CardExpiryElement options={{ style: { base: { fontSize: '14px', color: '#334155', '::placeholder': { color: '#94a3b8' } }, invalid: { color: '#ef4444' } }, disabled: isPaymentProcessing }} />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] uppercase font-bold text-slate-400">{paymentT.cvc}</label>
+                                                <div className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/20 bg-white transition-all">
+                                                    <CardCvcElement options={{ style: { base: { fontSize: '14px', color: '#334155', '::placeholder': { color: '#94a3b8' } }, invalid: { color: '#ef4444' } }, disabled: isPaymentProcessing }} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 flex flex-col items-center gap-2">
+                                            <div className="flex items-center gap-2 text-[10px] text-slate-400 justify-center">
+                                                <Lock size={12} />
+                                                {paymentT.securityNote}
+                                            </div>
+                                            {paymentError && (
+                                                <div className="text-xs text-red-500 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 flex items-center gap-2 text-center max-w-sm mt-2">
+                                                    <AlertCircle size={14} className="shrink-0" />
+                                                    <span>{paymentError}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className={`px-2 transition-opacity duration-300 relative z-10 ${isPaymentProcessing ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                                         <SlideToAccept
-                                            onAccept={() => setIsAccepted(true)}
-                                            label={t.actions.slide}
+                                            onAccept={handleSlideToAcceptAndPay}
+                                            label={paymentT.payButton ? paymentT.payButton.replace('{amount}', `${getFirstMonthAmount().toFixed(2)} €`) : "Slide to Accept & Pay"}
                                         />
                                     </div>
 
                                     <button
                                         onClick={() => setShowAcceptModal(false)}
-                                        className="w-full mt-6 text-slate-400 font-bold text-sm tracking-wide hover:text-slate-600 transition-colors"
+                                        disabled={isPaymentProcessing}
+                                        className={`w-full mt-6 text-slate-400 font-bold text-sm tracking-wide transition-colors relative z-10 ${isPaymentProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:text-slate-600'}`}
                                     >
                                         Cancel
                                     </button>
@@ -556,7 +710,7 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.5 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="text-center py-4"
+                                    className="text-center py-4 relative z-10"
                                 >
                                     <div className="w-24 h-24 bg-green-50 rounded-[40px] flex items-center justify-center text-green-500 mx-auto mb-8 shadow-[0_10px_40px_-10px_rgba(34,197,94,0.3)]">
                                         <CheckCircle2 size={48} />
@@ -564,10 +718,10 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
                                     <h3 className="text-3xl font-display font-bold text-slate-900 mb-3">
                                         {t.actions.success}
                                     </h3>
-                                    <p className="text-slate-500 mb-10 font-medium">
+                                    <p className="text-slate-500 mb-10 font-medium text-sm leading-relaxed px-4">
                                         {language === 'fr'
-                                            ? "Votre contrat a été signé électroniquement avec succès."
-                                            : "Your contract has been successfully signed electronically."
+                                            ? "Votre contrat a été signé électroniquement avec succès et le paiement a été traité."
+                                            : "Your contract has been successfully signed electrically and payment processed."
                                         }
                                     </p>
                                     <button
@@ -602,3 +756,9 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
         </div>
     );
 };
+
+export const ContractView: React.FC<ContractViewProps> = (props) => (
+    <Elements stripe={stripePromise}>
+        <ContractViewInner {...props} />
+    </Elements>
+);

@@ -27,7 +27,8 @@ import {
   Video
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
-import { api, User } from '../services/api';
+import { api, User, Invoice } from '../services/api';
+import { InvoicePaymentModal } from './InvoicePaymentModal';
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -39,10 +40,12 @@ interface ProfilePageProps {
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onModifyRequest, onGoToAdmin, onCreateRequest, onViewContract }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax'>('requests');
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -154,10 +157,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
     });
   };
 
-  const invoices = [
-    { id: "INV-2024-001", date: "2024-02-01", amount: 150.00 },
-    { id: "INV-2024-002", date: "2024-01-01", amount: 120.00 }
-  ];
+  const invoices = user?.invoices || [];
 
   const taxCertificates = [
     { year: 2023, type: "Annual Tax Certificate", date: "2024-01-15" }
@@ -536,14 +536,26 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                     {invoices.length > 0 ? (
                       invoices.map((inv) => (
                         <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4 font-bold text-slate-700 text-sm">{inv.id}</td>
-                          <td className="px-6 py-4 text-slate-500 text-sm">{inv.date}</td>
-                          <td className="px-6 py-4 font-bold text-slate-800 text-sm">€{inv.amount.toFixed(2)}</td>
+                          <td className="px-6 py-4 font-bold text-slate-700 text-sm">{inv.invoice_num}</td>
+                          <td className="px-6 py-4 text-slate-500 text-sm">{inv.created_at?.split('T')[0]}</td>
+                          <td className="px-6 py-4 font-bold text-slate-800 text-sm">€{parseFloat(inv.amount).toFixed(2)}</td>
                           <td className="px-6 py-4 text-right">
-                            <button className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold">
-                              <Download size={14} />
-                              <span className="hidden sm:inline">{t.profilePage.invoices.download}</span>
-                            </button>
+                            {inv.payment_status === 'Paid' ? (
+                              <button className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold">
+                                <Download size={14} />
+                                <span className="hidden sm:inline">{t.profilePage.invoices.download}</span>
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => {
+                                  setSelectedInvoice(inv);
+                                  setIsInvoiceModalOpen(true);
+                                }}
+                                className="px-4 py-2 bg-brand-accent text-white rounded-xl hover:bg-[#66B2AC] transition-all text-xs font-bold shadow-sm"
+                              >
+                                {language === 'fr' ? 'Payer' : 'Pay'}
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))
@@ -664,6 +676,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
           </div>
         )}
       </AnimatePresence>
+      {selectedInvoice && (
+        <InvoicePaymentModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => {
+            setIsInvoiceModalOpen(false);
+            setSelectedInvoice(null);
+          }}
+          invoice={selectedInvoice}
+          onSuccess={async () => {
+            // Refresh user data to show updated invoice status
+            const response = await api.getUser();
+            if (response.status && response.data) {
+              setUser(response.data);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
