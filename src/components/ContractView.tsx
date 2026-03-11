@@ -4,6 +4,10 @@ import { FileText, ArrowLeft, ShieldCheck, Loader2, AlertCircle, CheckCircle2, C
 import { api, ContractResponse } from '../services/api';
 import { SlideToAccept } from './SlideToAccept';
 import { useLanguage } from '../i18n/LanguageContext';
+import { loadStripe, StripeCardNumberElement } from '@stripe/stripe-js';
+import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY as string);
 
 interface ContractViewProps {
     userName: string;
@@ -13,7 +17,7 @@ interface ContractViewProps {
     choiceId: number;
 }
 
-export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, onAccept, onRefuse, choiceId }) => {
+const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAccept, onRefuse, choiceId }) => {
     const { t: trans, language } = useLanguage();
     const t = trans.contract;
 
@@ -23,6 +27,10 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
     const [showAcceptModal, setShowAcceptModal] = useState(false);
     const [isAccepted, setIsAccepted] = useState(false);
     const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
+
+    const stripe = useStripe();
+    const elements = useElements();
 
     // Payment translations using the same structure as App.tsx
     // (We cast to `any` because `t.payment` might not be in the LanguageContext type yet)
@@ -36,12 +44,65 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
         checkout: "Payer et Accepter"
     };
 
-    const handleSlideToAcceptAndPay = () => {
+    const getFirstMonthAmount = (): number => {
+        if (!contractData || !contractData.format2) return 57.0;
+        const months = Object.keys(contractData.format2);
+        if (months.length === 0) return 57.0;
+        return contractData.format2[months[0]];
+    };
+
+    const handleSlideToAcceptAndPay = async () => {
+        if (!stripe || !elements || !contractData) return;
+
         setIsPaymentProcessing(true);
-        setTimeout(() => {
+        setPaymentError(null);
+
+        try {
+            const amount = Math.round(getFirstMonthAmount());
+            
+            // 1. Create Payment Intent
+            const intentResponse = await api.createPaymentIntent(amount);
+            
+            const clientSecret = intentResponse.client_secret || intentResponse.clientSecret;
+            
+            if (!clientSecret) {
+                throw new Error(language === 'fr' ? "Erreur d'initialisation du paiement" : "Payment initialization error");
+            }
+
+            // 2. Confirm Card Payment
+            const cardNumberElement = elements.getElement(CardNumberElement);
+            if (!cardNumberElement) throw new Error("Card element not found");
+
+            const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+                clientSecret,
+                {
+                    payment_method: {
+                        card: cardNumberElement as unknown as StripeCardNumberElement, 
+                    }
+                }
+            );
+
+            if (stripeError) {
+                throw new Error(stripeError.message);
+            }
+
+            if (paymentIntent && paymentIntent.status === 'succeeded') {
+                // 3. Confirm on Backend
+                const confirmResponse = await api.confirmPayment(paymentIntent.id, contractData.contract_id);
+                
+                if (confirmResponse.status) {
+                    setIsPaymentProcessing(false);
+                    setIsAccepted(true);
+                } else {
+                    throw new Error(language === 'fr' ? "Erreur lors de la confirmation du contrat" : "Contract confirmation error");
+                }
+            } else {
+                throw new Error(language === 'fr' ? "Le paiement n'a pas été finalisé" : "Payment was not finalized");
+            }
+        } catch (err: any) {
             setIsPaymentProcessing(false);
-            setIsAccepted(true);
-        }, 2000); // Simulate processing delay
+            setPaymentError(err.message || "Payment failed");
+        }
     };
 
     useEffect(() => {
@@ -577,51 +638,63 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
                                         </p>
                                     </div>
 
+                                    {/* Invoice Section */}
+                                    {contractData && contractData.format2 && (
+                                        <div className="bg-slate-50 rounded-xl p-4 mb-6 border border-slate-100 flex justify-between items-center relative z-10">
+                                            <div>
+                                                <p className="text-xs text-slate-500 font-medium pb-1">{language === 'fr' ? 'Montant du 1er mois' : 'First month amount'}</p>
+                                                <p className="text-sm font-bold text-slate-800 capitalize">{Object.keys(contractData.format2)[0]}</p>
+                                            </div>
+                                            <div className="text-xl font-display font-bold text-brand-blue">
+                                                {getFirstMonthAmount().toFixed(2)} €
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Payment Fields */}
                                     <div className={`space-y-4 mb-6 transition-opacity duration-300 relative z-10 ${isPaymentProcessing ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                                         <div className="space-y-1">
                                             <label className="text-[10px] uppercase font-bold text-slate-400">{paymentT.cardNumber}</label>
                                             <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    disabled={isPaymentProcessing}
-                                                    placeholder="0000 0000 0000 0000"
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all"
-                                                />
-                                                <CreditCard size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                                                <div className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/20 bg-white transition-all">
+                                                    <CardNumberElement options={{ style: { base: { fontSize: '14px', color: '#334155', '::placeholder': { color: '#94a3b8' } }, invalid: { color: '#ef4444' } }, disabled: isPaymentProcessing }} />
+                                                </div>
+                                                <CreditCard size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1">
                                                 <label className="text-[10px] uppercase font-bold text-slate-400">{paymentT.expiry}</label>
-                                                <input
-                                                    type="text"
-                                                    disabled={isPaymentProcessing}
-                                                    placeholder="MM/AA"
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all"
-                                                />
+                                                <div className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/20 bg-white transition-all">
+                                                    <CardExpiryElement options={{ style: { base: { fontSize: '14px', color: '#334155', '::placeholder': { color: '#94a3b8' } }, invalid: { color: '#ef4444' } }, disabled: isPaymentProcessing }} />
+                                                </div>
                                             </div>
                                             <div className="space-y-1">
                                                 <label className="text-[10px] uppercase font-bold text-slate-400">{paymentT.cvc}</label>
-                                                <input
-                                                    type="text"
-                                                    disabled={isPaymentProcessing}
-                                                    placeholder="123"
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all"
-                                                />
+                                                <div className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/20 bg-white transition-all">
+                                                    <CardCvcElement options={{ style: { base: { fontSize: '14px', color: '#334155', '::placeholder': { color: '#94a3b8' } }, invalid: { color: '#ef4444' } }, disabled: isPaymentProcessing }} />
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-400 justify-center">
-                                            <Lock size={12} />
-                                            {paymentT.securityNote}
+                                        <div className="mt-2 flex flex-col items-center gap-2">
+                                            <div className="flex items-center gap-2 text-[10px] text-slate-400 justify-center">
+                                                <Lock size={12} />
+                                                {paymentT.securityNote}
+                                            </div>
+                                            {paymentError && (
+                                                <div className="text-xs text-red-500 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 flex items-center gap-2 text-center max-w-sm mt-2">
+                                                    <AlertCircle size={14} className="shrink-0" />
+                                                    <span>{paymentError}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     <div className={`px-2 transition-opacity duration-300 relative z-10 ${isPaymentProcessing ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                                         <SlideToAccept
                                             onAccept={handleSlideToAcceptAndPay}
-                                            label={paymentT.payButton ? paymentT.payButton.replace('{amount}', '19,00 €') : "Slide to Accept & Pay"}
+                                            label={paymentT.payButton ? paymentT.payButton.replace('{amount}', `${getFirstMonthAmount().toFixed(2)} €`) : "Slide to Accept & Pay"}
                                         />
                                     </div>
 
@@ -683,3 +756,9 @@ export const ContractView: React.FC<ContractViewProps> = ({ userName, onBack, on
         </div>
     );
 };
+
+export const ContractView: React.FC<ContractViewProps> = (props) => (
+    <Elements stripe={stripePromise}>
+        <ContractViewInner {...props} />
+    </Elements>
+);

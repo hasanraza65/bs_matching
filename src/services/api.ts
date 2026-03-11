@@ -367,4 +367,17 @@ export const api = {
     const response = await apiClient.get(`/contract/${choiceId}`);
     return response.data;
   },
+
+  createPaymentIntent: async (amount: number): Promise<any> => {
+    const response = await apiClient.post("/create-payment-intent", { amount });
+    return response.data;
+  },
+
+  confirmPayment: async (paymentIntentId: string, contractId: number): Promise<any> => {
+    const response = await apiClient.post("/confirm-payment", {
+      payment_intent_id: paymentIntentId,
+      contract_id: contractId,
+    });
+    return response.data;
+  },
 };
