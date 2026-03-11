@@ -72,6 +72,24 @@ export interface ParentRequest {
   updated_at?: string;
 }
 
+export interface Invoice {
+  id: number;
+  invoice_num: string;
+  receipt_num: string | null;
+  user_id: number;
+  parent_request_id: number;
+  amount: string;
+  paid_amount: string;
+  payment_status: string;
+  payment_method: string;
+  stripe_payment_intent: string | null;
+  due_date: string;
+  payment_date: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 export interface User {
   id: number;
   first_name: string;
@@ -82,6 +100,7 @@ export interface User {
   user_role: number;
   children?: Child[];
   parent_requests?: ParentRequest[];
+  invoices?: Invoice[];
 }
 
 export interface RegisterResponse {
@@ -377,6 +396,14 @@ export const api = {
     const response = await apiClient.post("/confirm-payment", {
       payment_intent_id: paymentIntentId,
       contract_id: contractId,
+    });
+    return response.data;
+  },
+
+  confirmInvoicePayment: async (paymentIntentId: string, invoiceId: number): Promise<any> => {
+    const response = await apiClient.post("/confirm-invoice-payment", {
+      payment_intent_id: paymentIntentId,
+      invoice_id: invoiceId,
     });
     return response.data;
   },
