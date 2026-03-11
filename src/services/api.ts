@@ -90,6 +90,17 @@ export interface Invoice {
   deleted_at: string | null;
 }
 
+export interface PaymentMethod {
+  id: string;
+  card: {
+    brand: string;
+    last4: string;
+    exp_month: number;
+    exp_year: number;
+    funding: string;
+  };
+}
+
 export interface User {
   id: number;
   first_name: string;
@@ -98,9 +109,14 @@ export interface User {
   user_phone: string;
   user_address: string;
   user_role: number;
+  stripe_customer_id?: string;
+  default_payment_method?: string;
   children?: Child[];
   parent_requests?: ParentRequest[];
   invoices?: Invoice[];
+  cards?: {
+    data: PaymentMethod[];
+  };
 }
 
 export interface RegisterResponse {
@@ -132,6 +148,9 @@ export interface ParentRequestResponse {
 export interface UserResponse {
   status: boolean;
   data?: User;
+  cards?: {
+    data: PaymentMethod[];
+  };
   message?: string;
 }
 
@@ -141,7 +160,7 @@ export interface LogoutResponse {
 }
 
 export interface ContractResponse {
-  status: boolean;
+  status: boolean | number;
   contract_id: number;
   hourly_rate: string;
   user: User;
@@ -405,6 +424,18 @@ export const api = {
       payment_intent_id: paymentIntentId,
       invoice_id: invoiceId,
     });
+    return response.data;
+  },
+  
+  setDefaultCard: async (paymentMethodId: string): Promise<any> => {
+    const response = await apiClient.post("/set-default-card", {
+      payment_method_id: paymentMethodId,
+    });
+    return response.data;
+  },
+
+  deleteCard: async (paymentMethodId: string): Promise<any> => {
+    const response = await apiClient.get(`/delete-card/${paymentMethodId}`);
     return response.data;
   },
 };
