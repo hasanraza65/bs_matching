@@ -110,6 +110,7 @@ export interface User {
   user_address: string;
   user_role: number;
   stripe_customer_id?: string;
+  default_payment_method?: string;
   children?: Child[];
   parent_requests?: ParentRequest[];
   invoices?: Invoice[];
@@ -159,7 +160,7 @@ export interface LogoutResponse {
 }
 
 export interface ContractResponse {
-  status: boolean;
+  status: boolean | number;
   contract_id: number;
   hourly_rate: string;
   user: User;
@@ -423,6 +424,18 @@ export const api = {
       payment_intent_id: paymentIntentId,
       invoice_id: invoiceId,
     });
+    return response.data;
+  },
+  
+  setDefaultCard: async (paymentMethodId: string): Promise<any> => {
+    const response = await apiClient.post("/set-default-card", {
+      payment_method_id: paymentMethodId,
+    });
+    return response.data;
+  },
+
+  deleteCard: async (paymentMethodId: string): Promise<any> => {
+    const response = await apiClient.get(`/delete-card/${paymentMethodId}`);
     return response.data;
   },
 };

@@ -25,7 +25,9 @@ import {
   MapPin,
   Plus,
   Video,
-  CreditCard
+  CreditCard,
+  Star,
+  Check
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { api, User, Invoice } from '../services/api';
@@ -143,6 +145,56 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
           }
         } catch (error) {
           console.error('Final choice selection failed:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    });
+  };
+
+  const handleSetDefaultCard = async (paymentMethodId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.setDefaultCard(paymentMethodId);
+      if (response.status) {
+        const userResponse = await api.getUser();
+        if (userResponse.status && userResponse.data) {
+          const userData = userResponse.data;
+          if (userResponse.cards) {
+            userData.cards = userResponse.cards;
+          }
+          setUser(userData);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to set default card:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteCard = (paymentMethodId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: language === 'fr' ? 'Supprimer la carte' : 'Delete Card',
+      message: language === 'fr' ? 'Êtes-vous sûr de vouloir supprimer cette carte ?' : 'Are you sure you want to delete this card?',
+      confirmColor: 'bg-red-500',
+      onConfirm: async () => {
+        try {
+          setIsLoading(true);
+          const response = await api.deleteCard(paymentMethodId);
+          if (response.status) {
+            const userResponse = await api.getUser();
+            if (userResponse.status && userResponse.data) {
+              const userData = userResponse.data;
+              if (userResponse.cards) {
+                userData.cards = userResponse.cards;
+              }
+              setUser(userData);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to delete card:', error);
         } finally {
           setIsLoading(false);
         }
@@ -615,13 +667,39 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
 
                             <div className="flex items-center justify-between pt-4 border-t border-slate-50">
                               <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">Expires</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">{language === 'fr' ? 'Expire' : 'Expires'}</p>
                                 <p className="text-sm font-bold text-slate-800">{String(card.card.exp_month).padStart(2, '0')}/{card.card.exp_year}</p>
                               </div>
                               <div className="text-right">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">Type</p>
                                 <p className="text-sm font-bold text-slate-800 capitalize">{card.card.funding}</p>
                               </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 pt-4">
+                              {user?.default_payment_method === card.id ? (
+                                <div className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-brand-accent/10 rounded-xl text-brand-accent">
+                                  <Star size={16} className="fill-brand-accent" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest">
+                                    {language === 'fr' ? 'Par défaut' : 'Default'}
+                                  </span>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleSetDefaultCard(card.id)}
+                                  className="flex-1 px-4 py-2.5 bg-brand-accent/10 text-brand-accent text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-brand-accent hover:text-white transition-all flex items-center justify-center gap-2"
+                                >
+                                  <Star size={14} />
+                                  {language === 'fr' ? 'Par défaut' : 'Set Default'}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteCard(card.id)}
+                                className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all group/delete"
+                                title={language === 'fr' ? 'Supprimer' : 'Delete'}
+                              >
+                                <Trash2 size={14} className="group-hover/delete:scale-110 transition-transform" />
+                              </button>
                             </div>
                           </div>
                         </div>
