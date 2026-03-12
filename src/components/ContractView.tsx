@@ -279,7 +279,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
             try {
                 setLoading(true);
                 const data = await api.getContract(choiceId);
-                console.log(data);
+                
                 if (data.status == 0 || data.status == 1 || data.status == 2) {
                     setContractData(data);
                 } else {
