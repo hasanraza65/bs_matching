@@ -279,7 +279,8 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
             try {
                 setLoading(true);
                 const data = await api.getContract(choiceId);
-                if (data.status) {
+                console.log(data);
+                if (data.status == 0 || data.status == 1 || data.status == 2) {
                     setContractData(data);
                 } else {
                     setError(language === 'fr' ? "Impossible de charger les détails du contrat" : "Could not load contract specifics");
