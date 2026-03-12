@@ -218,6 +218,7 @@ export const fr = {
       number: "Facture n°",
       date: "Date d'échéance",
       status: "Statut",
+      billingMonth: "Mois de facturation",
       amount: "Montant",
       download: "Télécharger PDF",
       noInvoices: "Aucune facture disponible.",

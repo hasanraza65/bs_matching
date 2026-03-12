@@ -438,4 +438,9 @@ export const api = {
     const response = await apiClient.get(`/delete-card/${paymentMethodId}`);
     return response.data;
   },
+
+  addCard: async (): Promise<any> => {
+    const response = await apiClient.post("/add-card");
+    return response.data;
+  },
 };

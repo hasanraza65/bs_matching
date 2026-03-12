@@ -32,6 +32,7 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { api, User, Invoice } from '../services/api';
 import { InvoicePaymentModal } from './InvoicePaymentModal';
+import { AddCardModal } from './AddCardModal';
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -49,6 +50,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
   const [invoiceSubTab, setInvoiceSubTab] = useState<'invoices' | 'cards'>('invoices');
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -225,6 +227,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
       });
     });
     return totalMinutes / 60;
+  };
+
+  const formatBillingMonth = (dateString?: string) => {
+    if (!dateString) return '--';
+    const date = new Date(dateString);
+    return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', {
+      month: 'long',
+      year: 'numeric'
+    });
   };
 
   if (isLoading) {
@@ -573,8 +584,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                   <button
                     onClick={() => setInvoiceSubTab('invoices')}
                     className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${invoiceSubTab === 'invoices'
-                        ? 'bg-white text-brand-accent shadow-sm'
-                        : 'text-slate-400 hover:text-slate-600'
+                      ? 'bg-white text-brand-accent shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600'
                       }`}
                   >
                     {t.profilePage.tabs.invoices}
@@ -582,8 +593,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                   <button
                     onClick={() => setInvoiceSubTab('cards')}
                     className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${invoiceSubTab === 'cards'
-                        ? 'bg-white text-brand-accent shadow-sm'
-                        : 'text-slate-400 hover:text-slate-600'
+                      ? 'bg-white text-brand-accent shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600'
                       }`}
                   >
                     {language === 'fr' ? 'Gestion des cartes' : 'Card Management'}
@@ -598,6 +609,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                           <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.number}</th>
                           <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.date}</th>
                           <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.amount}</th>
+                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.billingMonth}</th>
                           <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.status}</th>
                           <th className="px-6 py-4 text-right"></th>
                         </tr>
@@ -607,14 +619,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                           invoices.map((inv) => (
                             <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors">
                               <td className="px-6 py-4 font-bold text-slate-700 text-sm">{inv.invoice_num}</td>
-                              <td className="px-6 py-4 text-slate-500 text-sm">{inv.due_date}</td>
+                              <td className="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">{inv.due_date}</td>
                               <td className="px-6 py-4 font-bold text-slate-800 text-sm">€{parseFloat(inv.amount).toFixed(2)}</td>
+                              <td className="px-6 py-4 text-slate-600 text-sm font-medium capitalize">{formatBillingMonth(inv.due_date)}</td>
                               <td className="px-6 py-4">
                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${inv.payment_status === 'Paid'
-                                    ? 'bg-green-50 text-green-600 border border-green-100'
-                                    : inv.payment_status === 'Suspended'
-                                      ? 'bg-red-50 text-red-600 border border-red-100'
-                                      : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                  ? 'bg-green-50 text-green-600 border border-green-100'
+                                  : inv.payment_status === 'Suspended'
+                                    ? 'bg-red-50 text-red-600 border border-red-100'
+                                    : 'bg-amber-50 text-amber-600 border border-amber-100'
                                   }`}>
                                   {inv.payment_status}
                                 </span>
@@ -651,74 +664,89 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                     </table>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {user?.cards?.data && user.cards.data.length > 0 ? (
-                      user.cards.data.map((card) => (
-                        <div key={card.id} className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-brand-accent/10 transition-colors" />
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-lg font-bold text-slate-800">
+                        {language === 'fr' ? 'Mes Cartes Enregristrées' : 'My Saved Cards'}
+                      </h4>
+                      <button
+                        onClick={() => setIsAddCardModalOpen(true)}
+                        className="flex items-center gap-2 px-6 py-3 bg-brand-accent text-white font-bold rounded-2xl hover:bg-brand-accent/90 transition-all shadow-lg shadow-brand-accent/20"
+                      >
+                        <Plus size={18} />
+                        {language === 'fr' ? 'Ajouter une carte' : 'Add Card'}
+                      </button>
+                    </div>
 
-                          <div className="relative flex items-center justify-between mb-8">
-                            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-accent group-hover:bg-brand-accent group-hover:text-white transition-all duration-500 shadow-inner">
-                              <CreditCard size={28} />
-                            </div>
-                            <div className="px-3 py-1 bg-brand-accent/10 rounded-full">
-                              <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">{card.card.brand}</span>
-                            </div>
-                          </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {user?.cards?.data && user.cards.data.length > 0 ? (
+                        user.cards.data.map((card) => (
+                          <div key={card.id} className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-brand-accent/10 transition-colors" />
 
-                          <div className="relative space-y-4">
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Card Number</p>
-                              <p className="text-2xl font-display font-bold text-slate-900 tracking-wider">
-                                •••• •••• •••• {card.card.last4}
-                              </p>
+                            <div className="relative flex items-center justify-between mb-8">
+                              <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-accent group-hover:bg-brand-accent group-hover:text-white transition-all duration-500 shadow-inner">
+                                <CreditCard size={28} />
+                              </div>
+                              <div className="px-3 py-1 bg-brand-accent/10 rounded-full">
+                                <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">{card.card.brand}</span>
+                              </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                            <div className="relative space-y-4">
                               <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">{language === 'fr' ? 'Expire' : 'Expires'}</p>
-                                <p className="text-sm font-bold text-slate-800">{String(card.card.exp_month).padStart(2, '0')}/{card.card.exp_year}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Card Number</p>
+                                <p className="text-2xl font-display font-bold text-slate-900 tracking-wider">
+                                  •••• •••• •••• {card.card.last4}
+                                </p>
                               </div>
-                              <div className="text-right">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">Type</p>
-                                <p className="text-sm font-bold text-slate-800 capitalize">{card.card.funding}</p>
-                              </div>
-                            </div>
 
-                            <div className="flex items-center gap-3 pt-4">
-                              {user?.default_payment_method === card.id ? (
-                                <div className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-brand-accent/10 rounded-xl text-brand-accent">
-                                  <Star size={16} className="fill-brand-accent" />
-                                  <span className="text-[10px] font-bold uppercase tracking-widest">
-                                    {language === 'fr' ? 'Par défaut' : 'Default'}
-                                  </span>
+                              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                                <div>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">{language === 'fr' ? 'Expire' : 'Expires'}</p>
+                                  <p className="text-sm font-bold text-slate-800">{String(card.card.exp_month).padStart(2, '0')}/{card.card.exp_year}</p>
                                 </div>
-                              ) : (
+                                <div className="text-right">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">Type</p>
+                                  <p className="text-sm font-bold text-slate-800 capitalize">{card.card.funding}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 pt-4">
+                                {user?.default_payment_method === card.id ? (
+                                  <div className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-brand-accent/10 rounded-xl text-brand-accent">
+                                    <Star size={16} className="fill-brand-accent" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                                      {language === 'fr' ? 'Par défaut' : 'Default'}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => handleSetDefaultCard(card.id)}
+                                    className="flex-1 px-4 py-2.5 bg-brand-accent/10 text-brand-accent text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-brand-accent hover:text-white transition-all flex items-center justify-center gap-2"
+                                  >
+                                    <Star size={14} />
+                                    {language === 'fr' ? 'Par défaut' : 'Set Default'}
+                                  </button>
+                                )}
                                 <button
-                                  onClick={() => handleSetDefaultCard(card.id)}
-                                  className="flex-1 px-4 py-2.5 bg-brand-accent/10 text-brand-accent text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-brand-accent hover:text-white transition-all flex items-center justify-center gap-2"
+                                  onClick={() => handleDeleteCard(card.id)}
+                                  className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all group/delete"
+                                  title={language === 'fr' ? 'Supprimer' : 'Delete'}
                                 >
-                                  <Star size={14} />
-                                  {language === 'fr' ? 'Par défaut' : 'Set Default'}
+                                  <Trash2 size={14} className="group-hover/delete:scale-110 transition-transform" />
                                 </button>
-                              )}
-                              <button
-                                onClick={() => handleDeleteCard(card.id)}
-                                className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all group/delete"
-                                title={language === 'fr' ? 'Supprimer' : 'Delete'}
-                              >
-                                <Trash2 size={14} className="group-hover/delete:scale-110 transition-transform" />
-                              </button>
+                              </div>
                             </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="col-span-2 text-center py-20 bg-white rounded-[32px] border border-dashed border-slate-200">
+                          <CreditCard size={48} className="mx-auto text-slate-200 mb-4" />
+                          <p className="text-slate-400 font-medium">No saved cards found</p>
                         </div>
-                      ))
-                    ) : (
-                      <div className="col-span-2 text-center py-20 bg-white rounded-[32px] border border-dashed border-slate-200">
-                        <CreditCard size={48} className="mx-auto text-slate-200 mb-4" />
-                        <p className="text-slate-400 font-medium">No saved cards found</p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -828,6 +856,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
           </div>
         )}
       </AnimatePresence>
+
+      <AddCardModal
+        isOpen={isAddCardModalOpen}
+        onClose={() => setIsAddCardModalOpen(false)}
+        onSuccess={async () => {
+          const response = await api.getUser();
+          if (response.status && response.data) {
+            const userData = response.data;
+            if (response.cards) {
+              userData.cards = response.cards;
+            }
+            setUser(userData);
+          }
+        }}
+      />
+
       {selectedInvoice && (
         <InvoicePaymentModal
           isOpen={isInvoiceModalOpen}

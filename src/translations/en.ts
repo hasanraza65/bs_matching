@@ -215,6 +215,7 @@ export const en = {
       number: "Invoice #",
       date: "Due Date",
       status: "Status",
+      billingMonth: "Billing Month",
       amount: "Amount",
       download: "Download PDF",
       noInvoices: "No invoices available.",
