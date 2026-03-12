@@ -827,11 +827,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
             setSelectedInvoice(null);
           }}
           invoice={selectedInvoice}
+          savedCards={user?.cards?.data}
+          defaultPaymentMethod={user?.default_payment_method}
           onSuccess={async () => {
             // Refresh user data to show updated invoice status
             const response = await api.getUser();
             if (response.status && response.data) {
-              setUser(response.data);
+              const userData = response.data;
+              if (response.cards) {
+                userData.cards = response.cards;
+              }
+              setUser(userData);
             }
           }}
         />

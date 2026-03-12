@@ -6,12 +6,15 @@ interface SlideToAcceptProps {
     onAccept: () => void;
     text?: string;
     successText?: string;
+    /** When true, resets the slider back to initial draggable state */
+    reset?: boolean;
 }
 
 export const SlideToAccept: React.FC<SlideToAcceptProps> = ({
     onAccept,
     text = "Slide to Accept",
-    successText = "Accepted"
+    successText = "Accepted",
+    reset = false
 }) => {
     const [isAccepted, setIsAccepted] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -26,6 +29,14 @@ export const SlideToAccept: React.FC<SlideToAcceptProps> = ({
             setDragWidth(containerRef.current.offsetWidth - 64 - 8);
         }
     }, []);
+
+    // Reset slider when `reset` prop changes to true
+    useEffect(() => {
+        if (reset && isAccepted) {
+            setIsAccepted(false);
+            x.set(0);
+        }
+    }, [reset, isAccepted, x]);
 
     // Transform opacity based on drag position
     const opacity = useTransform(x, [0, dragWidth * 0.8], [1, 0]);

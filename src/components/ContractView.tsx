@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import { generateContractPdf } from '../utils/contractPdfGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, ArrowLeft, ShieldCheck, Loader2, AlertCircle, CheckCircle2, CreditCard, Lock, Download, Check } from 'lucide-react';
 import { api, ContractResponse } from '../services/api';
@@ -49,163 +48,11 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
     };
 
     const handleDownloadPDF = async () => {
-        if (!contractRef.current) return;
+        if (!contractData) return;
         
         try {
             setIsDownloading(true);
-            const element = contractRef.current;
-            
-            // Temporary styles to ensure full content is captured correctly
-            const originalStyle = element.style.cssText;
-            const scrollElement = element.querySelector('.custom-scroll') as HTMLElement;
-            let originalScrollStyle = '';
-            if (scrollElement) {
-                originalScrollStyle = scrollElement.style.cssText;
-                scrollElement.style.maxHeight = 'none';
-                scrollElement.style.overflow = 'visible';
-            }
-
-            // Give the browser time to repaint and reflow (fixes one-click issue)
-            await new Promise(resolve => setTimeout(resolve, 200));
-
-            // Collect all resolved (RGB) computed colors from the ORIGINAL DOM
-            // The browser resolves oklch() → rgb() in computed styles for the live DOM
-            const originalElements = element.getElementsByTagName('*');
-            const resolvedStyles: Array<Record<string, string>> = [];
-            
-            const colorProperties = [
-                'color', 'backgroundColor', 'borderColor',
-                'borderTopColor', 'borderBottomColor',
-                'borderLeftColor', 'borderRightColor',
-                'outlineColor', 'textDecorationColor',
-                'boxShadow', 'backgroundImage'
-            ];
-
-            for (let i = 0; i < originalElements.length; i++) {
-                const computed = window.getComputedStyle(originalElements[i]);
-                const styles: Record<string, string> = {};
-                colorProperties.forEach(prop => {
-                    styles[prop] = (computed as unknown as Record<string, string>)[prop] || '';
-                });
-                resolvedStyles.push(styles);
-            }
-
-            // Also capture the root element's resolved styles
-            const rootComputed = window.getComputedStyle(element);
-            const rootStyles: Record<string, string> = {};
-            colorProperties.forEach(prop => {
-                rootStyles[prop] = (rootComputed as unknown as Record<string, string>)[prop] || '';
-            });
-
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                backgroundColor: '#ffffff',
-                windowWidth: element.scrollWidth,
-                windowHeight: element.scrollHeight,
-                onclone: (clonedDoc) => {
-                    // Regex that handles nested parentheses for oklch/oklab/color-mix
-                    const colorRegex = /(oklch|oklab|color-mix)\((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*\)/gi;
-
-                    // 1. Fix stylesheets IN-PLACE (don't remove them - we need layout/padding classes)
-                    const styleTags = clonedDoc.getElementsByTagName('style');
-                    for (let i = 0; i < styleTags.length; i++) {
-                        if (styleTags[i].textContent) {
-                            styleTags[i].textContent = styleTags[i].textContent.replace(colorRegex, 'transparent');
-                        }
-                    }
-
-                    // 2. Hide decorative blur/absolute elements that render as solid blocks
-                    const allClonedEls = clonedDoc.getElementsByTagName('*');
-                    for (let i = 0; i < allClonedEls.length; i++) {
-                        const el = allClonedEls[i] as HTMLElement;
-                        const classList = el.className || '';
-                        
-                        // Hide decorative blur elements (they render as solid teal blocks)
-                        if (typeof classList === 'string' && (
-                            classList.includes('blur-') || 
-                            (classList.includes('absolute') && classList.includes('rounded-full') && classList.includes('bg-brand'))
-                        )) {
-                            el.style.display = 'none';
-                        }
-                    }
-
-                    // 3. Apply resolved RGB colors from original DOM to cloned elements
-                    const contractChildren = element.getElementsByTagName('*');
-                    const clonedContractRoot = clonedDoc.body.querySelector('[class*="min-h-screen"]');
-                    const clonedChildren = clonedContractRoot 
-                        ? clonedContractRoot.getElementsByTagName('*')
-                        : clonedDoc.body.getElementsByTagName('*');
-
-                    const maxLen = Math.min(contractChildren.length, clonedChildren.length, resolvedStyles.length);
-                    
-                    for (let i = 0; i < maxLen; i++) {
-                        const clonedEl = clonedChildren[i] as HTMLElement;
-                        if (!clonedEl || !clonedEl.style) continue;
-                        
-                        const resolved = resolvedStyles[i];
-                        if (!resolved) continue;
-
-                        // Apply each resolved color property
-                        colorProperties.forEach(prop => {
-                            const value = resolved[prop];
-                            if (!value) return;
-                            
-                            // Skip properties that still have unresolved modern colors
-                            if (value.includes('oklch') || value.includes('oklab') || value.includes('color-mix')) {
-                                if (prop === 'backgroundColor') {
-                                    (clonedEl.style as unknown as Record<string, string>)[prop] = 'transparent';
-                                } else if (prop === 'color') {
-                                    (clonedEl.style as unknown as Record<string, string>)[prop] = '#1e293b';
-                                } else if (prop.includes('border') || prop.includes('Border')) {
-                                    (clonedEl.style as unknown as Record<string, string>)[prop] = 'transparent';
-                                } else if (prop === 'boxShadow') {
-                                    (clonedEl.style as unknown as Record<string, string>)[prop] = 'none';
-                                } else if (prop === 'backgroundImage') {
-                                    (clonedEl.style as unknown as Record<string, string>)[prop] = 'none';
-                                }
-                                return;
-                            }
-                            
-                            // Apply the resolved RGB value
-                            (clonedEl.style as unknown as Record<string, string>)[prop] = value;
-                        });
-
-                        // Also clean any inline style that still has oklch
-                        if (clonedEl.style.cssText && colorRegex.test(clonedEl.style.cssText)) {
-                            clonedEl.style.cssText = clonedEl.style.cssText.replace(colorRegex, 'transparent');
-                        }
-                    }
-
-                    // 4. Final pass: catch any remaining oklch in inline styles
-                    for (let i = 0; i < allClonedEls.length; i++) {
-                        const el = allClonedEls[i] as HTMLElement;
-                        if (el.style && el.style.cssText && colorRegex.test(el.style.cssText)) {
-                            el.style.cssText = el.style.cssText.replace(colorRegex, 'transparent');
-                        }
-                    }
-                }
-            });
-
-            // Restore styles
-            if (scrollElement) {
-                scrollElement.style.cssText = originalScrollStyle;
-            }
-            element.style.cssText = originalStyle;
-
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'px',
-                format: [canvas.width / 2, canvas.height / 2]
-            });
-
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height / canvas.width) * pdfWidth;
-
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`Contract-${choiceId}-${contractData?.contract_id || 'draft'}.pdf`);
+            await generateContractPdf(contractData, language, trans, choiceId);
         } catch (err) {
             // PDF generation failed silently
         } finally {
