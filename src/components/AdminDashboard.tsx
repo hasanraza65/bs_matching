@@ -583,6 +583,7 @@ const InvoicesView = () => {
           <thead>
             <tr className="bg-slate-50/50">
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice ID</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Customer</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Due Date</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Billing Month</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
@@ -621,6 +622,12 @@ const InvoicesView = () => {
             {!isLoading && !error && invoices.map((item) => (
               <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                 <td className="px-6 py-4 font-bold text-slate-800">{item.invoice_num}</td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-slate-900">User #{item.user_id}</span>
+                    <span className="text-[10px] text-slate-400">Request #{item.parent_request_id}</span>
+                  </div>
+                </td>
                 <td className="px-6 py-4 text-slate-600">{item.due_date}</td>
                 <td className="px-6 py-4 text-slate-600 capitalize">{formatBillingMonth(item.due_date)}</td>
                 <td className="px-6 py-4 font-bold text-slate-900">€{parseFloat(item.amount).toFixed(2)}</td>
@@ -632,8 +639,16 @@ const InvoicesView = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
-                    <Download size={18} />
+                  <button
+                    onClick={async () => {
+                      const { generateInvoicePdf } = await import('../utils/invoicePdfGenerator');
+                      const placeholderUser = { first_name: 'Customer', last_name: `(#${item.user_id})`, email: '-', user_address: '-' } as any;
+                      generateInvoicePdf(item, placeholderUser, 'fr', {} as any);
+                    }}
+                    className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold"
+                  >
+                    <Download size={14} />
+                    <span className="hidden xl:inline">Download PDF</span>
                   </button>
                 </td>
               </tr>

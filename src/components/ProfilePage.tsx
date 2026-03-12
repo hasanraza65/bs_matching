@@ -608,7 +608,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                               </td>
                               <td className="px-6 py-4 text-right">
                                 {inv.payment_status === 'Paid' ? (
-                                  <button className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold">
+                                  <button
+                                    onClick={async () => {
+                                      const { generateInvoicePdf } = await import('../utils/invoicePdfGenerator');
+                                      if (user) {
+                                        generateInvoicePdf(inv, user, language, t);
+                                      }
+                                    }}
+                                    className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold"
+                                  >
                                     <Download size={14} />
                                     <span className="hidden sm:inline">{t.profilePage.invoices.download}</span>
                                   </button>
