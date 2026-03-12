@@ -38,6 +38,7 @@ import {
   HelpCircle,
   Filter,
   LogOut,
+  Search,
 } from 'lucide-react';
 
 import { ProfilePage } from './components/ProfilePage';
@@ -174,7 +175,17 @@ export default function App() {
     language: [] as string[],
     age_group: [] as string[],
     experience: '' as string,
+    s: '' as string,
   });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, s: searchTerm }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const formatAge = (age: { years: number, months: number } | null) => {
     if (!age) return '';
@@ -523,6 +534,7 @@ export default function App() {
     if (currentStep === 4) {
       setSitterPage(1);
       setHasMoreSitters(true);
+      setExternalSitters([]);
     }
   }, [filters, currentStep]);
 
@@ -2192,6 +2204,20 @@ export default function App() {
                         <div className="flex items-center gap-2 text-slate-400 mb-6 border-b border-slate-100 pb-4 relative z-10">
                           <Filter size={18} className="text-brand-accent" />
                           <span className="text-[11px] font-bold uppercase tracking-widest">{t.common.filters}</span>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="mb-8 relative z-10">
+                          <div className="relative group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-accent transition-colors" size={20} />
+                            <input
+                              type="text"
+                              placeholder={language === 'fr' ? 'Rechercher une babysitter...' : 'Search babysitters...'}
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[20px] text-sm outline-none focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent transition-all shadow-sm group-hover:shadow-md"
+                            />
+                          </div>
                         </div>
 
                         {/* Categories Container */}
