@@ -444,4 +444,14 @@ export const api = {
     const response = await apiClient.post("/add-card");
     return response.data;
   },
+  
+  getAllInvoices: async (): Promise<{
+    status: boolean;
+    month: number;
+    year: number;
+    data: Invoice[];
+  }> => {
+    const response = await apiClient.get("/all-invoices");
+    return response.data;
+  },
 };

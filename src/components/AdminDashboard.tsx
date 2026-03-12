@@ -540,11 +540,41 @@ const InterviewsView = () => {
 };
 
 const InvoicesView = () => {
-  const invoices = [
-    { id: 'INV-001', date: '01/03/2026', amount: '€450.00', status: 'Paid' },
-    { id: 'INV-002', date: '05/03/2026', amount: '€1,200.00', status: 'Pending' },
-    { id: 'INV-003', date: '28/02/2026', amount: '€890.00', status: 'Overdue' },
-  ];
+  const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const fetchInvoices = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { api } = await import('../services/api');
+        const result = await api.getAllInvoices();
+        if (!cancelled) {
+          setInvoices(result.data);
+        }
+      } catch {
+        if (!cancelled) {
+          setError('Failed to load invoices. Please try again.');
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    fetchInvoices();
+    return () => { cancelled = true; };
+  }, []);
+
+  const formatBillingMonth = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date);
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -553,23 +583,52 @@ const InvoicesView = () => {
           <thead>
             <tr className="bg-slate-50/50">
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice ID</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Due Date</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Billing Month</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
               <th className="px-6 py-4 text-right"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {invoices.map((item) => (
+            {isLoading && (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center">
+                  <div className="flex items-center justify-center gap-3 text-slate-400">
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    <span className="text-sm font-medium">Loading invoices…</span>
+                  </div>
+                </td>
+              </tr>
+            )}
+            {!isLoading && error && (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-red-500 text-sm font-medium">
+                  {error}
+                </td>
+              </tr>
+            )}
+            {!isLoading && !error && invoices.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                  No invoices found.
+                </td>
+              </tr>
+            )}
+            {!isLoading && !error && invoices.map((item) => (
               <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-4 font-bold text-slate-800">{item.id}</td>
-                <td className="px-6 py-4 text-slate-600">{item.date}</td>
-                <td className="px-6 py-4 font-bold text-slate-900">{item.amount}</td>
+                <td className="px-6 py-4 font-bold text-slate-800">{item.invoice_num}</td>
+                <td className="px-6 py-4 text-slate-600">{item.due_date}</td>
+                <td className="px-6 py-4 text-slate-600 capitalize">{formatBillingMonth(item.due_date)}</td>
+                <td className="px-6 py-4 font-bold text-slate-900">€{parseFloat(item.amount).toFixed(2)}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
-                    item.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.payment_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
+                    item.payment_status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
                     }`}>
-                    {item.status}
+                    {item.payment_status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
