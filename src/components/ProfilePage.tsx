@@ -94,23 +94,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
     fetchUser();
   }, [onLogout, onGoToAdmin]);
 
-  const handleLogout = async () => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Logout',
-      message: 'Are you sure you want to logout?',
-      confirmColor: 'bg-red-500',
-      onConfirm: async () => {
-        try {
-          await api.logout();
-        } catch (error) {
-          console.error('Logout failed:', error);
-        } finally {
-          onLogout();
-        }
-      }
-    });
-  };
 
   const handleRemoveRequest = (id: string) => {
     setConfirmModal({
@@ -265,15 +248,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                   <ArrowLeft size={14} />
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t.common.back}</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 transition-all group"
-              >
-                <div className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-red-500 group-hover:bg-red-50 transition-all">
-                  <LogOut size={14} />
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Logout</span>
               </button>
               <button
                 onClick={onCreateRequest}

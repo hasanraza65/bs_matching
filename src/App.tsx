@@ -37,6 +37,7 @@ import {
   Lock,
   HelpCircle,
   Filter,
+  LogOut,
 } from 'lucide-react';
 
 import { ProfilePage } from './components/ProfilePage';
@@ -611,6 +612,16 @@ export default function App() {
       return { ...prev, childDOBs: newDOBs };
     });
   }, [formData.numChildren]);
+
+  const handleLogout = () => {
+    api.removeToken();
+    setIsLoggedIn(false);
+    setUser(null);
+    setView('booking');
+    setCurrentStep(1);
+    setIsModifying(false);
+    setParentRequestId(null);
+  };
 
   const validateStep1 = () => {
     const newErrors: FormErrors = {};
@@ -1208,6 +1219,19 @@ export default function App() {
                   FR
                 </button>
               </div>
+
+              {isLoggedIn && (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-red-500 transition-all group"
+                  title="Logout"
+                >
+                  <div className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-red-500 group-hover:bg-red-50 transition-all">
+                    <LogOut size={14} />
+                  </div>
+                  <span className="hidden md:inline text-[10px] font-bold uppercase tracking-[0.2em]">Logout</span>
+                </button>
+              )}
 
               {view !== 'profile' && (
                 <button
