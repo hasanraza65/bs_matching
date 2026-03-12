@@ -45,7 +45,6 @@ import { LoginScreen } from './components/LoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
 import { ContractView } from './components/ContractView';
 
-const HOURLY_RATE = 28.50;
 
 interface TimeSlot {
   id: string;
@@ -166,6 +165,7 @@ interface FormErrors {
 
 export default function App() {
   const { t, language, setLanguage, formatCurrency, formatNumber } = useLanguage();
+  const [hourlyRate, setHourlyRate] = useState(28.50);
   const [externalSitters, setExternalSitters] = useState<Babysitter[]>([]);
   const [sitterPage, setSitterPage] = useState(1);
   const [hasMoreSitters, setHasMoreSitters] = useState(true);
@@ -337,6 +337,9 @@ export default function App() {
 
   const mapRequestToState = (data: ParentRequest) => {
     setParentRequestId(data.id);
+    if (data.hourly_rate) {
+      setHourlyRate(parseFloat(data.hourly_rate));
+    }
     setFormData({
       firstName: data.user.first_name,
       lastName: data.user.last_name,
@@ -564,6 +567,9 @@ export default function App() {
       countryCode: formData.countryCode, // Keep current country code or try to parse from user_phone
     });
     setParentRequestId(request.id);
+    if (request.hourly_rate) {
+      setHourlyRate(parseFloat(request.hourly_rate));
+    }
     setIsModifying(true);
     setView('booking');
     setCurrentStep(1);
@@ -571,6 +577,7 @@ export default function App() {
   const handleCreateNewRequest = () => {
     setParentRequestId(null);
     setIsModifying(false);
+    setHourlyRate(28.50); // Reset to default
     setFormData({
       firstName: user?.first_name || '',
       lastName: user?.last_name || '',
@@ -1013,11 +1020,11 @@ export default function App() {
   };
 
   const totalHours = calculateTotalHours();
-  const baseSubtotal = totalHours * HOURLY_RATE;
+  const baseSubtotal = totalHours * hourlyRate;
 
   // 7 Free Hours Benefit
   const hasFreeHour = totalHours >= 1;
-  //const freeHourValue = hasFreeHour ? HOURLY_RATE : 0;
+  //const freeHourValue = hasFreeHour ? hourlyRate : 0;
   const freeHourValue = 0;
   const subtotalAfterFreeHours = baseSubtotal - freeHourValue;
 
@@ -2031,7 +2038,7 @@ export default function App() {
                               <div className="flex justify-between items-start">
                                 <div className="flex flex-col">
                                   <span className="text-sm font-bold text-slate-700">{t.step2.childcarePackage}</span>
-                                  <span className="text-[10px] text-slate-400">({formatNumber(totalHours)}h × {formatCurrency(HOURLY_RATE)})</span>
+                                  <span className="text-[10px] text-slate-400">({formatNumber(totalHours)}h × {formatCurrency(hourlyRate)})</span>
                                 </div>
                                 <span className="font-bold text-slate-700">{formatCurrency(baseSubtotal)}</span>
                               </div>

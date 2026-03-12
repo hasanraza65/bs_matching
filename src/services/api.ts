@@ -66,6 +66,7 @@ export interface ParentRequest {
   board_order: number;
   user: User;
   children: Child[];
+  hourly_rate?: string;
   schedules?: Schedule[];
   choices?: Choice[];
   created_at?: string;
