@@ -216,7 +216,8 @@ export const fr = {
     },
     invoices: {
       number: "Facture n°",
-      date: "Date",
+      date: "Date d'échéance",
+      status: "Statut",
       amount: "Montant",
       download: "Télécharger PDF",
       noInvoices: "Aucune facture disponible.",

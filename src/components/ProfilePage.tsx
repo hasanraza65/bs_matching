@@ -75,7 +75,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
             userData.cards = response.cards;
           }
           setUser(userData);
-          
+
           if (userData.email === 'admin@mail.com') {
             onGoToAdmin();
           }
@@ -572,21 +572,19 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                 <div className="flex p-1 bg-slate-100/50 rounded-2xl w-fit border border-slate-200/50">
                   <button
                     onClick={() => setInvoiceSubTab('invoices')}
-                    className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
-                      invoiceSubTab === 'invoices'
+                    className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${invoiceSubTab === 'invoices'
                         ? 'bg-white text-brand-accent shadow-sm'
                         : 'text-slate-400 hover:text-slate-600'
-                    }`}
+                      }`}
                   >
                     {t.profilePage.tabs.invoices}
                   </button>
                   <button
                     onClick={() => setInvoiceSubTab('cards')}
-                    className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
-                      invoiceSubTab === 'cards'
+                    className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${invoiceSubTab === 'cards'
                         ? 'bg-white text-brand-accent shadow-sm'
                         : 'text-slate-400 hover:text-slate-600'
-                    }`}
+                      }`}
                   >
                     {language === 'fr' ? 'Gestion des cartes' : 'Card Management'}
                   </button>
@@ -600,6 +598,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                           <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.number}</th>
                           <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.date}</th>
                           <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.amount}</th>
+                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.status}</th>
                           <th className="px-6 py-4 text-right"></th>
                         </tr>
                       </thead>
@@ -608,8 +607,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                           invoices.map((inv) => (
                             <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors">
                               <td className="px-6 py-4 font-bold text-slate-700 text-sm">{inv.invoice_num}</td>
-                              <td className="px-6 py-4 text-slate-500 text-sm">{inv.created_at?.split('T')[0]}</td>
+                              <td className="px-6 py-4 text-slate-500 text-sm">{inv.due_date}</td>
                               <td className="px-6 py-4 font-bold text-slate-800 text-sm">€{parseFloat(inv.amount).toFixed(2)}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${inv.payment_status === 'Paid'
+                                    ? 'bg-green-50 text-green-600 border border-green-100'
+                                    : inv.payment_status === 'Suspended'
+                                      ? 'bg-red-50 text-red-600 border border-red-100'
+                                      : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                  }`}>
+                                  {inv.payment_status}
+                                </span>
+                              </td>
                               <td className="px-6 py-4 text-right">
                                 {inv.payment_status === 'Paid' ? (
                                   <button className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold">
@@ -617,7 +626,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                                     <span className="hidden sm:inline">{t.profilePage.invoices.download}</span>
                                   </button>
                                 ) : (
-                                  <button 
+                                  <button
                                     onClick={() => {
                                       setSelectedInvoice(inv);
                                       setIsInvoiceModalOpen(true);
@@ -647,7 +656,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
                       user.cards.data.map((card) => (
                         <div key={card.id} className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden">
                           <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-brand-accent/10 transition-colors" />
-                          
+
                           <div className="relative flex items-center justify-between mb-8">
                             <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-accent group-hover:bg-brand-accent group-hover:text-white transition-all duration-500 shadow-inner">
                               <CreditCard size={28} />

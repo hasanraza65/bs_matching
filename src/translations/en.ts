@@ -213,7 +213,8 @@ export const en = {
     },
     invoices: {
       number: "Invoice #",
-      date: "Date",
+      date: "Due Date",
+      status: "Status",
       amount: "Amount",
       download: "Download PDF",
       noInvoices: "No invoices available.",
