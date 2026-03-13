@@ -209,7 +209,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
         totalMinutes += (endH * 60 + endM) - (startH * 60 + startM);
       });
     });
-    return totalMinutes / 60;
+    return parseFloat((totalMinutes / 60).toFixed(2));
   };
 
   const formatBillingMonth = (dateString?: string) => {
