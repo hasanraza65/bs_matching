@@ -39,6 +39,8 @@ import {
   Filter,
   LogOut,
   Search,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 import { ProfilePage } from './components/ProfilePage';
@@ -266,6 +268,7 @@ export default function App() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmModalProcessing, setIsConfirmModalProcessing] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(true);
 
   const getAvailableMonths = () => {
     const monthsSet = new Set<string>();
@@ -2201,106 +2204,129 @@ export default function App() {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl" />
 
                         {/* Header */}
-                        <div className="flex items-center gap-2 text-slate-400 mb-6 border-b border-slate-100 pb-4 relative z-10">
-                          <Filter size={18} className="text-brand-accent" />
-                          <span className="text-[11px] font-bold uppercase tracking-widest">{t.common.filters}</span>
+                        <div 
+                          className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4 relative z-10 cursor-pointer"
+                          onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+                        >
+                          <div className="flex items-center gap-2 text-slate-400">
+                            <Filter size={18} className="text-brand-accent" />
+                            <span className="text-[11px] font-bold uppercase tracking-widest">{t.common.filters}</span>
+                          </div>
+                          <button 
+                            className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+                            aria-label={isFiltersExpanded ? 'Collapse filters' : 'Expand filters'}
+                          >
+                            {isFiltersExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                          </button>
                         </div>
 
-                        {/* Search Bar */}
-                        <div className="mb-8 relative z-10">
-                          <div className="relative group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-accent transition-colors" size={20} />
-                            <input
-                              type="text"
-                              placeholder={language === 'fr' ? 'Rechercher une babysitter...' : 'Search babysitters...'}
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[20px] text-sm outline-none focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent transition-all shadow-sm group-hover:shadow-md"
-                            />
-                          </div>
-                        </div>
+                        <AnimatePresence>
+                          {isFiltersExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3, ease: 'easeInOut' }}
+                              className="overflow-hidden"
+                            >
+                              {/* Search Bar */}
+                              <div className="mb-8 relative z-10">
+                                <div className="relative group">
+                                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-accent transition-colors" size={20} />
+                                  <input
+                                    type="text"
+                                    placeholder={language === 'fr' ? 'Rechercher une babysitter...' : 'Search babysitters...'}
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[20px] text-sm outline-none focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent transition-all shadow-sm group-hover:shadow-md"
+                                  />
+                                </div>
+                              </div>
 
-                        {/* Categories Container */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
-                          {/* By Languages Category */}
-                          <div className="flex flex-col gap-3">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byLanguages}</span>
-                            <div className="flex flex-wrap gap-2">
-                              {['English', 'French'].map(lang => (
-                                <button
-                                  key={lang}
-                                  onClick={() => {
-                                    setFilters(prev => ({
-                                      ...prev,
-                                      language: prev.language.includes(lang)
-                                        ? prev.language.filter(l => l !== lang)
-                                        : [...prev.language, lang]
-                                    }));
-                                  }}
-                                  className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.language.includes(lang)
-                                    ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
-                                    : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
-                                    }`}
-                                >
-                                  {lang}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                              {/* Categories Container */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+                                {/* By Languages Category */}
+                                <div className="flex flex-col gap-3">
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byLanguages}</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {['English', 'French'].map(lang => (
+                                      <button
+                                        key={lang}
+                                        onClick={() => {
+                                          setFilters(prev => ({
+                                            ...prev,
+                                            language: prev.language.includes(lang)
+                                              ? prev.language.filter(l => l !== lang)
+                                              : [...prev.language, lang]
+                                          }));
+                                        }}
+                                        className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.language.includes(lang)
+                                          ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
+                                          : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
+                                          }`}
+                                      >
+                                        {lang}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
 
-                          {/* By Age Group Category */}
-                          <div className="flex flex-col gap-3">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byAgeGroup}</span>
-                            <div className="flex flex-wrap gap-2">
-                              {['Infants', 'Toddlers', 'Preschoolers', 'Young Learners'].map(age => (
-                                <button
-                                  key={age}
-                                  onClick={() => {
-                                    setFilters(prev => ({
-                                      ...prev,
-                                      age_group: prev.age_group.includes(age)
-                                        ? prev.age_group.filter(a => a !== age)
-                                        : [...prev.age_group, age]
-                                    }));
-                                  }}
-                                  className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.age_group.includes(age)
-                                    ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
-                                    : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
-                                    }`}
-                                >
-                                  {age === 'Infants' ? t.common.infants :
-                                    age === 'Toddlers' ? t.common.toddlers :
-                                      age === 'Preschoolers' ? t.common.preschoolers :
-                                        t.common.youngLearners}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                                {/* By Age Group Category */}
+                                <div className="flex flex-col gap-3">
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byAgeGroup}</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {['Infants', 'Toddlers', 'Preschoolers', 'Young Learners'].map(age => (
+                                      <button
+                                        key={age}
+                                        onClick={() => {
+                                          setFilters(prev => ({
+                                            ...prev,
+                                            age_group: prev.age_group.includes(age)
+                                              ? prev.age_group.filter(a => a !== age)
+                                              : [...prev.age_group, age]
+                                          }));
+                                        }}
+                                        className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.age_group.includes(age)
+                                          ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
+                                          : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
+                                          }`}
+                                      >
+                                        {age === 'Infants' ? t.common.infants :
+                                          age === 'Toddlers' ? t.common.toddlers :
+                                            age === 'Preschoolers' ? t.common.preschoolers :
+                                              t.common.youngLearners}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
 
-                          {/* By Experience Category */}
-                          <div className="flex flex-col gap-3">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byExperience}</span>
-                            <div className="flex flex-wrap gap-2">
-                              {['1+', '3+', '5+', '10+'].map(exp => (
-                                <button
-                                  key={exp}
-                                  onClick={() => {
-                                    setFilters(prev => ({
-                                      ...prev,
-                                      experience: prev.experience === exp ? '' : exp
-                                    }));
-                                  }}
-                                  className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.experience === exp
-                                    ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
-                                    : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
-                                    }`}
-                                >
-                                  {exp} {t.step4.exp}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
+                                {/* By Experience Category */}
+                                <div className="flex flex-col gap-3">
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{t.common.byExperience}</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {['1+', '3+', '5+', '10+'].map(exp => (
+                                      <button
+                                        key={exp}
+                                        onClick={() => {
+                                          setFilters(prev => ({
+                                            ...prev,
+                                            experience: prev.experience === exp ? '' : exp
+                                          }));
+                                        }}
+                                        className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap ${filters.experience === exp
+                                          ? 'bg-brand-accent border-brand-accent text-white shadow-lg shadow-brand-accent/20 scale-105'
+                                          : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/40 hover:bg-slate-50'
+                                          }`}
+                                      >
+                                        {exp} {t.step4.exp}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
 
                       {/* Babysitter Grid */}
