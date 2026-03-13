@@ -16,6 +16,13 @@ const buildInvoiceHtml = (
   const billingMonth = new Date(invoice.due_date).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
   const brandTeal = '#38B2AC';
 
+  const totalAmount = parseFloat(invoice.amount);
+  const vatAmount = totalAmount * 0.10;
+  const subTotalExclTax = totalAmount - vatAmount;
+
+  const statusColor = invoice.payment_status === 'Paid' ? '#10b981' : '#f59e0b';
+  const statusText = invoice.payment_status === 'Paid' ? 'Payée' : 'En attente';
+
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -46,8 +53,10 @@ const buildInvoiceHtml = (
         .table .price { text-align: right; }
 
         .totals { display: flex; flex-direction: column; align-items: flex-end; }
-        .total-row { display: flex; justify-content: space-between; width: 280px; padding: 10px 16px; font-size: 14px; color: #64748b; }
+        .total-row { display: flex; justify-content: space-between; width: 320px; padding: 10px 16px; font-size: 14px; color: #64748b; }
         .total-row.grand-total { background: #f8fafc; border-radius: 12px; margin-top: 12px; padding: 16px; font-weight: 800; font-size: 18px; color: #0f172a; }
+
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .footer { margin-top: 80px; padding-top: 32px; border-top: 1px solid #f1f5f9; color: #94a3b8; font-size: 11px; }
         .footer strong { color: #64748b; }
@@ -62,6 +71,15 @@ const buildInvoiceHtml = (
                 <div>N° de facture : <strong>${invoice.invoice_num}</strong></div>
                 <div>Émise le : <strong>${new Date(invoice.created_at).toLocaleDateString(locale)}</strong></div>
                 <div>Date d'échéance : <strong>${dueDate}</strong></div>
+            </div>
+        </div>
+        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; padding-bottom: 4px;">
+            <div class="meta">
+                <div style="margin-bottom: 8px;">
+                    <span style="margin-right: 8px; font-weight: 600; color: #94a3b8;">Statut :</span>
+                    <span class="status-badge" style="background: ${statusColor}15; color: ${statusColor}">${statusText}</span>
+                </div>
+                ${invoice.payment_date ? `<div>Payée le : <strong>${new Date(invoice.payment_date).toLocaleDateString(locale)}</strong></div>` : ''}
             </div>
         </div>
     </div>
@@ -87,7 +105,7 @@ const buildInvoiceHtml = (
     </div>
 
     <div class="invoice-summary">
-        <div class="summary-amount">€${parseFloat(invoice.amount).toFixed(2)}</div>
+        <div class="summary-amount">€${totalAmount.toFixed(2)}</div>
         <div class="summary-note">Montant total dû au ${dueDate}</div>
     </div>
 
@@ -95,7 +113,7 @@ const buildInvoiceHtml = (
         <thead>
             <tr>
                 <th>Description</th>
-                <th class="qty">Qté</th>
+                <th class="qty">Hourly</th>
                 <th class="price">Prix Unitaire</th>
                 <th class="amount">Total</th>
             </tr>
@@ -104,20 +122,24 @@ const buildInvoiceHtml = (
             <tr>
                 <td style="font-weight: 600;">Services de garde d'enfants - ${billingMonth}</td>
                 <td class="qty">1</td>
-                <td class="price">€${parseFloat(invoice.amount).toFixed(2)}</td>
-                <td class="amount">€${parseFloat(invoice.amount).toFixed(2)}</td>
+                <td class="price">€${totalAmount.toFixed(2)}</td>
+                <td class="amount">€${totalAmount.toFixed(2)}</td>
             </tr>
         </tbody>
     </table>
 
     <div class="totals">
         <div class="total-row">
-            <span>Sous-total</span>
-            <span>€${parseFloat(invoice.amount).toFixed(2)}</span>
+            <span>Sous-total (Hors Taxe)</span>
+            <span>€${subTotalExclTax.toFixed(2)}</span>
+        </div>
+        <div class="total-row">
+            <span>TVA (10%)</span>
+            <span>€${vatAmount.toFixed(2)}</span>
         </div>
         <div class="total-row grand-total">
             <span style="color: ${brandTeal}">Montant Total</span>
-            <span>€${parseFloat(invoice.amount).toFixed(2)}</span>
+            <span>€${totalAmount.toFixed(2)}</span>
         </div>
     </div>
 

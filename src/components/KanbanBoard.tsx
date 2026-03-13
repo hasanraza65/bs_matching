@@ -330,7 +330,7 @@ const SortableCard = ({
           </div>
           <div className="flex items-center gap-1">
             <Clock size={12} className="text-slate-400" />
-            <span>{calculateTotalHours(request.schedules)}h</span>
+            <span>{calculateTotalHours(request.schedules).toFixed(2)}h</span>
           </div>
         </div>
 
@@ -594,13 +594,11 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
       }));
 
       const response = await api.updateParentRequest(reqId, {
-        first_name: updatedFields.user?.first_name || '',
-        last_name: updatedFields.user?.last_name || '',
-        parent_address: updatedFields.parent_address || '',
         email: updatedFields.email || '',
         children: childrenPayload,
         choices: choicesPayload,
-        schedules: schedulesPayload, // TS will complain unless we fix the type
+        schedules: schedulesPayload, 
+        hourly_rate: updatedFields.hourly_rate,
         _method: 'put'
       } as any);
 
@@ -627,6 +625,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         parent_address: newReq.parent_address,
         children: newReq.children.map((c: any) => ({ child_dob: c.child_dob })),
         schedules: newReq.schedules,
+        hourly_rate: newReq.hourly_rate,
         board_status: isAddingToColumn || 'In Matching',
         from_admin: true,
       });
@@ -753,7 +752,8 @@ const NewRequestModal = ({
         schedule_date: '',
         slots: [{ start_time: '', end_time: '' }]
       }
-    ]
+    ],
+    hourly_rate: '28.50'
   });
 
   const handleChange = (field: string, value: any) => {
@@ -901,6 +901,17 @@ const NewRequestModal = ({
                   placeholder="DHA Phase 6, Lahore"
                   value={formData.parent_address}
                   onChange={(e) => handleChange('parent_address', e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Hourly Rate (€)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  placeholder="28.50"
+                  value={formData.hourly_rate}
+                  onChange={(e) => handleChange('hourly_rate', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
                 />
               </div>
@@ -1347,6 +1358,16 @@ const RequestDetailsModal = ({
                             className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
                           />
                         </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Hourly Rate (€)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={formData.hourly_rate || ''}
+                            onChange={(e) => handleChange('hourly_rate', e.target.value)}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
@@ -1391,7 +1412,7 @@ const RequestDetailsModal = ({
                     <div>
                       <h3 className="text-lg font-bold text-slate-900">Detailed Schedule</h3>
                       <p className="text-xs text-slate-500 font-medium">
-                        Manage all dates and times for this request. Total: <span className="text-slate-900 font-bold">{formData.hours}h</span>
+                        Manage all dates and times for this request. Total: <span className="text-slate-900 font-bold">{formData.hours.toFixed(2)}h</span>
                       </p>
                     </div>
                     <button

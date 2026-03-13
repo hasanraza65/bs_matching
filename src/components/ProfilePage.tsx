@@ -41,9 +41,18 @@ interface ProfilePageProps {
   onGoToAdmin: () => void;
   onCreateRequest: () => void;
   onViewContract?: (choiceId: number) => void;
+  onUserLoaded?: (user: User) => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onModifyRequest, onGoToAdmin, onCreateRequest, onViewContract }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ 
+  onBack, 
+  onLogout, 
+  onModifyRequest, 
+  onGoToAdmin, 
+  onCreateRequest, 
+  onViewContract,
+  onUserLoaded 
+}) => {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax'>('requests');
   const [user, setUser] = useState<User | null>(null);
@@ -77,12 +86,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack, onLogout, onMo
             userData.cards = response.cards;
           }
           setUser(userData);
+          onUserLoaded?.(userData);
 
           if (userData.email === 'admin@mail.com') {
             onGoToAdmin();
           }
         } else {
-          onLogout();
+          // Only logout if unauthorized (401)
+          if (response.code === 401) {
+            onLogout();
+          } else {
+            console.error('Fetch user failed with status:', response.code, response.message);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch user:', error);

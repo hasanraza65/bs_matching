@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from './i18n/LanguageContext';
 import { api, User, ParentRequest } from './services/api';
@@ -466,6 +466,28 @@ export default function App() {
   const handleLoginSuccess = async (isAdmin?: boolean) => {
     setIsLoggedIn(true);
 
+    try {
+      const response = await api.getUser();
+      if (response.status && response.data) {
+        const userData = response.data;
+        setUser(userData);
+        
+        // Sync formData with user data if it's a parent
+        if (!isAdmin) {
+          setFormData(prev => ({
+            ...prev,
+            firstName: userData.first_name || '',
+            lastName: userData.last_name || '',
+            email: userData.email || '',
+            telephone: userData.user_phone || '',
+            address: userData.user_address || '',
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch user after login:', error);
+    }
+
     if (isAdmin) {
       setView('admin-dashboard');
     } else {
@@ -570,7 +592,7 @@ export default function App() {
     return () => observer.disconnect();
   }, [hasMoreSitters, isFetchingSitters, currentStep]);
 
-  const handleModifyRequest = (request: any) => {
+  const handleModifyRequest = useCallback((request: any) => {
     setFormData({
       firstName: user?.first_name || '',
       lastName: user?.last_name || '',
@@ -588,8 +610,9 @@ export default function App() {
     setIsModifying(true);
     setView('booking');
     setCurrentStep(1);
-  };
-  const handleCreateNewRequest = () => {
+  }, [user, formData.countryCode]);
+
+  const handleCreateNewRequest = useCallback(() => {
     setParentRequestId(null);
     setIsModifying(false);
     setHourlyRate(28.50); // Reset to default
@@ -609,7 +632,36 @@ export default function App() {
     setErrors({});
     setView('booking');
     setCurrentStep(1);
-  };
+  }, [user]);
+
+  const handleLogout = useCallback(() => {
+    api.removeToken();
+    setIsLoggedIn(false);
+    setUser(null);
+    setView('booking');
+    setCurrentStep(1);
+    setIsModifying(false);
+    setParentRequestId(null);
+  }, []);
+
+  const handleBackToBooking = useCallback(() => setView('booking'), []);
+  const handleGoToAdmin = useCallback(() => setView('admin-dashboard'), []);
+  const handleViewContract = useCallback((choiceId: number) => {
+    setSelectedChoiceId(choiceId);
+    setView('contract');
+  }, []);
+
+  const handleUserLoaded = useCallback((userData: User) => {
+    setUser(userData);
+    setFormData(prev => ({
+      ...prev,
+      firstName: userData.first_name || '',
+      lastName: userData.last_name || '',
+      email: userData.email || '',
+      telephone: userData.user_phone || '',
+      address: userData.user_address || '',
+    }));
+  }, []);
 
   const filteredCountries = COUNTRY_CODES.filter(c =>
     c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
@@ -635,15 +687,6 @@ export default function App() {
     });
   }, [formData.numChildren]);
 
-  const handleLogout = () => {
-    api.removeToken();
-    setIsLoggedIn(false);
-    setUser(null);
-    setView('booking');
-    setCurrentStep(1);
-    setIsModifying(false);
-    setParentRequestId(null);
-  };
 
   const validateStep1 = () => {
     const newErrors: FormErrors = {};
@@ -1293,15 +1336,7 @@ export default function App() {
               className="w-full"
             >
               <AdminDashboard
-                onLogout={() => {
-                  api.removeToken();       // remove auth token
-                  setIsLoggedIn(false);    // update login state
-                  setUser(null);           // clear user
-                  setView('booking');      // go to index page
-                  setCurrentStep(1);       // if you use this
-                  setIsModifying(false);   // optional reset
-                  setParentRequestId(null); // optional reset
-                }}
+                onLogout={handleLogout}
               />
             </motion.div>
           ) : view === 'profile' ? (
@@ -1313,23 +1348,13 @@ export default function App() {
               className="w-full"
             >
               <ProfilePage
-                onBack={() => setView('booking')}
-                onLogout={() => {
-                  api.removeToken();
-                  setIsLoggedIn(false);
-                  setUser(null);
-                  setView('booking');
-                  setCurrentStep(1);
-                  setIsModifying(false);
-                  setParentRequestId(null);
-                }}
+                onBack={handleBackToBooking}
+                onLogout={handleLogout}
                 onModifyRequest={handleModifyRequest}
-                onGoToAdmin={() => setView('admin-dashboard')}
+                onGoToAdmin={handleGoToAdmin}
                 onCreateRequest={handleCreateNewRequest}
-                onViewContract={(choiceId) => {
-                  setSelectedChoiceId(choiceId);
-                  setView('contract');
-                }}
+                onViewContract={handleViewContract}
+                onUserLoaded={handleUserLoaded}
               />
             </motion.div>
           ) : view === 'login' ? (

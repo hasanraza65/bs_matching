@@ -232,12 +232,19 @@ export const api = {
     return response.data;
   },
 
-  getUser: async (): Promise<UserResponse> => {
+  getUser: async (): Promise<UserResponse & { code?: number }> => {
     try {
       const response = await apiClient.get("/auth/user");
-      return response.data;
-    } catch (error) {
-      return { status: false, message: "Request failed" };
+      return {
+        ...response.data,
+        code: response.status
+      };
+    } catch (error: any) {
+      return { 
+        status: false, 
+        message: error.response?.data?.message || "Request failed",
+        code: error.response?.status
+      };
     }
   },
 
@@ -257,6 +264,7 @@ export const api = {
       parent_address: string;
       children: { id?: number; child_dob: string }[];
       choices?: BabysitterChoicePayload[];
+      hourly_rate?: string | number;
       _method?: string;
     },
   ): Promise<ParentRequestResponse> => {
@@ -286,6 +294,7 @@ export const api = {
     parent_address: string;
     children: { child_dob: string }[];
     schedules: any[];
+    hourly_rate?: string | number;
     board_status?: string;
     from_admin?: boolean;
   }): Promise<ParentRequestResponse> => {
