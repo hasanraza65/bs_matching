@@ -445,13 +445,16 @@ export const api = {
     return response.data;
   },
   
-  getAllInvoices: async (): Promise<{
+  getAllInvoices: async (params?: { month?: number; year?: number }): Promise<{
     status: boolean;
     month: number;
     year: number;
     data: Invoice[];
   }> => {
-    const response = await apiClient.get("/all-invoices");
+    const response = await apiClient.get("/all-invoices", {
+      params,
+    });
+
     return response.data;
   },
 };

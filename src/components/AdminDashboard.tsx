@@ -540,6 +540,8 @@ const InterviewsView = () => {
 };
 
 const InvoicesView = () => {
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -550,8 +552,13 @@ const InvoicesView = () => {
       setIsLoading(true);
       setError(null);
       try {
+
         const { api } = await import('../services/api');
-        const result = await api.getAllInvoices();
+        const result = await api.getAllInvoices({
+          month: selectedMonth,
+          year: selectedYear
+        });
+
         if (!cancelled) {
           setInvoices(result.data);
         }
@@ -565,7 +572,7 @@ const InvoicesView = () => {
     };
     fetchInvoices();
     return () => { cancelled = true; };
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   const formatBillingMonth = (dateStr: string) => {
     try {
@@ -578,6 +585,35 @@ const InvoicesView = () => {
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+
+      <div className="flex items-center gap-4 p-4 border-b border-slate-100">
+
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(Number(e.target.value))}
+          className="border rounded-lg px-3 py-2 text-sm"
+        >
+          {Array.from({ length: 12 }).map((_, i) => (
+            <option key={i + 1} value={i + 1}>
+              {new Date(0, i).toLocaleString('en-US', { month: 'long' })}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className="border rounded-lg px-3 py-2 text-sm"
+        >
+          {[2023, 2024, 2025, 2026, 2027, 2028].map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
