@@ -122,6 +122,22 @@ export interface User {
   };
 }
 
+export interface Contract {
+  id: number;
+  user_id: number;
+  choice_id: number;
+  parent_request_id: number;
+  status: number;
+  response_date: string | null;
+  start_date: string;
+  end_date: string;
+  hourly_rate: string;
+  created_at: string;
+  updated_at: string;
+  user: User;
+  request: ParentRequest;
+}
+
 export interface RegisterResponse {
   status: boolean;
   message: string;
@@ -514,5 +530,10 @@ export const api = {
       message: response.data.message || 'Operation successful',
       ...response.data
     };
+  },
+
+  getContracts: async (): Promise<Contract[]> => {
+    const response = await apiClient.get("/contract");
+    return response.data;
   },
 };

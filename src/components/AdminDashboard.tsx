@@ -49,6 +49,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [activePage, setActivePage] = useState<AdminPage>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [viewingUserId, setViewingUserId] = useState<number | null>(null);
+  const [viewingChoiceId, setViewingChoiceId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const menuItems = [
@@ -147,7 +148,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <Menu size={20} />
             </button>
             <h2 className="text-xl font-bold text-slate-900 capitalize hidden sm:block">
-              {viewingUserId ? 'User Details' : activePage.replace('-', ' ')}
+              {viewingUserId ? 'User Details' : viewingChoiceId ? 'Contract Details' : activePage.replace('-', ' ')}
             </h2>
           </div>
 
@@ -199,7 +200,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               {activePage === 'requests' && <RequestsView />}
               {activePage === 'interviews' && <InterviewsView />}
               {activePage === 'invoices' && <InvoicesView />}
-              {activePage === 'tax' && <TaxCertificatesView />}
+              {viewingChoiceId ? (
+                <ContractDetailView 
+                  choiceId={viewingChoiceId} 
+                  onBack={() => setViewingChoiceId(null)} 
+                />
+              ) : activePage === 'tax' ? (
+                <TaxCertificatesView onViewContract={(id) => setViewingChoiceId(id)} />
+              ) : null}
               {activePage === 'users' && (
                 viewingUserId ? (
                   <UserDetailsView 
@@ -716,34 +724,101 @@ const InvoicesView = () => {
   );
 };
 
-const TaxCertificatesView = () => {
+const TaxCertificatesView = ({ onViewContract }: { onViewContract: (id: number) => void }) => {
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        const data = await api.getContracts();
+        setContracts(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching contracts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContracts();
+  }, []);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <select className="bg-white border border-slate-200 text-sm font-bold rounded-xl px-4 py-2 outline-none">
-            <option>Year 2024</option>
-            <option>Year 2023</option>
-          </select>
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50/50">
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Contract ID</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">User Name</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Contract Date</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                [1, 2, 3].map((i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                    <td className="px-6 py-4"><div className="h-6 bg-slate-100 rounded-full w-16" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-12" /></td>
+                    <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
+                  </tr>
+                ))
+              ) : contracts.length > 0 ? (
+                contracts.map((contract) => (
+                  <tr key={contract.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-6 py-4 text-sm font-black text-slate-900">#{contract.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                          <UserIcon size={14} />
+                        </div>
+                        <span className="font-bold text-slate-800">
+                          {contract.user?.first_name} {contract.user?.last_name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">
+                      {new Date(contract.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                        contract.status === 1 
+                          ? 'bg-emerald-50 text-emerald-600' 
+                          : 'bg-amber-50 text-amber-600'
+                      }`}>
+                        {contract.status === 1 ? 'Signed' : 'Pending'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-bold text-slate-700">
+                      {contract.hourly_rate ? `${contract.hourly_rate}€/hr` : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button 
+                        onClick={() => onViewContract(contract.choice_id)}
+                        className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all" 
+                        title="View Contract"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                    No contracts found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
-                <FileText size={24} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-900">Tax Certificate Q{i}</p>
-                <p className="text-xs text-slate-400">Generated on 01/03/2026</p>
-              </div>
-            </div>
-            <button className="p-3 bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white rounded-xl transition-all">
-              <Download size={18} />
-            </button>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -1078,6 +1153,161 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: () => void }) => {
+  const [contractData, setContractData] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContract = async () => {
+      try {
+        setLoading(true);
+        const data = await api.getContract(choiceId);
+        setContractData(data);
+      } catch (err) {
+        console.error("Failed to fetch contract:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContract();
+  }, [choiceId]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4" />
+        <p className="text-slate-500 font-bold">Loading contract details...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <button 
+        onClick={onBack}
+        className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-all group"
+      >
+        <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
+          <ChevronLeft size={18} />
+        </div>
+        Back to Contracts
+      </button>
+
+      <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 relative overflow-hidden max-w-4xl mx-auto">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-900/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+        
+        <div className="relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-8 border-b border-slate-100">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-slate-900/10 rounded-2xl flex items-center justify-center text-slate-900">
+                <FileText size={28} />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
+                Contrat de Garde d'Enfant(s)
+              </h1>
+            </div>
+            <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">CONTRACT ID</p>
+              <p className="text-sm font-bold text-slate-700">#CTR-{choiceId}-{contractData?.contract_id}</p>
+            </div>
+          </div>
+
+          <div className="space-y-10 text-slate-600 leading-relaxed max-h-[60vh] overflow-y-auto pr-4 custom-scroll">
+            <section>
+              <h2 className="text-lg font-bold text-slate-900 mb-4 uppercase tracking-wide">ENTRE LES SOUSSIGNÉS</h2>
+              <p className="mb-4">
+                La société BLOOM BUDDIES BABYSITTING SAS, au capital de 1000 euros, ayant son siège social au 7 Rue Meyerbeer, 75009 Paris, immatriculée sous le numéro 885130682 au registre du commerce et des sociétés de Paris.
+              </p>
+              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">D'UNE PART,</p>
+              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">ET</p>
+              <div className="mb-4">
+                <p className="font-bold text-slate-900">{contractData?.user?.first_name} {contractData?.user?.last_name}</p>
+                {contractData?.user?.user_address && <p>Domicilié(e) au : {contractData.user.user_address}</p>}
+                {contractData?.user?.email && <p>Email : {contractData.user.email}</p>}
+              </div>
+              <p className="italic text-slate-500 text-sm mb-4">Ci-après désignée le Client.</p>
+              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider">D'AUTRE PART,</p>
+            </section>
+
+            <p className="py-4 border-y border-slate-50 text-center font-medium text-slate-400 italic text-sm">
+              Il a été convenu et arrêté ce qui suit :
+            </p>
+
+            <section>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">ARTICLE 1 - OBJET DU CONTRAT</h3>
+              <p className="mb-6">Le présent contrat a pour objet de définir les modalités de garde d'enfant(s) à domicile.</p>
+              
+              <div className="space-y-4">
+                {contractData?.format1 && Object.entries(contractData.format1 as Record<string, any>).map(([month, dates]) => (
+                  <div key={month} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <h4 className="text-slate-900 font-bold text-xs uppercase tracking-widest mb-4">{month}</h4>
+                    <div className="space-y-2">
+                      {Object.entries(dates).map(([date, slots]) => (
+                        <div key={date} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+                          <span className="text-sm">{new Date(date).toLocaleDateString()}</span>
+                          <span className="text-sm font-bold text-slate-900">{(slots as string[]).join(' - ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">ARTICLE 4 - RÉMUNÉRATION</h3>
+              <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner bg-slate-50">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+                    <tr>
+                      <th className="px-6 py-4">Période</th>
+                      <th className="px-6 py-4">Total Heures</th>
+                      <th className="px-6 py-4">Montant TTC</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {contractData?.format2 && Object.entries(contractData.format2 as Record<string, number>).map(([month, amount]) => (
+                      <tr key={month}>
+                        <td className="px-6 py-4 font-bold text-slate-700">{month}</td>
+                        <td className="px-6 py-4 text-slate-500">Heures calculées</td>
+                        <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} €</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-slate-900 text-white">
+                    <tr>
+                      <td className="px-6 py-4 font-bold">Taux Horaire</td>
+                      <td colSpan={2} className="px-6 py-4 text-right font-bold text-lg">
+                        {contractData?.hourly_rate} €/h
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col items-end gap-2 text-slate-400">
+            <p className="text-xs">Fait électroniquement le {new Date(contractData?.created_at).toLocaleDateString()}</p>
+            {contractData?.status === 1 && (
+              <div className="text-right py-4">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Signature du Client</p>
+                <p className="font-['Caveat',_cursive] text-4xl text-slate-900 mb-1 leading-none transform -rotate-2">
+                  {contractData?.user?.first_name} {contractData?.user?.last_name}
+                </p>
+                <div className="w-56 h-0.5 bg-slate-900/10 rounded-full mt-2" />
+              </div>
+            )}
+            <p className="font-bold text-slate-900 text-sm italic">
+              {contractData?.status === 1 ? 'Electronic Signature Verified' : 'Pending Signature'}
+            </p>
+          </div>
         </div>
       </div>
     </div>
