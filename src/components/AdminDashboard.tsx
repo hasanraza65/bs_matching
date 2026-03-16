@@ -54,7 +54,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminPage = 'dashboard' | 'requests' | 'interviews' | 'invoices' | 'tax' | 'users';
+type AdminPage = 'dashboard' | 'requests' | 'interviews' | 'invoices' | 'contracts' | 'users';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [activePage, setActivePage] = useState<AdminPage>('dashboard');
@@ -68,7 +68,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { id: 'requests', label: 'All Requests', icon: ClipboardList },
     // { id: 'interviews', label: 'Interviews', icon: Calendar },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
-    { id: 'tax', label: 'Tax Certificates', icon: FileText },
+    { id: 'contracts', label: 'Contracts', icon: FileText },
     { id: 'users', label: 'All Users', icon: Users },
   ];
 
@@ -216,8 +216,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   choiceId={viewingChoiceId} 
                   onBack={() => setViewingChoiceId(null)} 
                 />
-              ) : activePage === 'tax' ? (
-                <TaxCertificatesView onViewContract={(id) => setViewingChoiceId(id)} />
+              ) : activePage === 'contracts' ? (
+                <ContractsView onViewContract={(id) => setViewingChoiceId(id)} />
               ) : null}
               {activePage === 'users' && (
                 viewingUserId ? (
@@ -735,7 +735,7 @@ const InvoicesView = () => {
   );
 };
 
-const TaxCertificatesView = ({ onViewContract }: { onViewContract: (id: number) => void }) => {
+const ContractsView = ({ onViewContract }: { onViewContract: (id: number) => void }) => {
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
