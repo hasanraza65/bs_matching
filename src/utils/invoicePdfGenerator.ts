@@ -113,7 +113,7 @@ const buildInvoiceHtml = (
         <thead>
             <tr>
                 <th>Description</th>
-                <th class="qty">Hourly</th>
+                <th class="qty">Heures</th>
                 <th class="price">Prix Unitaire</th>
                 <th class="amount">Total</th>
             </tr>
@@ -121,7 +121,7 @@ const buildInvoiceHtml = (
         <tbody>
             <tr>
                 <td style="font-weight: 600;">Services de garde d'enfants - ${billingMonth}</td>
-                <td class="qty">1</td>
+                <td class="qty">${invoice.billable_hours}</td>
                 <td class="price">€${totalAmount.toFixed(2)}</td>
                 <td class="amount">€${totalAmount.toFixed(2)}</td>
             </tr>
