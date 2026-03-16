@@ -269,6 +269,7 @@ export default function App() {
   const [isConfirmModalProcessing, setIsConfirmModalProcessing] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
+  const [profileInitialTab, setProfileInitialTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>('requests');
 
   const getAvailableMonths = () => {
     const monthsSet = new Set<string>();
@@ -335,6 +336,13 @@ export default function App() {
         } finally {
           setIsRegistering(false);
         }
+      }
+
+      const cmgMatch = path.match(/\/cmg\/(\d+)/);
+      if (cmgMatch) {
+        setProfileInitialTab('cmg');
+        setView('profile');
+        window.history.replaceState({}, '', '/');
       }
     };
     handleUrlRoute();
@@ -1355,6 +1363,7 @@ export default function App() {
                 onCreateRequest={handleCreateNewRequest}
                 onViewContract={handleViewContract}
                 onUserLoaded={handleUserLoaded}
+                initialTab={profileInitialTab}
               />
             </motion.div>
           ) : view === 'login' ? (

@@ -43,6 +43,7 @@ interface ProfilePageProps {
   onCreateRequest: () => void;
   onViewContract?: (choiceId: number) => void;
   onUserLoaded?: (user: User) => void;
+  initialTab?: 'requests' | 'invoices' | 'tax' | 'cmg';
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ 
@@ -52,10 +53,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onGoToAdmin, 
   onCreateRequest, 
   onViewContract,
-  onUserLoaded 
+  onUserLoaded,
+  initialTab = 'requests'
 }) => {
   const { t, language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>(initialTab);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
