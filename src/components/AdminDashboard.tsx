@@ -35,8 +35,19 @@ import {
   User as UserIcon,
   Shield,
   LayoutGrid,
-  Table as TableIcon
+  Table as TableIcon,
+  ShieldCheck,
+  Loader2,
+  History,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
+  Activity,
+  CreditCard,
+  DollarSign,
+  Briefcase
 } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import { KanbanBoard } from './KanbanBoard';
 
 interface AdminDashboardProps {
@@ -1160,6 +1171,8 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
 };
 
 const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: () => void }) => {
+  const { t: trans, language } = useLanguage();
+  const t = trans.contract;
   const [contractData, setContractData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -1177,6 +1190,41 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
     };
     fetchContract();
   }, [choiceId]);
+
+  const calculateHoursFromSlot = (slot: string): number => {
+    try {
+      const separator = slot.includes(' : ') ? ' : ' : ' - ';
+      const [start, end] = slot.split(separator).map(s => s.trim());
+      const [startH, startM] = start.split(':').map(Number);
+      const [endH, endM] = end.split(':').map(Number);
+      const startDecimal = startH + (startM / 60);
+      const endDecimal = endH + (endM / 60);
+      return Math.max(0, endDecimal - startDecimal);
+    } catch (e) {
+      return 0;
+    }
+  };
+
+  const getMonthlyHours = (monthDates: Record<string, string[]>): number => {
+    let total = 0;
+    Object.values(monthDates).forEach(slots => {
+      (slots as string[]).forEach(slot => {
+        total += calculateHoursFromSlot(slot);
+      });
+    });
+    return total;
+  };
+
+  const formatMonthString = (monthStr: string) => {
+    try {
+      const [monthName, year] = monthStr.split(' ');
+      const date = new Date(Date.parse(`${monthName} 1, ${year}`));
+      if (isNaN(date.getTime())) return monthStr;
+      return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+    } catch {
+      return monthStr;
+    }
+  };
 
   if (loading) {
     return (
@@ -1209,80 +1257,134 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                 <FileText size={28} />
               </div>
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                Contrat de Garde d'Enfant(s)
+                {t.title}
               </h1>
             </div>
             <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">CONTRACT ID</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">ID</p>
               <p className="text-sm font-bold text-slate-700">#CTR-{choiceId}-{contractData?.contract_id}</p>
             </div>
           </div>
 
-          <div className="space-y-10 text-slate-600 leading-relaxed max-h-[60vh] overflow-y-auto pr-4 custom-scroll">
+          <div className="space-y-10 text-slate-600 leading-relaxed max-h-[70vh] overflow-y-auto pr-4 custom-scroll">
             <section>
-              <h2 className="text-lg font-bold text-slate-900 mb-4 uppercase tracking-wide">ENTRE LES SOUSSIGNÉS</h2>
-              <p className="mb-4">
-                La société BLOOM BUDDIES BABYSITTING SAS, au capital de 1000 euros, ayant son siège social au 7 Rue Meyerbeer, 75009 Paris, immatriculée sous le numéro 885130682 au registre du commerce et des sociétés de Paris.
-              </p>
-              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">D'UNE PART,</p>
-              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">ET</p>
+              <h2 className="text-lg font-bold text-slate-900 mb-6 uppercase tracking-wide">{t.between}</h2>
+              <p className="mb-6">{t.agency}</p>
+              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">{t.part1}</p>
+              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">{t.part2}</p>
               <div className="mb-4">
-                <p className="font-bold text-slate-900">{contractData?.user?.first_name} {contractData?.user?.last_name}</p>
-                {contractData?.user?.user_address && <p>Domicilié(e) au : {contractData.user.user_address}</p>}
-                {contractData?.user?.email && <p>Email : {contractData.user.email}</p>}
+                <p>
+                  <strong className="text-slate-900">{contractData?.user?.first_name} {contractData?.user?.last_name}</strong>
+                  {contractData?.user?.user_address && (
+                    <span className="mx-1">{t.domiciledAt} {contractData.user.user_address}</span>
+                  )}
+                  {contractData?.user?.user_phone && (
+                    <span className="mx-1">{t.reachableAt} {contractData.user.user_phone}</span>
+                  )}
+                  {contractData?.user?.email && (
+                    <span className="mx-1">{language === 'fr' ? 'et' : 'and'} {contractData.user.email}</span>
+                  )}
+                </p>
               </div>
-              <p className="italic text-slate-500 text-sm mb-4">Ci-après désignée le Client.</p>
-              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider">D'AUTRE PART,</p>
+              <p className="italic text-slate-500 text-sm mb-4">{t.clientDesignation}</p>
+              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider">{t.partOther}</p>
             </section>
 
             <p className="py-4 border-y border-slate-50 text-center font-medium text-slate-400 italic text-sm">
-              Il a été convenu et arrêté ce qui suit :
+              {t.agreedFollowing}
             </p>
 
             <section>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">ARTICLE 1 - OBJET DU CONTRAT</h3>
-              <p className="mb-6">Le présent contrat a pour objet de définir les modalités de garde d'enfant(s) à domicile.</p>
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">1</span>
+                {t.article1.title}
+              </h3>
+              <p className="mb-6">{t.article1.content}</p>
               
-              <div className="space-y-4">
-                {contractData?.format1 && Object.entries(contractData.format1 as Record<string, any>).map(([month, dates]) => (
-                  <div key={month} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                    <h4 className="text-slate-900 font-bold text-xs uppercase tracking-widest mb-4">{month}</h4>
-                    <div className="space-y-2">
-                      {Object.entries(dates).map(([date, slots]) => (
-                        <div key={date} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-                          <span className="text-sm">{new Date(date).toLocaleDateString()}</span>
-                          <span className="text-sm font-bold text-slate-900">{(slots as string[]).join(' - ')}</span>
-                        </div>
-                      ))}
+              <div className="space-y-4 mb-6">
+                {contractData?.format1 && Object.entries(contractData.format1 as Record<string, any>).map(([month, dates]) => {
+                  const monthlyHours = getMonthlyHours(dates);
+                  const formattedMonth = formatMonthString(month);
+                  return (
+                    <div key={month} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                      <h4 className="text-slate-900 font-bold text-xs uppercase tracking-widest mb-4">{formattedMonth}</h4>
+                      <div className="space-y-2 mb-4">
+                        {Object.entries(dates as Record<string, string[]>).map(([date, slots]) => (
+                          <div key={date} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+                            <span className="text-sm capitalize">{new Date(date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                            <span className="text-sm font-bold text-slate-900">{(slots as string[]).join(' - ')}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-right text-xs font-bold text-slate-400 border-t border-slate-100 pt-4">
+                        {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-slate-900 ml-1 font-bold text-sm">{monthlyHours.toFixed(2)} h</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+              <div className="p-5 bg-slate-900 text-white rounded-2xl flex justify-between items-center shadow-lg">
+                <span className="font-bold text-sm">{t.article1.totalPeriod}</span>
+                <span className="text-xl font-bold">
+                  {contractData ? Object.values(contractData.format1 as Record<string, any>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates), 0).toFixed(2) : '0.00'} h
+                </span>
               </div>
             </section>
 
             <section>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">ARTICLE 4 - RÉMUNÉRATION</h3>
-              <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner bg-slate-50">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">2</span>
+                {t.article2.title}
+              </h3>
+              <p className="text-sm leading-relaxed">{t.article2.content}</p>
+            </section>
+
+            <section>
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">3</span>
+                {t.article3.title}
+              </h3>
+              <p className="mb-6">
+                {t.article3.content
+                  .replace('{start}', contractData?.start_date ? new Date(contractData.start_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[Date]')
+                  .replace('{end}', contractData?.end_date ? new Date(contractData.end_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[Date]')
+                }
+              </p>
+              <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article3.subTitle}</h4>
+                <p className="text-xs text-slate-500 italic">{t.article3.subContent}</p>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">4</span>
+                {t.article4.title}
+              </h3>
+              <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle41}</h4>
+              <p className="mb-4">{t.article4.content}</p>
+
+              <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner bg-slate-50 mb-6">
                 <table className="w-full text-left text-sm">
                   <thead className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
                     <tr>
-                      <th className="px-6 py-4">Période</th>
-                      <th className="px-6 py-4">Total Heures</th>
-                      <th className="px-6 py-4">Montant TTC</th>
+                      <th className="px-6 py-4">{t.article4.period}</th>
+                      <th className="px-6 py-4">{t.article4.hrTotal}</th>
+                      <th className="px-6 py-4">{t.article4.amountTtc}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {contractData?.format2 && Object.entries(contractData.format2 as Record<string, number>).map(([month, amount]) => (
                       <tr key={month}>
-                        <td className="px-6 py-4 font-bold text-slate-700">{month}</td>
-                        <td className="px-6 py-4 text-slate-500">Heures calculées</td>
+                        <td className="px-6 py-4 font-bold text-slate-700 capitalize">{formatMonthString(month)}</td>
+                        <td className="px-6 py-4 text-slate-500">{getMonthlyHours(contractData.format1[month]).toFixed(2)}h</td>
                         <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} €</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot className="bg-slate-900 text-white">
                     <tr>
-                      <td className="px-6 py-4 font-bold">Taux Horaire</td>
+                      <td className="px-6 py-4 font-bold">{t.article4.hourlyRate}</td>
                       <td colSpan={2} className="px-6 py-4 text-right font-bold text-lg">
                         {contractData?.hourly_rate} €/h
                       </td>
@@ -1290,11 +1392,127 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                   </tfoot>
                 </table>
               </div>
+              
+              <div className="space-y-4">
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                  <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle42}</h4>
+                  <p className="text-xs text-slate-500 italic leading-relaxed">{t.article4.content42}</p>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                  <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle43}</h4>
+                  <p className="text-xs text-slate-500 italic leading-relaxed">{t.article4.content43}</p>
+                </div>
+              </div>
             </section>
+
+            {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((num) => {
+              const art = (t as any)[`article${num}`];
+              if (!art) return null;
+              return (
+                <section key={num}>
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">{num}</span>
+                    {art.title}
+                  </h3>
+                  <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+                    {num === 6 && (
+                      <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p></>
+                    )}
+                    {num === 9 && (
+                      <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p></>
+                    )}
+                    {num === 11 && (
+                      <>
+                        <p>{art.content}</p>
+                        <ul className="list-disc pl-5 space-y-2">
+                          <li>{art.item1}</li><li>{art.item2}</li><li>{art.item3}</li>
+                        </ul>
+                      </>
+                    )}
+                    {num === 13 && (
+                      <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p></>
+                    )}
+                    {num === 14 && (
+                      <>
+                        <p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p>
+                        <p>{art.content4}</p><p>{art.content5}</p>
+                        <p className="italic font-medium">{art.content6}</p>
+                      </>
+                    )}
+                    {num === 15 && (
+                      <div className="space-y-4">
+                        <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle151}</h4><p>{art.content151}</p></div>
+                        <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle152}</h4><p>{art.content152}</p></div>
+                        <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle153}</h4><p>{art.content153}</p></div>
+                      </div>
+                    )}
+                    {num === 16 && (
+                      <>
+                        <p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p>
+                        <p>{art.content4}</p><p>{art.content5}</p>
+                        <p className="italic font-medium">{art.content6}</p>
+                      </>
+                    )}
+                    {num === 17 && (
+                      <>
+                        <p>{art.content1}</p>
+                        <div className="pl-4 space-y-3"><p>{art.itemA}</p><p>{art.itemB}</p></div>
+                        <p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p>
+                        <p className="italic font-medium">{art.content5}</p>
+                      </>
+                    )}
+                    {num === 18 && (
+                      <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p></>
+                    )}
+                    {num === 19 && (
+                      <div className="space-y-6">
+                        <div className="space-y-3"><p>{art.contentA}</p><p>{art.contentB}</p><p>{art.contentC}</p></div>
+                        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                          <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{art.subTitle1}</h4>
+                          <div className="space-y-2 text-xs text-slate-500 italic">
+                            <p>{art.subContent1A}</p><p>{art.subContent1B}</p><p>{art.subContent1C}</p>
+                          </div>
+                        </div>
+                        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                          <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{art.subTitle2}</h4>
+                          <div className="space-y-2 text-xs text-slate-500 italic">
+                            <p>{art.subContent2A}</p><p>{art.subContent2B}</p><p>{art.subContent2C}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {art.content && ![6, 9, 11, 13, 14, 15, 16, 17, 18, 19].includes(num) && (
+                      <p>{art.content}</p>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
+
+            <section className="mt-12 pt-12 border-t border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-900/10 flex items-center justify-center text-slate-900">
+                  <FileText size={20} />
+                </div>
+                {t.annexe.title}
+              </h3>
+              <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+                <p>{t.annexe.content1}</p><p>{t.annexe.content2}</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li>{t.annexe.item1}</li><li>{t.annexe.item2}</li>
+                  <li>{t.annexe.item3}</li><li>{t.annexe.item4}</li><li>{t.annexe.item5}</li>
+                </ul>
+                <p className="italic text-slate-500">{t.annexe.content3}</p>
+                <p>{t.annexe.content4}</p>
+              </div>
+            </section>
+
           </div>
 
           <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col items-end gap-2 text-slate-400">
-            <p className="text-xs">Fait électroniquement le {new Date(contractData?.created_at).toLocaleDateString()}</p>
+            <p className="text-xs">
+              {t.signatureLocationDate.replace('{date}', new Date(contractData?.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }))}
+            </p>
             {contractData?.status === 1 && (
               <div className="text-right py-4">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Signature du Client</p>
