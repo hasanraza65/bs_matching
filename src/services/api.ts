@@ -74,6 +74,7 @@ export interface ParentRequest {
 }
 
 export interface Invoice {
+  billable_hours: any;
   id: number;
   invoice_num: string;
   receipt_num: string | null;

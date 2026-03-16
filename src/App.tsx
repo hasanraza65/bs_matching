@@ -268,7 +268,7 @@ export default function App() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmModalProcessing, setIsConfirmModalProcessing] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
-  const [isFiltersExpanded, setIsFiltersExpanded] = useState(true);
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
 
   const getAvailableMonths = () => {
     const monthsSet = new Set<string>();
@@ -2230,7 +2230,7 @@ export default function App() {
 
                         {/* Header */}
                         <div 
-                          className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4 relative z-10 cursor-pointer"
+                          className="flex items-center justify-between border-b border-slate-100 relative z-10 cursor-pointer"
                           onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
                         >
                           <div className="flex items-center gap-2 text-slate-400">
@@ -2263,7 +2263,7 @@ export default function App() {
                                     placeholder={language === 'fr' ? 'Rechercher une babysitter...' : 'Search babysitters...'}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[20px] text-sm outline-none focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent transition-all shadow-sm group-hover:shadow-md"
+                                    className="mt-4 w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[20px] text-sm outline-none focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent transition-all shadow-sm group-hover:shadow-md"
                                   />
                                 </div>
                               </div>
