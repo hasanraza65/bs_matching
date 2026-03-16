@@ -340,8 +340,13 @@ export default function App() {
 
       const cmgMatch = path.match(/\/cmg\/(\d+)/);
       if (cmgMatch) {
+        const token = api.getToken();
         setProfileInitialTab('cmg');
-        setView('profile');
+        if (token) {
+          setView('profile');
+        } else {
+          setView('login');
+        }
         window.history.replaceState({}, '', '/');
       }
     };
