@@ -185,6 +185,7 @@ export const en = {
       interviews: "Interviews",
       invoices: "Invoices",
       tax: "Tax Certificates",
+      cmg: "CMG",
     },
     requests: {
       id: "Request ID",
@@ -225,6 +226,13 @@ export const en = {
       type: "Certificate Type",
       download: "Download",
       noCertificates: "No tax certificates available yet.",
+    },
+    cmg: {
+      title: "CMG Number",
+      fieldLabel: "Your CMG Number",
+      placeholder: "e.g. abc123456",
+      submit: "Save",
+      updateSuccess: "CMG number updated successfully",
     },
   },
   login: {

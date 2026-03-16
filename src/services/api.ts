@@ -112,6 +112,7 @@ export interface User {
   user_role: number;
   stripe_customer_id?: string;
   default_payment_method?: string;
+  cmg_num?: string;
   children?: Child[];
   parent_requests?: ParentRequest[];
   invoices?: Invoice[];
@@ -464,6 +465,11 @@ export const api = {
       params,
     });
 
+    return response.data;
+  },
+
+  updateCmg: async (cmg_num: string): Promise<{ status: boolean; message: string }> => {
+    const response = await apiClient.post("/update-cmg", { cmg_num });
     return response.data;
   },
 };

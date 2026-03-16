@@ -27,7 +27,8 @@ import {
   Video,
   CreditCard,
   Star,
-  Check
+  Check,
+  ShieldCheck
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { api, User, Invoice } from '../services/api';
@@ -54,13 +55,16 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onUserLoaded 
 }) => {
   const { t, language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>('requests');
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
   const [invoiceSubTab, setInvoiceSubTab] = useState<'invoices' | 'cards'>('invoices');
+  const [cmgValue, setCmgValue] = useState('');
+  const [isCmgUpdating, setIsCmgUpdating] = useState(false);
+  const [cmgMessage, setCmgMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -86,6 +90,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             userData.cards = response.cards;
           }
           setUser(userData);
+          setCmgValue(userData.cmg_num || '');
           onUserLoaded?.(userData);
 
           if (userData.email === 'admin@mail.com') {
@@ -212,6 +217,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     { id: 'requests', label: t.profilePage.tabs.requests, icon: Baby },
     { id: 'invoices', label: t.profilePage.tabs.invoices, icon: Receipt },
     { id: 'tax', label: t.profilePage.tabs.tax, icon: FileText },
+    { id: 'cmg', label: t.profilePage.tabs.cmg || 'CMG', icon: ShieldCheck },
   ];
 
   const calculateTotalHours = (schedules?: any[]) => {
@@ -774,6 +780,110 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     <p className="text-slate-400 font-medium">{t.profilePage.tax.noCertificates}</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'cmg' && (
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-white rounded-[40px] p-8 md:p-12 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                  
+                  <div className="relative space-y-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-brand-accent/10 rounded-[24px] flex items-center justify-center text-brand-accent shadow-sm">
+                        <ShieldCheck size={32} />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-display font-bold text-slate-900 tracking-tight">
+                          {(t.profilePage as any).cmg?.title || 'Numéro CMG'}
+                        </h3>
+                        <p className="text-sm text-slate-400 font-medium">Manage your Complementary Choice of Childcare mode</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">
+                          {(t.profilePage as any).cmg?.fieldLabel || 'Votre numéro CMG'}
+                        </label>
+                        <div className="relative group">
+                          <input
+                            type="text"
+                            value={cmgValue}
+                            onChange={(e) => setCmgValue(e.target.value)}
+                            placeholder={(t.profilePage as any).cmg?.placeholder || 'ex. abc123456'}
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 font-medium placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:bg-white transition-all group-hover:border-slate-200"
+                          />
+                        </div>
+                      </div>
+
+                      {cmgMessage && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`p-4 rounded-xl flex items-center gap-3 ${
+                            cmgMessage.type === 'success' 
+                              ? 'bg-green-50 text-green-600 border border-green-100' 
+                              : 'bg-red-50 text-red-600 border border-red-100'
+                          }`}
+                        >
+                          {cmgMessage.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                          <span className="text-xs font-bold">{cmgMessage.text}</span>
+                        </motion.div>
+                      )}
+
+                      <button
+                        onClick={async () => {
+                          try {
+                            setIsCmgUpdating(true);
+                            setCmgMessage(null);
+                            const response = await api.updateCmg(cmgValue);
+                            if (response.status) {
+                              setCmgMessage({ 
+                                text: (t.profilePage as any).cmg?.updateSuccess || 'Numéro CMG mis à jour avec succès', 
+                                type: 'success' 
+                              });
+                              // Refresh user data to sync
+                              const userRes = await api.getUser();
+                              if (userRes.status && userRes.data) {
+                                setUser(userRes.data);
+                              }
+                            } else {
+                              setCmgMessage({ text: response.message || 'Error updating CMG', type: 'error' });
+                            }
+                          } catch (error) {
+                            setCmgMessage({ text: 'An unexpected error occurred', type: 'error' });
+                          } finally {
+                            setIsCmgUpdating(false);
+                          }
+                        }}
+                        disabled={isCmgUpdating}
+                        className={`w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-lg shadow-slate-900/10 hover:bg-brand-accent hover:shadow-brand-accent/20 transition-all flex items-center justify-center gap-3 ${
+                          isCmgUpdating ? 'opacity-70 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {isCmgUpdating ? (
+                          <Loader2 size={20} className="animate-spin" />
+                        ) : (
+                          <Check size={20} />
+                        )}
+                        {(t.profilePage as any).cmg?.submit || 'Enregistrer'}
+                      </button>
+                    </div>
+
+                    <div className="pt-8 border-t border-slate-50">
+                      <div className="flex items-start gap-4 p-4 bg-brand-blue/5 rounded-2xl border border-brand-blue/10">
+                        <div className="mt-1 text-brand-blue">
+                          <AlertCircle size={16} />
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                          Your CMG number is essential for calculating your financial aid from the CAF. 
+                          Please ensure it matches the one provided in your CAF account.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </motion.div>

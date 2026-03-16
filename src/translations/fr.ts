@@ -188,6 +188,7 @@ export const fr = {
       interviews: "Entretiens",
       invoices: "Factures",
       tax: "Attestations Fiscales",
+      cmg: "CMG",
     },
     requests: {
       id: "ID Demande",
@@ -228,6 +229,13 @@ export const fr = {
       type: "Type d'attestation",
       download: "Télécharger",
       noCertificates: "Aucune attestation fiscale disponible pour le moment.",
+    },
+    cmg: {
+      title: "Numéro CMG",
+      fieldLabel: "Votre numéro CMG",
+      placeholder: "ex. abc123456",
+      submit: "Enregistrer",
+      updateSuccess: "Numéro CMG mis à jour avec succès",
     },
   },
   login: {
