@@ -50,6 +50,7 @@ import { ProfilePage } from './components/ProfilePage';
 import { LoginScreen } from './components/LoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
 import { ContractView } from './components/ContractView';
+import { Toaster } from 'react-hot-toast';
 
 
 interface TimeSlot {
@@ -3004,6 +3005,7 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Toaster position="top-right" />
     </div>
   );
 }

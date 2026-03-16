@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { api, User } from '../services/api';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+import { toast } from 'react-hot-toast';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -18,11 +22,17 @@ import {
   Download,
   Filter,
   TrendingUp,
+  Eye,
+  Trash2,
+  Edit2,
   Clock,
+  Phone,
+  Mail,
+  MapPin,
   CheckCircle2,
   AlertCircle,
   Baby,
-  User,
+  User as UserIcon,
   Shield,
   LayoutGrid,
   Table as TableIcon
@@ -38,6 +48,7 @@ type AdminPage = 'dashboard' | 'requests' | 'interviews' | 'invoices' | 'tax' | 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [activePage, setActivePage] = useState<AdminPage>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [viewingUserId, setViewingUserId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const menuItems = [
@@ -136,7 +147,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <Menu size={20} />
             </button>
             <h2 className="text-xl font-bold text-slate-900 capitalize hidden sm:block">
-              {activePage.replace('-', ' ')}
+              {viewingUserId ? 'User Details' : activePage.replace('-', ' ')}
             </h2>
           </div>
 
@@ -189,7 +200,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               {activePage === 'interviews' && <InterviewsView />}
               {activePage === 'invoices' && <InvoicesView />}
               {activePage === 'tax' && <TaxCertificatesView />}
-              {activePage === 'users' && <UsersView />}
+              {activePage === 'users' && (
+                viewingUserId ? (
+                  <UserDetailsView 
+                    id={viewingUserId} 
+                    onBack={() => setViewingUserId(null)} 
+                  />
+                ) : (
+                  <UsersView onViewUser={(id) => setViewingUserId(id)} />
+                )
+              )}
             </motion.div>
           </AnimatePresence>
         </main>
@@ -256,7 +276,7 @@ const DashboardView = () => {
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex gap-4">
                 <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
-                  <User size={18} />
+                  <UserIcon size={18} />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-800">New request from Family Smith</p>
@@ -729,33 +749,79 @@ const TaxCertificatesView = () => {
   );
 };
 
-const UsersView = () => {
-  const [activeTab, setActiveTab] = useState<'families' | 'sitters' | 'admins'>('families');
+const UsersView = ({ onViewUser }: { onViewUser: (id: number) => void }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const data = await api.getAllUsers();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = (user: User) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+    const id = userToDelete.id;
+    setIsDeleting(id);
+    try {
+      const response = await api.deleteUser(id);
+      if (response.status) {
+        setUsers(users.filter(u => u.id !== id));
+        toast.success(response.message || 'User deleted successfully');
+        setIsDeleteModalOpen(false);
+        setUserToDelete(null);
+      } else {
+        toast.error(response.message || 'Failed to delete user');
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error('An error occurred while deleting the user');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  const filteredUsers = users.filter(user => 
+    `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4 bg-white p-1.5 rounded-2xl border border-slate-100 w-fit">
-        {['families', 'sitters', 'admins'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab as any)}
-            className={`px-6 py-2 rounded-xl text-sm font-bold capitalize transition-all ${activeTab === tab ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:text-slate-900'
-              }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
-              placeholder={`Search ${activeTab}...`}
-              className="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm outline-none w-64"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm outline-none w-64 focus:bg-white focus:ring-2 focus:ring-slate-900/10 transition-all font-medium"
             />
+          </div>
+          <div className="text-sm text-slate-400 font-medium">
+            {filteredUsers.length} Users Total
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -764,29 +830,478 @@ const UsersView = () => {
               <tr className="bg-slate-50/50">
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Email</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-right"></th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">SMG Num</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Requests</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Phone</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {[1, 2, 3, 4].map((i) => (
-                <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-slate-800">User Name {i}</td>
-                  <td className="px-6 py-4 text-slate-600">user{i}@example.com</td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                      Active
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-sm font-bold text-slate-400 hover:text-slate-900 transition-colors">View Profile</button>
+              {loading ? (
+                [1, 2, 3].map(i => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-48" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-12" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-48" /></td>
+                    <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
+                  </tr>
+                ))
+              ) : filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                          <UserIcon size={14} />
+                        </div>
+                        <span className="font-bold text-slate-800">{user.first_name} {user.last_name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">{user.email || 'N/A'}</td>
+                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">{user.cmg_num || 'N/A'}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">
+                        {user.parent_requests_count || 0}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">{user.user_phone || 'N/A'}</td>
+                    <td className="px-6 py-4 text-slate-500 text-xs max-w-xs truncate">{user.user_address || 'N/A'}</td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <button
+                          onClick={() => onViewUser(user.id)}
+                          className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => { setSelectedUser(user); setIsEditModalOpen(true); }}
+                          className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all"
+                          title="Edit User"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user)}
+                          disabled={isDeleting === user.id}
+                          className={`p-2 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-all ${isDeleting === user.id ? 'animate-pulse' : ''}`}
+                          title="Delete User"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                    No users found matching your search.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {isEditModalOpen && selectedUser && (
+        <EditUserModal
+          user={selectedUser}
+          onClose={() => { setIsEditModalOpen(false); setSelectedUser(null); }}
+          onUpdate={() => { fetchUsers(); setIsEditModalOpen(false); setSelectedUser(null); }}
+        />
+      )}
+
+      {isDeleteModalOpen && userToDelete && (
+        <DeleteConfirmationModal
+          userName={`${userToDelete.first_name} ${userToDelete.last_name}`}
+          isDeleting={isDeleting === userToDelete.id}
+          onClose={() => { setIsDeleteModalOpen(false); setUserToDelete(null); }}
+          onConfirm={confirmDelete}
+        />
+      )}
+    </div>
+  );
+};
+
+const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => {
+  const [user, setUser] = useState<User & { parent_requests: any[] } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        const data = await api.getUserDetails(id);
+        setUser(data);
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetails();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="h-48 bg-white rounded-3xl border border-slate-100 shadow-sm" />
+        <div className="h-96 bg-white rounded-3xl border border-slate-100 shadow-sm" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Back Button & Header */}
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-all group"
+        >
+          <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
+            <ChevronLeft size={18} />
+          </div>
+          Back to Users
+        </button>
+      </div>
+
+      {/* User Info Card */}
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-8 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-900/20">
+              <UserIcon size={40} />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-slate-900 mb-1">{user?.first_name} {user?.last_name}</h2>
+              <div className="flex items-center gap-4 text-sm text-slate-400 font-medium">
+                <span className="flex items-center gap-1.5"><Mail size={14} /> {user?.email || 'N/A'}</span>
+                <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                <span className="flex items-center gap-1.5"><Phone size={14} /> {user?.user_phone || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Address</label>
+            <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <MapPin size={18} className="text-slate-400 mt-0.5" />
+              <p className="text-sm font-bold text-slate-700 leading-relaxed">{user?.user_address || 'Not Provided'}</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">CMG Identification</label>
+            <div className="flex items-center gap-3 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 group">
+              <Shield size={18} className="text-emerald-500" />
+              <div>
+                <p className="text-[10px] font-bold text-emerald-600/60 uppercase">CMG</p>
+                <p className="text-lg font-black text-emerald-600 tracking-wider">
+                  {user?.cmg_num || 'PENDING'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Quick Stats</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Requests</p>
+                <p className="text-xl font-black text-slate-900">{user?.parent_requests?.length || 0}</p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Role</p>
+                <p className="text-xl font-black text-slate-900">Parent</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Requests Table */}
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <ClipboardList size={20} className="text-slate-400" /> Parent Requests
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50/50">
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Rate</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Children</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {user?.parent_requests?.map((req: any) => (
+                <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4 text-sm font-black text-slate-900">#{req.id}</td>
+                  <td className="px-6 py-4">
+                    <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                      {req.board_status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-700">{req.hourly_rate}€/hr</td>
+                  <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate">{req.parent_address}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-1.5">
+                      <Baby size={14} className="text-slate-400" />
+                      <span className="text-sm font-bold text-slate-700">{req.children?.length || 0}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-xs text-slate-400 font-medium">
+                    {new Date(req.created_at).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+              {(!user?.parent_requests || user.parent_requests.length === 0) && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                    No requests found for this user.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditUserModal = ({ user, onClose, onUpdate }: { user: User; onClose: () => void; onUpdate: () => void }) => {
+  const [formData, setFormData] = useState({
+    first_name: user.first_name || '',
+    last_name: user.last_name || '',
+    user_phone: user.user_phone || '',
+    user_address: user.user_address || '',
+    cmg_num: user.cmg_num || '',
+    lat: '',
+    lng: ''
+  });
+  const [saving, setSaving] = useState(false);
+  const addressRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!addressRef.current || !window.google) return;
+    const autocomplete = new window.google.maps.places.Autocomplete(addressRef.current, {
+      types: ['address'],
+      fields: ['formatted_address', 'geometry']
+    });
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (place.geometry?.location) {
+        setFormData(prev => ({
+          ...prev,
+          user_address: place.formatted_address || '',
+          lat: place.geometry!.location.lat().toString(),
+          lng: place.geometry!.location.lng().toString()
+        }));
+      }
+    });
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const response = await api.updateUser(user.id, formData);
+      if (response.status) {
+        toast.success(response.message || 'User profile updated successfully!');
+        onUpdate();
+        onClose();
+      } else {
+        toast.error(response.message || 'Failed to update user profile');
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error('An error occurred while updating the profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative w-full max-w-xl bg-white rounded-[32px] shadow-2xl overflow-hidden"
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white">
+                <Edit2 size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Edit User Profile</h2>
+                <p className="text-xs text-slate-400 font-medium">Update account information for {user.first_name}</p>
+              </div>
+            </div>
+            <button type="button" onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-all text-slate-400">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-8 space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">First Name</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Last Name</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phone Number</label>
+              <PhoneInput
+                country={'fr'}
+                value={formData.user_phone}
+                onChange={(phone) => setFormData({ ...formData, user_phone: phone })}
+                enableSearch={true}
+                inputClass="!w-full !h-[48px] !bg-slate-50 !border !border-slate-100 !rounded-xl !text-sm !font-bold !pl-12 focus:!bg-white focus:!ring-2 focus:!ring-slate-900/10 focus:!border-slate-900"
+                containerClass="phone-input-container"
+                buttonClass="!bg-transparent !border-none !rounded-l-xl"
+                searchClass="!bg-white !text-slate-900"
+                dropdownClass="!bg-white !text-slate-900 !rounded-xl !shadow-xl !border-slate-100"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Address</label>
+              <div className="relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  ref={addressRef}
+                  type="text"
+                  defaultValue={formData.user_address}
+                  placeholder="Street address, city..."
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">CMG Number</label>
+              <input
+                type="text"
+                placeholder="e.g. ABC123456"
+                value={formData.cmg_num}
+                onChange={(e) => setFormData({ ...formData, cmg_num: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+              />
+            </div>
+          </div>
+
+          <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-8 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Update Profile'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};
+
+const DeleteConfirmationModal = ({ userName, isDeleting, onClose, onConfirm }: { userName: string; isDeleting: boolean; onClose: () => void; onConfirm: () => void }) => {
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden p-8 text-center"
+      >
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+          <AlertCircle size={40} />
+        </div>
+        
+        <h2 className="text-2xl font-black text-slate-900 mb-2">Delete User?</h2>
+        <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+          Are you sure you want to delete <span className="font-bold text-slate-900">{userName}</span>? 
+          This action is permanent and cannot be undone.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="w-full py-4 bg-red-600 text-white text-sm font-black rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isDeleting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Yes, Delete User'
+            )}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="w-full py-4 bg-slate-50 text-slate-500 text-sm font-bold rounded-2xl hover:bg-slate-100 transition-all"
+          >
+            No, Cancel
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 };

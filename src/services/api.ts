@@ -477,4 +477,42 @@ export const api = {
     const response = await apiClient.post("/update-cmg", { cmg_num });
     return response.data;
   },
+
+  // --- User Management APIs ---
+  getAllUsers: async (): Promise<User[]> => {
+    const response = await apiClient.get("/user-management");
+    return response.data;
+  },
+
+  getUserDetails: async (id: number): Promise<User & { parent_requests: any[] }> => {
+    const response = await apiClient.get(`/user-management/${id}`);
+    const data = response.data.data || response.data;
+    return data;
+  },
+
+  updateUser: async (id: number, data: {
+    first_name: string;
+    last_name: string;
+    user_phone: string;
+    cmg_num: string;
+    user_address: string;
+    lat?: string | number;
+    lng?: string | number;
+  }): Promise<{ status: boolean; message: string }> => {
+    const response = await apiClient.put(`/user-management/${id}`, data);
+    return {
+      status: response.data.status !== undefined ? response.data.status : (response.status >= 200 && response.status < 300),
+      message: response.data.message || 'Operation successful',
+      ...response.data
+    };
+  },
+
+  deleteUser: async (id: number): Promise<{ status: boolean; message: string }> => {
+    const response = await apiClient.delete(`/user-management/${id}`);
+    return {
+      status: response.data.status !== undefined ? response.data.status : (response.status >= 200 && response.status < 300),
+      message: response.data.message || 'Operation successful',
+      ...response.data
+    };
+  },
 };
