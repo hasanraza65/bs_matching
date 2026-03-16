@@ -94,6 +94,8 @@ interface FormData {
   countryCode: string;
   telephone: string;
   email: string;
+  lat?: number;
+  lng?: number;
 }
 
 const Tooltip = ({ children, content }: { children: React.ReactNode, content: React.ReactNode }) => {
@@ -215,6 +217,8 @@ export default function App() {
     countryCode: '+1',
     telephone: '',
     email: '',
+    lat: undefined,
+    lng: undefined,
   });
 
   const [dateSchedule, setDateSchedule] = useState<DateSchedule[]>([]);
@@ -257,6 +261,42 @@ export default function App() {
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [profileInitialTab, setProfileInitialTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>('requests');
+  
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Initializing Google Maps Autocomplete
+    const win = window as any;
+    if (currentStep === 1 && addressInputRef.current && win.google) {
+      autocompleteRef.current = new win.google.maps.places.Autocomplete(addressInputRef.current, {
+        fields: ['formatted_address', 'geometry'],
+      });
+
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current.getPlace();
+        if (place && place.formatted_address && place.geometry && place.geometry.location) {
+          const newAddress = place.formatted_address;
+          const newLat = place.geometry.location.lat();
+          const newLng = place.geometry.location.lng();
+          
+          setFormData(prev => ({
+            ...prev,
+            address: newAddress,
+            lat: newLat,
+            lng: newLng,
+          }));
+          
+          // Clear address error if it exists
+          setErrors(prev => {
+            const next = { ...prev };
+            delete next.address;
+            return next;
+          });
+        }
+      });
+    }
+  }, [currentStep]);
 
   const getAvailableMonths = () => {
     const monthsSet = new Set<string>();
@@ -685,7 +725,11 @@ export default function App() {
     const newErrors: FormErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
+    if (!formData.address.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (!formData.lat || !formData.lng) {
+      newErrors.address = 'Please select a valid address from the suggestions';
+    }
     if (!formData.telephone.trim()) {
       newErrors.telephone = 'Telephone is required';
     } else if (!isValidPhoneNumber(formData.telephone)) {
@@ -783,6 +827,8 @@ export default function App() {
                   child_dob: dob
                 };
               }),
+              lat: formData.lat,
+              lng: formData.lng,
             });
           } else {
             response = await api.register({
@@ -792,6 +838,8 @@ export default function App() {
               user_phone: formData.telephone,
               user_address: formData.address,
               children: formData.childDOBs.map(dob => ({ child_dob: dob })),
+              lat: formData.lat,
+              lng: formData.lng,
             }, parentRequestId || undefined);
           }
 
@@ -1487,6 +1535,7 @@ export default function App() {
                           <input
                             type="text"
                             name="address"
+                            ref={addressInputRef}
                             value={formData.address}
                             onChange={handleInputChange}
                             placeholder={t.step1.placeholders.address}

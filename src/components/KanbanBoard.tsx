@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import {
   DndContext,
   DragOverlay,
@@ -42,6 +44,12 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { api, ParentRequest } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 // --- Types ---
 
@@ -753,8 +761,49 @@ const NewRequestModal = ({
         slots: [{ start_time: '', end_time: '' }]
       }
     ],
-    hourly_rate: '28.50'
+    hourly_rate: '28.50',
+    lat: undefined as number | undefined,
+    lng: undefined as number | undefined
   });
+
+  const parentAddressRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!parentAddressRef.current || !window.google) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(parentAddressRef.current, {
+      types: ['address'],
+      fields: ['formatted_address', 'geometry']
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (place.geometry?.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        const address = place.formatted_address || '';
+        
+        setFormData(prev => ({
+          ...prev,
+          parent_address: address,
+          lat,
+          lng
+        }));
+        
+        // Update draft for parent component
+        onUpdateDraft({
+          ...formData,
+          parent_address: address,
+          lat,
+          lng
+        });
+      }
+    });
+
+    return () => {
+      window.google.maps.event.clearInstanceListeners(autocomplete);
+    };
+  }, [window.google]);
 
   const handleChange = (field: string, value: any) => {
     const newData = { ...formData, [field]: value };
@@ -897,10 +946,10 @@ const NewRequestModal = ({
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Parent Address</label>
                 <input
+                  ref={parentAddressRef}
                   type="text"
                   placeholder="DHA Phase 6, Lahore"
-                  value={formData.parent_address}
-                  onChange={(e) => handleChange('parent_address', e.target.value)}
+                  defaultValue={formData.parent_address}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
                 />
               </div>
@@ -1079,6 +1128,73 @@ const RequestDetailsModal = ({
     schedules: request.schedules || [],
     choices: request.choices || [],
   });
+
+  const parentAddressDetailsRef = useRef<HTMLInputElement>(null);
+  const babysitterAddressRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!parentAddressDetailsRef.current || !window.google) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(parentAddressDetailsRef.current, {
+      types: ['address'],
+      fields: ['formatted_address', 'geometry']
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (place.geometry?.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        const address = place.formatted_address || '';
+        
+        setFormData(prev => ({
+          ...prev,
+          parent_address: address,
+          lat,
+          lng
+        }));
+      }
+    });
+
+    return () => {
+      window.google.maps.event.clearInstanceListeners(autocomplete);
+    };
+  }, [window.google]);
+
+  useEffect(() => {
+    if (!window.google) return;
+
+    const autocompletes = babysitterAddressRefs.current.map((ref, idx) => {
+      if (!ref) return null;
+      const ac = new window.google.maps.places.Autocomplete(ref, {
+        types: ['address'],
+        fields: ['formatted_address', 'geometry']
+      });
+      ac.addListener('place_changed', () => {
+        const place = ac.getPlace();
+        if (place.geometry?.location) {
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+          const address = place.formatted_address || '';
+          handleSitterChange(idx, 'babysitter_address', address);
+          // Assuming choice objects need lat/lng
+          const newChoices = [...(formData.choices || [])];
+          if (newChoices[idx]) {
+            (newChoices[idx] as any).lat = lat;
+            (newChoices[idx] as any).lng = lng;
+            setFormData(prev => ({ ...prev, choices: newChoices }));
+          }
+        }
+      });
+      return ac;
+    });
+
+    return () => {
+      autocompletes.forEach(ac => {
+        if (ac) window.google.maps.event.clearInstanceListeners(ac);
+      });
+    };
+  }, [formData.choices?.length, window.google]);
 
   const handleChange = (field: string, value: any) => {
     const newData = { ...formData, [field]: value };
@@ -1352,9 +1468,9 @@ const RequestDetailsModal = ({
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Parent Address</label>
                           <input
+                            ref={parentAddressDetailsRef}
                             type="text"
-                            value={formData.parent_address}
-                            onChange={(e) => handleChange('parent_address', e.target.value)}
+                            defaultValue={formData.parent_address}
                             className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
                           />
                         </div>
@@ -1384,11 +1500,16 @@ const RequestDetailsModal = ({
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phone</label>
-                          <input
-                            type="text"
+                          <PhoneInput
+                            country={'fr'}
                             value={formData.lastContact.phone}
-                            onChange={(e) => handleChange('lastContact', { ...formData.lastContact, phone: e.target.value })}
-                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold"
+                            onChange={(phone) => handleChange('lastContact', { ...formData.lastContact, phone })}
+                            enableSearch={true}
+                            inputClass="!w-full !h-[40px] !bg-white !border !border-slate-200 !rounded-xl !text-xs !font-bold !pl-12 focus:!ring-2 focus:!ring-slate-900/10 focus:!border-slate-900"
+                            containerClass="phone-input-container"
+                            buttonClass="!bg-transparent !border-none !rounded-l-xl"
+                            searchClass="!bg-white !text-slate-900"
+                            dropdownClass="!bg-white !text-slate-900 !rounded-xl !shadow-xl !border-slate-100"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -1549,19 +1670,24 @@ const RequestDetailsModal = ({
                             </div>
                             <div className="space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">Phone</label>
-                              <input
-                                type="text"
+                              <PhoneInput
+                                country={'fr'}
                                 value={choice.babysitter_phone}
-                                onChange={(e) => handleSitterChange(idx, 'babysitter_phone', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                                onChange={(phone) => handleSitterChange(idx, 'babysitter_phone', phone)}
+                                enableSearch={true}
+                                inputClass="!w-full !h-[38px] !bg-slate-50 !border !border-slate-100 !rounded-lg !text-sm !font-bold !pl-12 focus:!bg-white focus:!ring-2 focus:!ring-slate-900/10 focus:!border-slate-900"
+                                containerClass="phone-input-container shadow-none"
+                                buttonClass="!bg-transparent !border-none !rounded-l-lg hover:!bg-slate-100"
+                                searchClass="!bg-white !text-slate-900"
+                                dropdownClass="!bg-white !text-slate-900 !rounded-xl !shadow-xl !border-slate-100"
                               />
                             </div>
                             <div className="md:col-span-2 space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">Address</label>
                               <input
+                                ref={el => babysitterAddressRefs.current[idx] = el}
                                 type="text"
-                                value={choice.babysitter_address}
-                                onChange={(e) => handleSitterChange(idx, 'babysitter_address', e.target.value)}
+                                defaultValue={choice.babysitter_address}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
                               />
                             </div>

@@ -198,6 +198,8 @@ export const api = {
       user_address: string;
       children: { child_dob: string }[];
       board_status?: string;
+      lat?: number;
+      lng?: number;
     },
     parentRequestId?: number,
   ): Promise<RegisterResponse> => {
@@ -268,6 +270,8 @@ export const api = {
       choices?: BabysitterChoicePayload[];
       hourly_rate?: string | number;
       _method?: string;
+      lat?: number;
+      lng?: number;
     },
   ): Promise<ParentRequestResponse> => {
     const response = await apiClient.post(`/parent-requests/${id}`, {
