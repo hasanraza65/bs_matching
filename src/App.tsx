@@ -42,6 +42,9 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 import { ProfilePage } from './components/ProfilePage';
 import { LoginScreen } from './components/LoginScreen';
@@ -92,21 +95,6 @@ interface FormData {
   telephone: string;
   email: string;
 }
-
-const COUNTRY_CODES = [
-  { code: '+1', country: 'United States', flag: '🇺🇸', iso: 'US' },
-  { code: '+44', country: 'United Kingdom', flag: '🇬🇧', iso: 'GB' },
-  { code: '+61', country: 'Australia', flag: '🇦🇺', iso: 'AU' },
-  { code: '+33', country: 'France', flag: '🇫🇷', iso: 'FR' },
-  { code: '+49', country: 'Germany', flag: '🇩🇪', iso: 'DE' },
-  { code: '+91', country: 'India', flag: '🇮🇳', iso: 'IN' },
-  { code: '+81', country: 'Japan', flag: '🇯🇵', iso: 'JP' },
-  { code: '+971', country: 'United Arab Emirates', flag: '🇦🇪', iso: 'AE' },
-  { code: '+34', country: 'Spain', flag: '🇪🇸', iso: 'ES' },
-  { code: '+39', country: 'Italy', flag: '🇮🇹', iso: 'IT' },
-  { code: '+55', country: 'Brazil', flag: '🇧🇷', iso: 'BR' },
-  { code: '+27', country: 'South Africa', flag: '🇿🇦', iso: 'ZA' },
-];
 
 const Tooltip = ({ children, content }: { children: React.ReactNode, content: React.ReactNode }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -235,9 +223,8 @@ export default function App() {
   const [tempTimeConfig, setTempTimeConfig] = useState({ startTime: '', endTime: '' });
 
   const [errors, setErrors] = useState<FormErrors>({});
+
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
-  const [countrySearch, setCountrySearch] = useState('');
 
   const [isRegistering, setIsRegistering] = useState(() => {
     return typeof window !== 'undefined' && window.location.pathname.match(/\/price\/\d+/) ? true : false;
@@ -610,11 +597,11 @@ export default function App() {
       firstName: user?.first_name || '',
       lastName: user?.last_name || '',
       email: user?.email || '',
-      telephone: user?.user_phone?.replace(formData.countryCode, '') || '',
+      telephone: request.user?.user_phone || '', // PhoneInput expects full number
       address: request.parent_address || '',
       numChildren: request.children?.length || 1,
       childDOBs: request.children?.map((c: any) => c.child_dob) || [''],
-      countryCode: formData.countryCode, // Keep current country code or try to parse from user_phone
+      countryCode: '+1', // Keep current country code or try to parse from user_phone
     });
     setParentRequestId(request.id);
     if (request.hourly_rate) {
@@ -623,7 +610,7 @@ export default function App() {
     setIsModifying(true);
     setView('booking');
     setCurrentStep(1);
-  }, [user, formData.countryCode]);
+  }, [user]);
 
   const handleCreateNewRequest = useCallback(() => {
     setParentRequestId(null);
@@ -676,13 +663,6 @@ export default function App() {
     }));
   }, []);
 
-  const filteredCountries = COUNTRY_CODES.filter(c =>
-    c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-    c.code.includes(countrySearch)
-  );
-
-  const selectedCountry = COUNTRY_CODES.find(c => c.code === formData.countryCode) || COUNTRY_CODES[0];
-
   // Update childDOBs array when numChildren changes
   useEffect(() => {
     setFormData(prev => {
@@ -706,7 +686,11 @@ export default function App() {
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.address.trim()) newErrors.address = 'Address is required';
-    if (!formData.telephone.trim()) newErrors.telephone = 'Telephone is required';
+    if (!formData.telephone.trim()) {
+      newErrors.telephone = 'Telephone is required';
+    } else if (!isValidPhoneNumber(formData.telephone)) {
+      newErrors.telephone = 'Invalid phone number format';
+    }
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -805,7 +789,7 @@ export default function App() {
               first_name: formData.firstName,
               last_name: formData.lastName,
               email: formData.email,
-              user_phone: formData.countryCode + formData.telephone,
+              user_phone: formData.telephone,
               user_address: formData.address,
               children: formData.childDOBs.map(dob => ({ child_dob: dob })),
             }, parentRequestId || undefined);
@@ -1580,88 +1564,26 @@ export default function App() {
                               <Phone size={16} className="text-brand-accent" />
                               {t.step1.phone}
                             </label>
-                            <div className="relative">
-                              <div className={`flex items-center w-full rounded-xl border bg-slate-50/50 transition-all focus-within:ring-2 focus-within:ring-brand-accent/20 focus-within:border-brand-accent ${errors.telephone ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200'
-                                }`}>
-                                {/* Integrated Country Selector */}
-                                <div className="relative">
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                                    className="flex items-center gap-1.5 px-3 py-3 border-r border-slate-200 hover:bg-slate-100/50 transition-colors rounded-l-xl min-w-[80px] justify-center"
-                                  >
-                                    <span className="text-lg leading-none">{selectedCountry.flag}</span>
-                                    <span className="text-sm font-medium text-slate-700">{selectedCountry.code}</span>
-                                  </button>
-
-                                  <AnimatePresence>
-                                    {isCountryDropdownOpen && (
-                                      <>
-                                        <div
-                                          className="fixed inset-0 z-40"
-                                          onClick={() => setIsCountryDropdownOpen(false)}
-                                        />
-                                        <motion.div
-                                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                          className="absolute left-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden"
-                                        >
-                                          <div className="p-2 border-bottom border-slate-100">
-                                            <input
-                                              autoFocus
-                                              type="text"
-                                              placeholder={t.common.searchCountry}
-                                              value={countrySearch}
-                                              onChange={(e) => setCountrySearch(e.target.value)}
-                                              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-brand-accent"
-                                            />
-                                          </div>
-                                          <div className="max-h-60 overflow-y-auto p-1">
-                                            {filteredCountries.length > 0 ? (
-                                              filteredCountries.map((c) => (
-                                                <button
-                                                  key={c.iso}
-                                                  type="button"
-                                                  onClick={() => {
-                                                    setFormData(prev => ({ ...prev, countryCode: c.code }));
-                                                    setIsCountryDropdownOpen(false);
-                                                    setCountrySearch('');
-                                                  }}
-                                                  className={`flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-50 ${formData.countryCode === c.code ? 'bg-brand-accent/5 text-brand-accent font-medium' : 'text-slate-700'
-                                                    }`}
-                                                >
-                                                  <div className="flex items-center gap-3">
-                                                    <span className="text-lg">{c.flag}</span>
-                                                    <span>{c.country}</span>
-                                                  </div>
-                                                  <span className="text-slate-400 font-mono">{c.code}</span>
-                                                </button>
-                                              ))
-                                            ) : (
-                                              <div className="px-3 py-4 text-center text-slate-400 text-sm italic">
-                                                {t.common.noCountries}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </motion.div>
-                                      </>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-
-                                <input
-                                  type="tel"
-                                  name="telephone"
-                                  value={formData.telephone}
-                                  onChange={handleInputChange}
-                                  placeholder={t.step1.placeholders.phone}
-                                  className="flex-1 px-4 py-3 bg-transparent border-none focus:ring-0 focus:outline-none text-slate-700 placeholder:text-slate-300"
-                                />
-                              </div>
+                            <div className="relative phone-input-container">
+                              <PhoneInput
+                                country={'fr'}
+                                value={formData.telephone}
+                                onChange={(phone) => setFormData(prev => ({ ...prev, telephone: phone.startsWith('+') ? phone : `+${phone}` }))}
+                                enableSearch={true}
+                                searchPlaceholder={language === 'fr' ? 'Chercher...' : 'Search...'}
+                                containerClass="w-full !border-none"
+                                inputClass={`!w-full !h-[50px] !bg-slate-50/50 !border !rounded-xl !text-slate-900 !font-medium !pl-14 focus:!ring-2 focus:!ring-brand-accent/20 focus:!border-brand-accent ${errors.telephone ? '!border-red-400' : '!border-slate-200'}`}
+                                buttonClass="!h-[50px] !bg-slate-50/50 !border !border-slate-200 !rounded-l-xl !px-2 hover:!bg-slate-100/50 !transition-colors !min-w-[50px] !z-10"
+                                dropdownClass="!max-h-80 !overflow-y-auto !bg-white !border !border-slate-200 !rounded-xl !shadow-2xl !z-[100]"
+                                searchClass="!bg-white !p-2 !sticky !top-0 !z-20"
+                                inputProps={{
+                                  name: 'telephone',
+                                  required: true,
+                                }}
+                              />
                             </div>
                             {errors.telephone && (
-                              <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                              <p className="text-red-500 text-[10px] font-bold mt-2 flex items-center gap-1">
                                 <AlertCircle size={12} /> {errors.telephone}
                               </p>
                             )}
