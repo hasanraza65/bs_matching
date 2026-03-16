@@ -263,19 +263,15 @@ export default function App() {
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [profileInitialTab, setProfileInitialTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>('requests');
   
-  const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
-
-  useEffect(() => {
-    // Initializing Google Maps Autocomplete
-    const win = window as any;
-    if (currentStep === 1 && addressInputRef.current && win.google) {
-      autocompleteRef.current = new win.google.maps.places.Autocomplete(addressInputRef.current, {
+  const initAutocomplete = useCallback((node: HTMLInputElement | null) => {
+    if (node && (window as any).google) {
+      const autocomplete = new (window as any).google.maps.places.Autocomplete(node, {
         fields: ['formatted_address', 'geometry'],
       });
 
-      autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current.getPlace();
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
         if (place && place.formatted_address && place.geometry && place.geometry.location) {
           const newAddress = place.formatted_address;
           const newLat = place.geometry.location.lat();
@@ -296,8 +292,9 @@ export default function App() {
           });
         }
       });
+      autocompleteRef.current = autocomplete;
     }
-  }, [currentStep]);
+  }, []);
 
   const getAvailableMonths = () => {
     const monthsSet = new Set<string>();
@@ -828,6 +825,18 @@ export default function App() {
                   child_dob: dob
                 };
               }),
+              lat: formData.lat,
+              lng: formData.lng,
+            });
+          } else if (isLoggedIn) {
+            // If logged in and not modifying a specific request, create a new one
+            response = await api.createParentRequest({
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              email: formData.email,
+              parent_address: formData.address,
+              children: formData.childDOBs.map(dob => ({ child_dob: dob })),
+              schedules: [], // Schedules will be added in step 2
               lat: formData.lat,
               lng: formData.lng,
             });
@@ -1533,16 +1542,16 @@ export default function App() {
                             <MapPin size={16} className="text-brand-accent" />
                             {t.step1.address}
                           </label>
-                          <input
-                            type="text"
-                            name="address"
-                            ref={addressInputRef}
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            placeholder={t.step1.placeholders.address}
-                            className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${errors.address ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200 focus:border-brand-accent'
-                              }`}
-                          />
+                            <input
+                              type="text"
+                              name="address"
+                              ref={initAutocomplete}
+                              value={formData.address}
+                              onChange={handleInputChange}
+                              placeholder={t.step1.placeholders.address}
+                              className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${errors.address ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200 focus:border-brand-accent'
+                                }`}
+                            />
                           {errors.address && (
                             <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
                               <AlertCircle size={12} /> {errors.address}

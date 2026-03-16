@@ -319,6 +319,8 @@ export const api = {
     hourly_rate?: string | number;
     board_status?: string;
     from_admin?: boolean;
+    lat?: number;
+    lng?: number;
   }): Promise<ParentRequestResponse> => {
     const response = await apiClient.post("/parent-requests", data);
     return {
