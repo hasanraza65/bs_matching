@@ -138,6 +138,21 @@ export interface Contract {
   request: ParentRequest;
 }
 
+export interface Attestation {
+  id: number;
+  user_id: number;
+  year: string;
+  file: string;
+  created_at: string;
+  updated_at: string;
+  user: User;
+}
+
+export interface AttestationsResponse {
+  data: Attestation[];
+}
+
+
 export interface RegisterResponse {
   status: boolean;
   message: string;
@@ -538,4 +553,14 @@ export const api = {
     const response = await apiClient.get("/contract");
     return response.data;
   },
+
+  getAttestations: async (): Promise<AttestationsResponse> => {
+    const response = await apiClient.get("/attestations");
+    return response.data;
+  },
+
 };
+
+
+
+

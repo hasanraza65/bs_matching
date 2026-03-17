@@ -4,6 +4,8 @@ import { api, User } from '../services/api';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { toast } from 'react-hot-toast';
+
+
 import {
   LayoutDashboard,
   ClipboardList,
@@ -54,7 +56,8 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminPage = 'dashboard' | 'requests' | 'interviews' | 'invoices' | 'contracts' | 'users';
+type AdminPage = 'dashboard' | 'requests' | 'interviews' | 'invoices' | 'contracts' | 'attestations' | 'users';
+
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [activePage, setActivePage] = useState<AdminPage>('dashboard');
@@ -69,7 +72,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     // { id: 'interviews', label: 'Interviews', icon: Calendar },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
     { id: 'contracts', label: 'Contracts', icon: FileText },
+    { id: 'attestations', label: 'Attestations Fiscales', icon: History },
     { id: 'users', label: 'All Users', icon: Users },
+
   ];
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -211,7 +216,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               {activePage === 'requests' && <RequestsView />}
               {activePage === 'interviews' && <InterviewsView />}
               {activePage === 'invoices' && <InvoicesView />}
+              {activePage === 'attestations' && <AttestationsView />}
               {viewingChoiceId ? (
+
                 <ContractDetailView 
                   choiceId={viewingChoiceId} 
                   onBack={() => setViewingChoiceId(null)} 
@@ -834,6 +841,106 @@ const ContractsView = ({ onViewContract }: { onViewContract: (id: number) => voi
     </div>
   );
 };
+
+const AttestationsView = () => {
+  const [attestations, setAttestations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAttestations = async () => {
+      try {
+        const result = await api.getAttestations();
+        setAttestations(result.data || []);
+      } catch (error) {
+        console.error("Error fetching attestations:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAttestations();
+  }, []);
+
+  const handleDownload = (fileName: string) => {
+    const link = document.createElement('a');
+    link.href = `/certificates/${fileName}`;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+  };
+
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50/50">
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">User Name</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Year</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                [1, 2, 3].map((i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-8" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                    <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
+                  </tr>
+                ))
+              ) : attestations.length > 0 ? (
+                attestations.map((a) => (
+                  <tr key={a.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-6 py-4 text-sm font-black text-slate-900">#{a.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                          <UserIcon size={14} />
+                        </div>
+                        <span className="font-bold text-slate-800">
+                          {a.user?.first_name} {a.user?.last_name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">
+                      {a.year}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">
+                      {new Date(a.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button 
+                        onClick={() => handleDownload(a.file)}
+                        className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all" 
+                        title="Download Attestation"
+                      >
+                        <Download size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                    No attestations found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 const UsersView = ({ onViewUser }: { onViewUser: (id: number) => void }) => {
   const [searchQuery, setSearchQuery] = useState('');

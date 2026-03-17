@@ -31,7 +31,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
-import { api, User, Invoice } from '../services/api';
+import { api, User, Invoice, Attestation } from '../services/api';
 import { InvoicePaymentModal } from './InvoicePaymentModal';
 import { AddCardModal } from './AddCardModal';
 
@@ -59,6 +59,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>(initialTab);
   const [user, setUser] = useState<User | null>(null);
+  const [attestations, setAttestations] = useState<Attestation[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -115,6 +117,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
     fetchUser();
   }, [onLogout, onGoToAdmin]);
+
+  useEffect(() => {
+    const fetchAttestations = async () => {
+      try {
+        const response = await api.getAttestations();
+        if (response && response.data) {
+          setAttestations(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch attestations:', error);
+      }
+    };
+
+    fetchAttestations();
+  }, []);
+
 
 
   const handleRemoveRequest = (id: string) => {
@@ -211,9 +229,24 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
   const invoices = user?.invoices || [];
 
-  const taxCertificates = [
-    { year: 2023, type: "Annual Tax Certificate", date: "2024-01-15" }
-  ];
+  const handleDownloadAttestation = (fileName: string) => {
+    const link = document.createElement('a');
+    link.href = `/certificates/${fileName}`;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+  };
+
+
+  const taxCertificatesToDisplay = attestations.length > 0 ? attestations.map(a => ({
+
+    id: a.id,
+    year: a.year,
+    type: language === 'fr' ? 'Attestation Fiscale Annuelle' : 'Annual Tax Certificate',
+    file: a.file
+  })) : [];
+
 
   const tabs = [
     { id: 'requests', label: t.profilePage.tabs.requests, icon: Baby },
@@ -759,9 +792,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
             {activeTab === 'tax' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {taxCertificates.length > 0 ? (
-                  taxCertificates.map((cert, idx) => (
-                    <div key={idx} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex items-center justify-between group hover:border-brand-accent/30 transition-colors">
+                {taxCertificatesToDisplay.length > 0 ? (
+                  taxCertificatesToDisplay.map((cert) => (
+                    <div key={cert.id} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex items-center justify-between group hover:border-brand-accent/30 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-brand-pink/10 rounded-2xl flex items-center justify-center text-brand-pink">
                           <FileText size={24} />
@@ -771,9 +804,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           <p className="text-xs text-slate-400">{t.profilePage.tax.year} {cert.year}</p>
                         </div>
                       </div>
-                      <button className="p-3 bg-slate-50 text-slate-400 group-hover:bg-brand-accent group-hover:text-white rounded-2xl transition-all">
+                      <button 
+                        onClick={() => handleDownloadAttestation(cert.file)}
+                        className="p-3 bg-slate-50 text-slate-400 group-hover:bg-brand-accent group-hover:text-white rounded-2xl transition-all"
+                      >
                         <Download size={18} />
                       </button>
+
                     </div>
                   ))
                 ) : (
@@ -784,6 +821,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 )}
               </div>
             )}
+
 
             {activeTab === 'cmg' && (
               <div className="max-w-2xl mx-auto">
