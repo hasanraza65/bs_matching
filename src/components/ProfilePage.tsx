@@ -82,6 +82,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     confirmColor: 'bg-red-500',
     onConfirm: () => { },
   });
+  const [rejectingChoice, setRejectingChoice] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -572,10 +573,48 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                           <CheckCircle2 size={16} />
                                           {t.profilePage.interviews.finalChoice}
                                         </button>
-                                        <button className="flex-1 sm:flex-none px-6 py-3.5 bg-red-500/10 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap flex items-center justify-center gap-2">
-                                          <X size={16} />
-                                          {t.profilePage.interviews.reject}
-                                        </button>
+                                        {choice.final_choice === 2 ? (
+                                          <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2">
+                                            <X size={16} />
+                                            {language === 'fr' ? 'Refusé' : 'Rejected'}
+                                          </div>
+                                        ) : (
+                                          <button
+                                            onClick={async () => {
+                                              setRejectingChoice(choice.id);
+                                              try {
+                                                const resp = await api.rejectChoice(choice.id);
+                                                if (resp && resp.status) {
+                                                  // refresh user data to reflect updated choice statuses
+                                                  const userResp = await api.getUser();
+                                                  if (userResp.status && userResp.data) {
+                                                    setUser(userResp.data);
+                                                  }
+                                                } else {
+                                                  console.error('Reject choice failed', resp.message);
+                                                }
+                                              } catch (err) {
+                                                console.error('Reject call error', err);
+                                              } finally {
+                                                setRejectingChoice(null);
+                                              }
+                                            }}
+                                            disabled={rejectingChoice === choice.id}
+                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-red-500/10 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                          >
+                                            {rejectingChoice === choice.id ? (
+                                              <div className="flex items-center gap-2">
+                                                <Loader2 size={14} className="animate-spin" />
+                                                <span className="text-xs">{language === 'fr' ? 'Refus...' : 'Rejecting...'}</span>
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <X size={16} />
+                                                {t.profilePage.interviews.reject}
+                                              </>
+                                            )}
+                                          </button>
+                                        )}
                                       </>
                                     )}
                                   </div>

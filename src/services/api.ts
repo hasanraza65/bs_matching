@@ -15,11 +15,37 @@ const apiClient = axios.create({
 // Add a request interceptor to attach the token if available
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem("auth_token");
+  // Log outgoing request for debugging
+  try {
+    console.log('[axios request] ', config.method, config.url, config.params || null, config.data || null);
+  } catch (e) {
+    // ignore logging errors
+  }
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// Log responses and errors globally
+apiClient.interceptors.response.use(
+  (response) => {
+    try {
+      console.log('[axios response]', response.status, response.config.url, response.data);
+    } catch (e) {
+      // ignore
+    }
+    return response;
+  },
+  (error) => {
+    try {
+      console.error('[axios response error]', error?.response?.status, error?.response?.data || error?.message);
+    } catch (e) {
+      // ignore
+    }
+    return Promise.reject(error);
+  }
+);
 
 export interface Child {
   id?: number;
@@ -439,8 +465,15 @@ export const api = {
   acceptPriceQuote: async (
     id: number,
   ): Promise<{ status: boolean; message: string }> => {
-    const response = await apiClient.post(`/accept-price-quote/${id}`);
-    return response.data;
+    try {
+      console.log('[api] POST /accept-price-quote/', id);
+      const response = await apiClient.post(`/accept-price-quote/${id}`);
+      console.log('[api] acceptPriceQuote response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('[api] acceptPriceQuote error:', error?.response?.data || error?.message || error);
+      throw error;
+    }
   },
 
   // Reject contract by contract id
@@ -468,6 +501,25 @@ export const api = {
   ): Promise<{ status: boolean; message: string }> => {
     const response = await apiClient.post(`/select-final-choice/${choiceId}`);
     return response.data;
+  },
+
+  // Reject a specific babysitter choice (mark as rejected)
+  rejectChoice: async (
+    choiceId: number,
+  ): Promise<{ status: boolean; message?: string; data?: any }> => {
+    try {
+      const response = await apiClient.post(`/reject-choice/${choiceId}`);
+      return {
+        status: response.status >= 200 && response.status < 300,
+        message: typeof response.data === 'string' ? response.data : response.data?.message,
+        data: response.data,
+      };
+    } catch (error: any) {
+      return {
+        status: false,
+        message: error?.response?.data?.message || error?.message || 'Request failed',
+      };
+    }
   },
 
   getContract: async (choiceId: number): Promise<ContractResponse> => {

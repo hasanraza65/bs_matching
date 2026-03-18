@@ -42,6 +42,7 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
+  Loader2,
 } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -504,6 +505,7 @@ export default function App() {
   }, [currentStep, dateSchedule, selectedMonth]);
 
   const mapRequestToState = (data: ParentRequest) => {
+  console.log('[App] mapRequestToState: incoming ParentRequest id=', data?.id);
     setParentRequestId(data.id);
     if (data.hourly_rate) {
       setHourlyRate(parseFloat(data.hourly_rate));
@@ -571,9 +573,11 @@ export default function App() {
   useEffect(() => {
     const fetchSchedules = async () => {
       if (currentStep === 2 && parentRequestId) {
-        try {
+          try {
           setIsRegistering(true);
+          console.log('[App] getParentSchedules: parentRequestId=', parentRequestId);
           const response = await api.getParentSchedules(parentRequestId);
+          console.log('[App] getParentSchedules response:', response);
           if (response.status && response.data) {
             const mappedSchedules = response.data.map((s: any) => ({
               id: s.schedule_date,
@@ -603,7 +607,9 @@ export default function App() {
       if (currentStep === 4 && parentRequestId && selectedCandidates.length === 0) {
         try {
           setIsRegistering(true);
+          console.log('[App] getParentBabysitterChoices: parentRequestId=', parentRequestId);
           const response = await api.getParentBabysitterChoices(parentRequestId);
+          console.log('[App] getParentBabysitterChoices response:', response);
           if (response.status && response.data) {
             const mappedChoices = response.data.map((choice: any) => {
               // Try to find the sitter in our local list by email or name
@@ -976,6 +982,15 @@ export default function App() {
     }
   };
 
+  // Debug: print key state so we can see whether the flow is active
+  useEffect(() => {
+    try {
+      console.log('[App-state] view=', view, 'currentStep=', currentStep, 'parentRequestId=', parentRequestId, 'selectedCandidates=', selectedCandidates.length);
+    } catch (e) {
+      // ignore
+    }
+  }, [view, currentStep, parentRequestId, selectedCandidates.length]);
+
   const handleNextStep = async () => {
     if (currentStep === 1) {
       if (validateStep1()) {
@@ -1027,6 +1042,7 @@ export default function App() {
           }
 
           if (response.status && response.data) {
+            console.log('[App] handleNextStep (step1) response:', response);
             // Case 1 & 2: Success
             if (response.data.token) {
               api.setToken(response.data.token);
@@ -1035,6 +1051,7 @@ export default function App() {
 
             if (response.data.parent_request) {
               setParentRequestId(response.data.parent_request.id);
+              console.log('[App] set parentRequestId from response:', response.data.parent_request.id);
             }
 
             // Refresh user data to reflect new/updated request
@@ -1150,7 +1167,9 @@ export default function App() {
       if (parentRequestId) {
         try {
           setIsRegistering(true);
-          await api.acceptPriceQuote(parentRequestId);
+          console.log('[App] acceptPriceQuote: parentRequestId=', parentRequestId);
+          const resp = await api.acceptPriceQuote(parentRequestId);
+          console.log('[App] acceptPriceQuote response:', resp);
           setCurrentStep(4);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
@@ -2288,10 +2307,21 @@ export default function App() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleNextStep}
-                            className="w-full font-display font-bold py-5 bg-brand-accent hover:bg-[#66B2AC] text-white rounded-2xl shadow-xl shadow-brand-accent/30 flex items-center justify-center gap-3 transition-all text-lg"
+                            disabled={isRegistering}
+                            aria-busy={isRegistering}
+                            className={`w-full font-display font-bold py-5 ${isRegistering ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-brand-accent hover:bg-[#66B2AC] text-white'} rounded-2xl shadow-xl shadow-brand-accent/30 flex items-center justify-center gap-3 transition-all text-lg`}
                           >
-                            <ChevronRight size={22} />
-                            Continue to Matching
+                            {isRegistering ? (
+                              <>
+                                <Loader2 size={18} className="animate-spin" />
+                                <span>{language === 'fr' ? 'Traitement...' : 'Processing...'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <ChevronRight size={22} />
+                                Continue to Matching
+                              </>
+                            )}
                           </motion.button>
                         </div>
                       </div>
