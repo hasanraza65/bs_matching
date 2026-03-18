@@ -297,15 +297,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <button
-                onClick={onBack}
-                className="inline-flex items-center gap-2 text-slate-400 hover:text-brand-accent transition-all group"
-              >
-                <div className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-brand-accent group-hover:bg-brand-accent group-hover:text-white transition-all">
-                  <ArrowLeft size={14} />
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t.common.back}</span>
-              </button>
-              <button
                 onClick={onCreateRequest}
                 className="inline-flex items-center gap-3 px-6 py-2.5 bg-brand-accent text-white rounded-full shadow-lg shadow-brand-accent/20 hover:bg-[#66B2AC] hover:-translate-y-0.5 transition-all group"
               >

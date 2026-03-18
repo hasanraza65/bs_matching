@@ -99,8 +99,20 @@ interface FormData {
   lng?: number;
 }
 
-const Tooltip = ({ children, content }: { children: React.ReactNode, content: React.ReactNode }) => {
+const Tooltip = ({ children, content, placement = 'top' }: { children: React.ReactNode, content: React.ReactNode, placement?: 'top' | 'right' | 'bottom' | 'left' }) => {
   const [isVisible, setIsVisible] = useState(false);
+
+  // compute classes based on placement
+  let containerClass = 'absolute bottom-full right-0 mb-2 w-28 p-2 bg-slate-900 text-white text-[11px] rounded-md shadow-lg z-[100] pointer-events-none';
+  let arrow = <div className="absolute top-full right-4 border-6 border-transparent border-t-slate-900" />;
+
+  if (placement === 'right') {
+    containerClass = 'absolute left-full top-1/2 -translate-y-1/2 ml-2 w-auto p-2 bg-slate-900 text-white text-[11px] rounded-md shadow-lg z-[100] pointer-events-none';
+    arrow = <div className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 border-6 border-transparent border-r-slate-900" />;
+  } else if (placement === 'left') {
+    containerClass = 'absolute right-full top-1/2 -translate-y-1/2 mr-2 w-auto p-2 bg-slate-900 text-white text-[11px] rounded-md shadow-lg z-[100] pointer-events-none';
+    arrow = <div className="absolute right-0 top-1/2 translate-x-full -translate-y-1/2 border-6 border-transparent border-l-slate-900" />;
+  }
 
   return (
     <div className="relative inline-block" onMouseEnter={() => setIsVisible(true)} onMouseLeave={() => setIsVisible(false)}>
@@ -108,15 +120,15 @@ const Tooltip = ({ children, content }: { children: React.ReactNode, content: Re
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            initial={{ opacity: 0, y: 6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-4 bg-slate-900 text-white text-[11px] rounded-2xl shadow-2xl z-[100] pointer-events-none"
+            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+            className={containerClass}
           >
-            <div className="relative z-10">
+            <div className="relative z-10 text-[12px]">
               {content}
             </div>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900" />
+            {arrow}
           </motion.div>
         )}
       </AnimatePresence>
@@ -151,6 +163,24 @@ const calculateAge = (dob: string) => {
   }
 
   return { years, months };
+};
+
+// Helper: parse YYYY-MM-DD into a local Date at midnight (avoids timezone shift)
+const ymdToDate = (ymd: string) => {
+  if (!ymd) return new Date();
+  const parts = ymd.split('-');
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  return new Date(y, m, d);
+};
+
+// Format a Date to YYYY-MM-DD using local date parts (avoid toISOString timezone issues)
+const formatDateId = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 };
 
 interface FormErrors {
@@ -406,7 +436,7 @@ export default function App() {
     if (data.schedules) {
       const mappedSchedules = data.schedules.map(s => ({
         id: s.schedule_date,
-        date: new Date(s.schedule_date),
+        date: ymdToDate(s.schedule_date),
         dbId: s.id,
         slots: s.slots.map(slot => ({
           id: Math.random().toString(36).substr(2, 9),
@@ -443,7 +473,7 @@ export default function App() {
           if (response.status && response.data) {
             const mappedSchedules = response.data.map((s: any) => ({
               id: s.schedule_date,
-              date: new Date(s.schedule_date),
+              date: ymdToDate(s.schedule_date),
               dbId: s.id,
               slots: s.slots.map((slot: any) => ({
                 id: Math.random().toString(36).substr(2, 9),
@@ -762,6 +792,12 @@ export default function App() {
       }
 
       item.slots.forEach(slot => {
+        // Validate presence
+        if (!slot.startTime || !slot.endTime) {
+          newErrors[`${item.id}_${slot.id}_time`] = 'Please provide both start and end times';
+          return;
+        }
+
         const start = new Date(`2000-01-01T${slot.startTime}`);
         const end = new Date(`2000-01-01T${slot.endTime}`);
 
@@ -775,6 +811,22 @@ export default function App() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Runtime check for invalid slots (used for enabling/disabling Next button instantly)
+  const hasInvalidSlots = () => {
+    if (dateSchedule.length === 0) return true;
+    for (const item of dateSchedule) {
+      if (!item.slots || item.slots.length === 0) return true;
+      for (const slot of item.slots) {
+        if (!slot.startTime || !slot.endTime) return true;
+        const start = new Date(`2000-01-01T${slot.startTime}`);
+        const end = new Date(`2000-01-01T${slot.endTime}`);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) return true;
+        if (end.getTime() <= start.getTime()) return true;
+      }
+    }
+    return false;
   };
 
   const validateStep4 = () => {
@@ -946,7 +998,7 @@ export default function App() {
               if (refreshResponse.status && refreshResponse.data) {
                 const mappedSchedules = refreshResponse.data.map((s: any) => ({
                   id: s.schedule_date,
-                  date: new Date(s.schedule_date),
+                  date: ymdToDate(s.schedule_date),
                   dbId: s.id,
                   slots: s.slots.map((slot: any) => ({
                     id: Math.random().toString(36).substr(2, 9),
@@ -1220,17 +1272,18 @@ export default function App() {
   };
 
   const toggleDateSelection = (date: Date) => {
-    const dateId = date.toISOString().split('T')[0];
+    const dateId = formatDateId(date);
     const exists = dateSchedule.find(item => item.id === dateId);
 
     if (exists) {
       setDateSchedule(prev => prev.filter(item => item.id !== dateId));
     } else {
-      setDateSchedule(prev => [...prev, {
+      // insert at start so newest selected appears first
+      setDateSchedule(prev => [{
         id: dateId,
-        date: new Date(date),
+        date: ymdToDate(dateId),
         slots: [{ id: Math.random().toString(36).substr(2, 9), startTime: '', endTime: '' }]
-      }].sort((a, b) => a.date.getTime() - b.date.getTime()));
+      }, ...prev]);
     }
 
     if (errors.schedule) {
@@ -1786,9 +1839,9 @@ export default function App() {
                               ))}
                               {Array.from({ length: new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + 1, 0).getDate() }).map((_, i) => {
                                 const date = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth(), i + 1);
-                                const dateId = date.toISOString().split('T')[0];
+                                const dateId = formatDateId(date);
                                 const isSelected = dateSchedule.some(item => item.id === dateId);
-                                const isToday = new Date().toISOString().split('T')[0] === dateId;
+                                const isToday = formatDateId(new Date()) === dateId;
 
                                 return (
                                   <motion.button
@@ -1799,7 +1852,7 @@ export default function App() {
                                     className={`aspect-square rounded-xl flex flex-col items-center justify-center text-sm font-bold transition-all relative ${isSelected
                                       ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
                                       : isToday
-                                        ? 'bg-brand-blue/30 text-brand-accent border border-brand-blue'
+                                        ? 'bg-brand-blue/30 text-slate-900 border border-brand-blue'
                                         : 'hover:bg-white text-slate-600 border border-transparent hover:border-slate-200'
                                       }`}
                                   >
@@ -1896,7 +1949,7 @@ export default function App() {
                                                 type="time"
                                                 value={slot.startTime}
                                                 onChange={(e) => updateTimeSlot(item.id, slot.id, 'startTime', e.target.value)}
-                                                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 outline-none transition-all text-sm font-medium"
+                                                className={`w-full px-3 py-2 rounded-xl border outline-none transition-all text-sm font-medium ${errors[`${item.id}_${slot.id}_time`] ? 'border-red-400 ring-red-100' : 'border-slate-200 focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20'}`}
                                               />
                                             </div>
                                             <div className="space-y-1">
@@ -1941,9 +1994,9 @@ export default function App() {
                             <motion.button
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              disabled={isRegistering || dateSchedule.length === 0 || Object.keys(errors).some(k => k.includes('_time'))}
+                              disabled={isRegistering || hasInvalidSlots()}
                               onClick={handleNextStep}
-                              className={`w-full font-display font-bold py-5 rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all text-lg ${isRegistering || dateSchedule.length === 0 || Object.keys(errors).some(k => k.includes('_time'))
+                              className={`w-full font-display font-bold py-5 rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all text-lg ${isRegistering || hasInvalidSlots()
                                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                                 : 'bg-brand-accent hover:bg-[#66B2AC] text-white shadow-brand-accent/30'
                                 }`}
@@ -2361,46 +2414,51 @@ export default function App() {
                             <motion.div
                               key={sitter.id}
                               whileHover={{ y: -5 }}
-                              className={`group relative bg-white rounded-3xl border transition-all duration-300 ${isSelected
+                              className={`group relative bg-white rounded-3xl border transition-all duration-300 flex flex-col h-full overflow-hidden ${isSelected
                                 ? 'border-brand-accent ring-4 ring-brand-accent/5 shadow-xl'
                                 : 'border-slate-100 hover:border-brand-accent/30 hover:shadow-lg'
                                 }`}
                             >
-                              {/* Status Badge */}
-                              <div className="absolute top-4 right-4 z-10">
-                                <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${sitter.status === 'Online'
-                                  ? 'bg-green-100 text-green-600'
-                                  : 'bg-blue-100 text-blue-600'
-                                  }`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${sitter.status === 'Online' ? 'bg-green-500 animate-pulse' : 'bg-blue-500'}`} />
-                                  {sitter.status === 'Online' ? t.common.online : t.common.available}
-                                </span>
-                              </div>
+                                {/* Status badge moved inline with header (no absolute badge) */}
 
-                              <div className="p-6">
+                              <div className="p-6 flex-1 flex flex-col">
                                 <div className="flex items-center gap-4 mb-4">
                                   <div className="relative">
-                                    <img
-                                      src={sitter.photo}
-                                      alt={sitter.name}
-                                      className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm"
-                                      referrerPolicy="no-referrer"
-                                    />
+                                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                                      <img
+                                        src={sitter.photo}
+                                        alt={sitter.name}
+                                        className="w-full h-full object-cover"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    </div>
                                     {isSelected && (
                                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-brand-accent text-white rounded-full flex items-center justify-center shadow-md border-2 border-white">
                                         <Check size={14} strokeWidth={3} />
                                       </div>
                                     )}
                                   </div>
-                                  <div>
-                                    <h3 className="font-display font-bold text-slate-800">{sitter.name} {sitter.lastName}</h3>
-                                    <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} • {sitter.experience}{t.step4.exp}</p>
-                                    <div className="flex items-center gap-1 mt-1">
-                                      <Star size={12} className="text-amber-400 fill-amber-400" />
-                                      <span className="text-xs font-bold text-slate-700">{sitter.rating}</span>
+                                  <div className="flex-1 flex items-start justify-between">
+                                    <div>
+                                      <h3 className="font-display font-bold text-slate-800">{sitter.name} {sitter.lastName}</h3>
+                                      <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} • {sitter.experience}{t.step4.exp}</p>
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <Star size={12} className="text-amber-400 fill-amber-400" />
+                                        <span className="text-xs font-bold text-slate-700">{sitter.rating}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Status dot with tooltip on hover */}
+                                    <div className="ml-3 self-center">
+                                      <Tooltip placement="left" content={<span className="text-xs font-bold">{sitter.status === 'Online' ? t.common.online : t.common.available}</span>}>
+                                        <div
+                                          className={`w-3 h-3 rounded-full ${sitter.status === 'Online' ? 'bg-green-500 animate-pulse' : 'bg-blue-500'}`}
+                                          aria-hidden
+                                        />
+                                      </Tooltip>
                                     </div>
                                   </div>
-                                </div>
+                                 </div>
 
                                 <div className="space-y-3 mb-6">
                                   <div className="flex flex-wrap gap-1.5">
@@ -2415,7 +2473,7 @@ export default function App() {
                                   </p>
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-3 mt-auto">
                                   <button
                                     onClick={() => setViewingBabysitter(sitter)}
                                     className="w-full py-2.5 text-xs font-bold text-slate-500 hover:text-brand-accent hover:bg-brand-accent/5 rounded-xl transition-colors flex items-center justify-center gap-2"
@@ -2424,7 +2482,7 @@ export default function App() {
                                   </button>
 
                                   {isSelected ? (
-                                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex items-center justify-between">
+                                    <div className="w-full py-2.5 rounded-xl flex items-center justify-between px-3 bg-emerald-50 border border-emerald-100">
                                       <div className="flex items-center gap-2">
                                         <div className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">
                                           {selectedCandidates.findIndex(c => c.sitterId === sitter.id) + 1}
@@ -2791,7 +2849,7 @@ export default function App() {
                                 setModalInterviewConfig(prev => ({ ...prev, date: e.target.value }));
                                 setModalError('');
                               }}
-                              min={new Date().toISOString().split('T')[0]}
+                              min={formatDateId(new Date())}
                               className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-accent/20 outline-none transition-all"
                             />
                           </div>
@@ -2932,6 +2990,7 @@ export default function App() {
                       {selectedCandidates.some(c => c.sitterId === viewingBabysitter.id) ? (
                         <button
                           onClick={() => {
+                            // Remove the candidate for the currently viewed babysitter
                             removeCandidate(viewingBabysitter.id);
                             setViewingBabysitter(null);
                           }}
