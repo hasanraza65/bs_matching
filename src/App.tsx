@@ -17,6 +17,7 @@ import {
   Euro,
   Info,
   ShieldCheck,
+  ShieldAlert,
   Languages,
   FileText,
   ArrowLeft,
@@ -223,6 +224,32 @@ export default function App() {
     }
 
     return `${years}y ${months}m`;
+  };
+
+  // Experience helpers (months -> years/months) available inside App to access `language`
+  const parseMonths = (monthsInput: any) => {
+    const m = parseInt(String(monthsInput || '0'), 10);
+    if (isNaN(m) || m < 0) return { years: 0, months: 0 };
+    const years = Math.floor(m / 12);
+    const months = m % 12;
+    return { years, months };
+  };
+
+  const formatExperienceShortFromMonths = (monthsInput: any) => {
+    const { years, months } = parseMonths(monthsInput);
+    if (years === 0) return `${months} ${language === 'fr' ? 'mois' : months > 1 ? 'months' : 'month'}`;
+    if (months === 0) return `${years}${language === 'fr' ? (years > 1 ? 'ans' : 'an') : `${years}y`}`;
+    return `${years}y ${months}m`;
+  };
+
+  const formatExperienceLongFromMonths = (monthsInput: any) => {
+    const { years, months } = parseMonths(monthsInput);
+    if (years === 0) return `${months} ${language === 'fr' ? 'mois' : months > 1 ? 'months' : 'month'}`;
+    if (months === 0) return `${years} ${language === 'fr' ? (years > 1 ? 'ans' : 'an') : years > 1 ? 'years' : 'year'}`;
+    if (language === 'fr') {
+      return `${years} ${years > 1 ? 'ans' : 'an'} ${months} mois`;
+    }
+    return `${years} ${years > 1 ? 'years' : 'year'} ${months} ${months > 1 ? 'months' : 'month'}`;
   };
 
   const localizedSitters = React.useMemo(() => {
@@ -587,7 +614,9 @@ export default function App() {
                 lastName: item.user_last_name || '',
                 age: calculateAgeFromDOB(item.user_dob),
                 languages,
+                // keep raw numeric years for some existing logic but persist months from API
                 experience: item.babysitter_profiles_experience || 0,
+                experienceMonths: item.total_experience_months || item.total_experience || 0,
                 description: item.babysitter_profiles_about || '',
                 fullBio: item.babysitter_profiles_personal || '',
                 photo,
@@ -2441,7 +2470,7 @@ export default function App() {
                                   <div className="flex-1 flex items-start justify-between">
                                     <div>
                                       <h3 className="font-display font-bold text-slate-800">{sitter.name} {sitter.lastName}</h3>
-                                      <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} • {sitter.experience}{t.step4.exp}</p>
+                                      <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} • {formatExperienceShortFromMonths((sitter as any).experienceMonths || 0)}</p>
                                       <div className="flex items-center gap-1 mt-1">
                                         <Star size={12} className="text-amber-400 fill-amber-400" />
                                         <span className="text-xs font-bold text-slate-700">{sitter.rating}</span>
@@ -2598,8 +2627,10 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden p-8 text-center"
             >
-              <div className="w-20 h-20 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center mx-auto mb-6">
-                <Check size={40} />
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                <div className="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  <Check size={20} className="text-white" />
+                </div>
               </div>
               <h3 className="text-2xl font-display font-bold text-slate-800 mb-2">
                 {t.modals.confirmSelection.title}
@@ -2803,7 +2834,7 @@ export default function App() {
                   <img src={schedulingSitter.photo} alt={schedulingSitter.name} className="w-14 h-14 rounded-xl object-cover" />
                   <div>
                     <h4 className="font-bold text-slate-800">{schedulingSitter.name}</h4>
-                    <p className="text-xs text-slate-500">{schedulingSitter.experience} {t.modals.profile.yearsExp.toLowerCase()} {t.modals.profile.experience.toLowerCase()}</p>
+                    <p className="text-xs text-slate-500">{formatExperienceLongFromMonths((schedulingSitter as any).experienceMonths || 0)}</p>
                   </div>
                 </div>
 
@@ -2838,40 +2869,41 @@ export default function App() {
                         exit={{ height: 0, opacity: 0 }}
                         className="space-y-4 overflow-hidden"
                       >
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">{t.modals.interview.preferredDate}</label>
-                          <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-accent" size={18} />
-                            <input
-                              type="date"
-                              value={modalInterviewConfig.date}
-                              onChange={(e) => {
-                                setModalInterviewConfig(prev => ({ ...prev, date: e.target.value }));
-                                setModalError('');
-                              }}
-                              min={formatDateId(new Date())}
-                              className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-accent/20 outline-none transition-all"
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-bold text-slate-400">{t.modals.interview.preferredDate}</label>
+                            <div className="relative">
+                              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-accent" size={18} />
+                              <input
+                                type="date"
+                                value={modalInterviewConfig.date}
+                                onChange={(e) => {
+                                  setModalInterviewConfig(prev => ({ ...prev, date: e.target.value }));
+                                  setModalError('');
+                                }}
+                                min={formatDateId(new Date())}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-accent/20 outline-none transition-all"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-bold text-slate-400">{t.modals.interview.preferredTime}</label>
+                            <div className="relative">
+                              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-accent" size={18} />
+                              <input
+                                type="time"
+                                value={modalInterviewConfig.time}
+                                onChange={(e) => setModalInterviewConfig(prev => ({ ...prev, time: e.target.value }))}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-accent/20 outline-none transition-all"
+                                placeholder="HH:MM"
+                              />
+                            </div>
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">{t.modals.interview.preferredTime}</label>
-                          <div className="relative">
-                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-accent" size={18} />
-                            <select
-                              value={modalInterviewConfig.time}
-                              onChange={(e) => setModalInterviewConfig(prev => ({ ...prev, time: e.target.value }))}
-                              className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-accent/20 outline-none transition-all appearance-none"
-                            >
-                              {['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'].map(t => (
-                                <option key={t} value={t}>{t}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <p className="text-[10px] text-slate-400 flex items-center gap-1">
-                            <Info size={10} /> {t.modals.interview.timezone}
-                          </p>
-                        </div>
+                        <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-2">
+                          <Info size={10} /> {t.modals.interview.timezone}
+                        </p>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -2963,7 +2995,7 @@ export default function App() {
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                       <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">{t.modals.profile.experience}</p>
                       <p className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        <Award size={16} className="text-brand-accent" /> {viewingBabysitter.experience} {t.modals.profile.yearsExp}
+                        <Award size={16} className="text-brand-accent" /> {formatExperienceLongFromMonths((viewingBabysitter as any).experienceMonths || 0)}
                       </p>
                     </div>
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
