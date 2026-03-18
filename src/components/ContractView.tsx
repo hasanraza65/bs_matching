@@ -627,6 +627,13 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                 }
                             </button>
                         </>
+                    ) : contractData?.status === 2 ? (
+                        <>
+                            <div className="flex-1 py-4 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 flex items-center justify-center gap-2">
+                                <AlertCircle size={20} />
+                                {language === 'fr' ? 'Refusé' : 'Rejected'}
+                            </div>
+                        </>
                     ) : (
                         <>
                             <button
