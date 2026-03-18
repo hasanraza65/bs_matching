@@ -443,6 +443,26 @@ export const api = {
     return response.data;
   },
 
+  // Reject contract by contract id
+  rejectContract: async (
+    contractId: number,
+  ): Promise<{ status: boolean; message?: string }> => {
+    try {
+      const response = await apiClient.post(`/reject-contract/${contractId}`);
+      const data = response.data;
+      const message = typeof data === 'string' ? data : (data?.message || '');
+      return {
+        status: response.status >= 200 && response.status < 300,
+        message,
+      };
+    } catch (error: any) {
+      return {
+        status: false,
+        message: error?.response?.data?.message || error?.message || 'Request failed',
+      };
+    }
+  },
+
   selectFinalChoice: async (
     choiceId: number,
   ): Promise<{ status: boolean; message: string }> => {

@@ -184,6 +184,41 @@ const formatDateId = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
+// Merge server-provided choices with local selections.
+// local and server arrays are arrays of { sitterId, dbId?, interview }
+const mergeServerAndLocalChoices = (local: any[], server: any[]) => {
+  const byDbId = new Map<number, any>();
+  const result: any[] = [];
+
+  // First, add local selections keyed by dbId when available (preserve interview config)
+  for (const l of local) {
+    if (l.dbId) {
+      byDbId.set(l.dbId, { ...l });
+    } else {
+      // push local-only picks (no dbId) directly
+      result.push({ ...l });
+    }
+  }
+
+  // Merge server entries, preferring local interview config when dbId matches
+  for (const s of server) {
+    if (s.dbId && byDbId.has(s.dbId)) {
+      // use local version (preserves interview)
+      result.push(byDbId.get(s.dbId));
+      byDbId.delete(s.dbId);
+    } else {
+      result.push({ ...s });
+    }
+  }
+
+  // Any remaining local entries that had dbIds but weren't in server list should be appended
+  for (const leftover of byDbId.values()) {
+    result.push(leftover);
+  }
+
+  return result;
+};
+
 interface FormErrors {
   [key: string]: string;
 }
@@ -303,6 +338,30 @@ export default function App() {
     dbId?: number,
     interview: { date: string, time: string, skipped: boolean }
   }>>([]);
+
+  // Load persisted selections from sessionStorage (survive back/next & tab navigation)
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.sessionStorage.getItem('selectedCandidates') : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setSelectedCandidates(parsed);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+  }, []);
+
+  // Persist selected candidates to sessionStorage whenever it changes
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('selectedCandidates', JSON.stringify(selectedCandidates));
+      }
+    } catch (e) {
+      // ignore storage errors
+    }
+  }, [selectedCandidates]);
   const [viewingBabysitter, setViewingBabysitter] = useState<Babysitter | null>(null);
   const [schedulingSitter, setSchedulingSitter] = useState<Babysitter | null>(null);
   const [modalInterviewConfig, setModalInterviewConfig] = useState({
@@ -475,8 +534,9 @@ export default function App() {
       setDateSchedule(mappedSchedules);
     }
 
+    // Merge server-provided choices with any locally persisted selections
     if (data.choices && data.choices.length > 0) {
-      setSelectedCandidates(data.choices.map(c => ({
+      const serverMapped = data.choices.map(c => ({
         sitterId: 0,
         dbId: c.id,
         interview: {
@@ -484,7 +544,24 @@ export default function App() {
           time: c.interview_time || '',
           skipped: !c.interview_date
         }
-      })));
+      }));
+
+      // Prefer in-memory selectedCandidates if available, otherwise fall back to sessionStorage
+      let localSelections = selectedCandidates;
+      try {
+        if ((!localSelections || localSelections.length === 0) && typeof window !== 'undefined') {
+          const raw = window.sessionStorage.getItem('selectedCandidates');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) localSelections = parsed;
+          }
+        }
+      } catch (e) {
+        // ignore parse/storage errors and continue with empty localSelections
+      }
+
+      const merged = mergeServerAndLocalChoices(localSelections || [], serverMapped);
+      setSelectedCandidates(merged);
     }
 
     setCurrentStep(3);
@@ -546,7 +623,22 @@ export default function App() {
                 }
               };
             });
-            setSelectedCandidates(mappedChoices);
+            // Merge with any locally persisted selections to avoid overwriting interview times
+            let localSelections = selectedCandidates;
+            try {
+              if ((!localSelections || localSelections.length === 0) && typeof window !== 'undefined') {
+                const raw = window.sessionStorage.getItem('selectedCandidates');
+                if (raw) {
+                  const parsed = JSON.parse(raw);
+                  if (Array.isArray(parsed)) localSelections = parsed;
+                }
+              }
+            } catch (e) {
+              // ignore
+            }
+
+            const merged = mergeServerAndLocalChoices(localSelections || [], mappedChoices);
+            setSelectedCandidates(merged);
           }
         } catch (error) {
           console.error('Failed to fetch babysitter choices:', error);
@@ -1121,6 +1213,11 @@ export default function App() {
       setIsConfirmModalProcessing(false);
       setIsConfirmModalOpen(false);
       setIsSubmitted(true);
+      try {
+        if (typeof window !== 'undefined') window.sessionStorage.removeItem('selectedCandidates');
+      } catch (e) {
+        // ignore
+      }
     }, 1500);
   };
 
