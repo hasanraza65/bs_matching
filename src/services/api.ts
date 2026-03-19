@@ -639,6 +639,11 @@ export const api = {
     return response.data;
   },
 
+  getActiveRequests: async (): Promise<ParentRequest[]> => {
+    const response = await apiClient.get("/active-requests");
+    return response.data;
+  },
+
 };
 
 

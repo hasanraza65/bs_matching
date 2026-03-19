@@ -56,7 +56,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminPage = 'dashboard' | 'requests' | 'interviews' | 'invoices' | 'contracts' | 'attestations' | 'users';
+type AdminPage = 'dashboard' | 'requests' | 'active-requests' | 'interviews' | 'invoices' | 'contracts' | 'attestations' | 'users';
 
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
@@ -69,7 +69,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'requests', label: 'All Requests', icon: ClipboardList },
-    // { id: 'interviews', label: 'Interviews', icon: Calendar },
+    { id: 'active-requests', label: 'Active Requests', icon: Activity },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
     { id: 'contracts', label: 'Contracts', icon: FileText },
     { id: 'attestations', label: 'Attestations Fiscales', icon: History },
@@ -214,6 +214,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             >
               {activePage === 'dashboard' && <DashboardView />}
               {activePage === 'requests' && <RequestsView />}
+              {activePage === 'active-requests' && <ActiveRequestsView />}
               {activePage === 'interviews' && <InterviewsView />}
               {activePage === 'invoices' && <InvoicesView />}
               {activePage === 'attestations' && <AttestationsView />}
@@ -315,6 +316,125 @@ const DashboardView = () => {
       </div>
     </div>
   );
+};
+
+const ActiveRequestsView = () => {
+    const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    React.useEffect(() => {
+        let cancelled = false;
+        const fetchActiveRequests = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const result = await api.getActiveRequests();
+                if (!cancelled) {
+                    setRequests(result);
+                }
+            } catch (err: any) {
+                if (!cancelled) {
+                    setError('Failed to load active requests. Please try again.');
+                }
+            } finally {
+                if (!cancelled) setIsLoading(false);
+            }
+        };
+        fetchActiveRequests();
+        return () => { cancelled = true; };
+    }, []);
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg font-bold text-slate-900">Active Requests List</h3>
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Filter active requests..."
+                            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Schedules</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {isLoading && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <Loader2 className="animate-spin" size={20} />
+                                            <span className="text-sm font-medium">Loading active requests...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && error && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <AlertCircle size={18} />
+                                            <span className="text-sm font-medium">{error}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && requests.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                        No active requests found.
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && requests.map((req) => (
+                                <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
+                                            <span className="text-xs text-slate-400">{req.user?.email}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{req.parent_address}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.board_status === 'In Matching' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
+                                            {req.board_status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <ActiveRequestSchedulesCell schedules={req.schedules ?? []} />
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
+                                            <MoreVertical size={18} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const RequestsView = () => {
@@ -500,6 +620,85 @@ interface ScheduleDatesCellProps {
 }
 
 const MAX_VISIBLE_DATES = 4;
+
+const ActiveRequestSchedulesCell: React.FC<{ schedules: any[] }> = ({ schedules }) => {
+    const [tooltipOpen, setTooltipOpen] = useState(false);
+    if (!schedules || schedules.length === 0) return <span className="text-slate-400 text-sm italic">No schedules</span>;
+
+    const visibleSchedules = schedules.slice(0, 2);
+    const hiddenSchedules = schedules.slice(2);
+
+    return (
+        <div className="flex flex-wrap gap-2 max-w-[400px]">
+            {visibleSchedules.map((sch) => (
+                <div key={sch.id} className="flex items-center gap-1.5 p-1.5 px-2 bg-slate-50 border border-slate-100 rounded-lg group-hover:bg-white transition-all shadow-sm">
+                    <div className="flex items-center gap-1 shrink-0">
+                        <Calendar size={11} className="text-brand-accent/70" />
+                        <span className="text-[10px] font-bold text-slate-700 whitespace-nowrap">{sch.schedule_date}</span>
+                    </div>
+                    {sch.slots && sch.slots.length > 0 && (
+                        <>
+                            <div className="w-px h-3 bg-slate-200" />
+                            <div className="flex items-center gap-1">
+                                <Clock size={10} className="text-slate-400" />
+                                <span className="text-[9px] font-medium text-slate-500 whitespace-nowrap">
+                                    {sch.slots.map((slot: any) => `${slot.start_time?.substring(0, 5)}-${slot.end_time?.substring(0, 5)}`).join(', ')}
+                                </span>
+                            </div>
+                        </>
+                    )}
+                </div>
+            ))}
+            {hiddenSchedules.length > 0 && (
+                <div className="relative">
+                    <button
+                        onMouseEnter={() => setTooltipOpen(true)}
+                        onMouseLeave={() => setTooltipOpen(false)}
+                        className="flex items-center gap-1 px-2 py-1.5 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-400 hover:bg-slate-200 transition-colors h-full whitespace-nowrap"
+                    >
+                        <History size={10} />
+                        <span>+{hiddenSchedules.length} more</span>
+                    </button>
+                    {tooltipOpen && (
+                        <div className="absolute z-[100] top-full left-1/2 -translate-x-1/2 mt-3 bg-white border border-slate-200 shadow-[0_10px_40px_rgba(0,0,0,0.1)] rounded-2xl p-4 min-w-[300px] animate-in fade-in zoom-in duration-200">
+                            <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Remaining Schedules
+                                </span>
+                                <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    {hiddenSchedules.length} dates
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2">
+                                {hiddenSchedules.map((sch) => (
+                                    <div key={sch.id} className="flex flex-col gap-1 p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar size={12} className="text-brand-accent/70" />
+                                            <span className="text-[11px] font-bold text-slate-700">{sch.schedule_date}</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1 ml-5">
+                                            {sch.slots?.map((slot: any) => (
+                                                <div key={slot.id} className="flex items-center gap-1.5 px-2 py-0.5 bg-white border border-slate-200 rounded-md text-[10px] font-medium text-slate-500">
+                                                    <Clock size={10} className="text-slate-400" />
+                                                    <span>{slot.start_time?.substring(0, 5)} - {slot.end_time?.substring(0, 5)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Pointer Arrow pointing UP */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-[2px] rotate-180">
+                                <div className="border-[6px] border-transparent border-t-white relative z-10" />
+                                <div className="border-[7px] border-transparent border-t-slate-200 -mt-[14px]" />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const ScheduleDatesCell: React.FC<ScheduleDatesCellProps> = ({ schedules }) => {
   const [tooltipOpen, setTooltipOpen] = useState(false);
