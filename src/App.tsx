@@ -505,7 +505,6 @@ export default function App() {
   }, [currentStep, dateSchedule, selectedMonth]);
 
   const mapRequestToState = (data: ParentRequest) => {
-  console.log('[App] mapRequestToState: incoming ParentRequest id=', data?.id);
     setParentRequestId(data.id);
     if (data.hourly_rate) {
       setHourlyRate(parseFloat(data.hourly_rate));
@@ -575,9 +574,7 @@ export default function App() {
       if (currentStep === 2 && parentRequestId) {
           try {
           setIsRegistering(true);
-          console.log('[App] getParentSchedules: parentRequestId=', parentRequestId);
           const response = await api.getParentSchedules(parentRequestId);
-          console.log('[App] getParentSchedules response:', response);
           if (response.status && response.data) {
             const mappedSchedules = response.data.map((s: any) => ({
               id: s.schedule_date,
@@ -607,9 +604,7 @@ export default function App() {
       if (currentStep === 4 && parentRequestId && selectedCandidates.length === 0) {
         try {
           setIsRegistering(true);
-          console.log('[App] getParentBabysitterChoices: parentRequestId=', parentRequestId);
           const response = await api.getParentBabysitterChoices(parentRequestId);
-          console.log('[App] getParentBabysitterChoices response:', response);
           if (response.status && response.data) {
             const mappedChoices = response.data.map((choice: any) => {
               // Try to find the sitter in our local list by email or name
@@ -982,14 +977,7 @@ export default function App() {
     }
   };
 
-  // Debug: print key state so we can see whether the flow is active
-  useEffect(() => {
-    try {
-      console.log('[App-state] view=', view, 'currentStep=', currentStep, 'parentRequestId=', parentRequestId, 'selectedCandidates=', selectedCandidates.length);
-    } catch (e) {
-      // ignore
-    }
-  }, [view, currentStep, parentRequestId, selectedCandidates.length]);
+    // Status tracking effect removed
 
   const handleNextStep = async () => {
     if (currentStep === 1) {
@@ -1042,16 +1030,20 @@ export default function App() {
           }
 
           if (response.status && response.data) {
-            console.log('[App] handleNextStep (step1) response:', response);
             // Case 1 & 2: Success
             if (response.data.token) {
               api.setToken(response.data.token);
               setIsLoggedIn(true);
             }
 
-            if (response.data.parent_request) {
-              setParentRequestId(response.data.parent_request.id);
-              console.log('[App] set parentRequestId from response:', response.data.parent_request.id);
+            const requestId = 
+              response.data?.parent_request?.id || 
+              response.data?.id || 
+              response.parent_request?.id || 
+              response.id;
+
+            if (requestId) {
+              setParentRequestId(requestId);
             }
 
             // Refresh user data to reflect new/updated request
@@ -1096,7 +1088,15 @@ export default function App() {
       }
     } else if (currentStep === 2) {
       if (validateStep2()) {
-        if (parentRequestId) {
+        let idToUse = parentRequestId;
+        
+        // Fallback: If parentRequestId is null, try to find the latest request from the user object
+        if (!idToUse && isLoggedIn && user?.parent_requests?.length) {
+          const sortedRequests = [...user.parent_requests].sort((a, b) => b.id - a.id);
+          idToUse = sortedRequests[0].id;
+        }
+
+        if (idToUse) {
           const saveSchedules = async () => {
             try {
               setIsRegistering(true);
@@ -1120,7 +1120,7 @@ export default function App() {
               // Create new schedules
               if (newSchedules.length > 0) {
                 await api.createParentSchedules({
-                  parent_request_id: parentRequestId,
+                  parent_request_id: idToUse,
                   schedules: newSchedules.map(s => ({
                     date: s.id,
                     slots: s.slots.map(slot => ({
@@ -1132,7 +1132,7 @@ export default function App() {
               }
 
               // Refresh to get all IDs
-              const refreshResponse = await api.getParentSchedules(parentRequestId);
+              const refreshResponse = await api.getParentSchedules(idToUse);
               if (refreshResponse.status && refreshResponse.data) {
                 const mappedSchedules = refreshResponse.data.map((s: any) => ({
                   id: s.schedule_date,
@@ -1164,12 +1164,18 @@ export default function App() {
         }
       }
     } else if (currentStep === 3) {
-      if (parentRequestId) {
+      let idToUse = parentRequestId;
+      
+      // Fallback: If parentRequestId is null, try to find the latest request from the user object
+      if (!idToUse && isLoggedIn && user?.parent_requests?.length) {
+        const sortedRequests = [...user.parent_requests].sort((a, b) => b.id - a.id);
+        idToUse = sortedRequests[0].id;
+      }
+
+      if (idToUse) {
         try {
           setIsRegistering(true);
-          console.log('[App] acceptPriceQuote: parentRequestId=', parentRequestId);
-          const resp = await api.acceptPriceQuote(parentRequestId);
-          console.log('[App] acceptPriceQuote response:', resp);
+          await api.acceptPriceQuote(idToUse);
           setCurrentStep(4);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
@@ -1186,58 +1192,57 @@ export default function App() {
       }
     } else if (currentStep === 4) {
       if (validateStep4()) {
-        if (parentRequestId) {
-          const saveChoices = async () => {
-            try {
-              setIsRegistering(true);
-
-              await api.createBabysitterChoices({
-                parent_request_id: parentRequestId,
-                choices: selectedCandidates.map((c, index) => {
-                  const sitter = localizedSitters.find(s => s.id === c.sitterId);
-
-                  return {
-                    choice_order: index + 1,
-                    babysitter_first_name: sitter?.name || "Babysitter",
-                    babysitter_last_name: sitter?.lastName || "Unknown",
-                    babysitter_email: sitter?.email || `${sitter?.name?.toLowerCase() || 'babysitter'}@example.com`,
-                    babysitter_phone: sitter?.phone || "00000000000",
-                    babysitter_address: sitter?.address || "Not Provided",
-                    interview_date: c.interview.skipped ? undefined : c.interview.date,
-                    interview_time: c.interview.skipped ? undefined : c.interview.time
-                  };
-                })
-              });
-
-              setIsConfirmModalOpen(true);
-
-            } catch (error) {
-              console.error('Failed to save babysitter choices:', error);
-              setErrors({ candidates: 'Failed to save your selection. Please try again.' });
-            } finally {
-              setIsRegistering(false);
-            }
-          };
-          saveChoices();
-        } else {
-          setIsConfirmModalOpen(true);
-        }
+        setIsConfirmModalOpen(true);
       }
     }
   };
 
-  const handleConfirmSubmission = () => {
+  const handleConfirmSubmission = async () => {
     setIsConfirmModalProcessing(true);
-    setTimeout(() => {
+    setErrors({});
+    
+    try {
+      let idToUse = parentRequestId;
+      if (!idToUse && isLoggedIn && user?.parent_requests?.length) {
+        const sortedRequests = [...user.parent_requests].sort((a, b) => b.id - a.id);
+        idToUse = sortedRequests[0].id;
+      }
+
+      if (idToUse) {
+        await api.createBabysitterChoices({
+          parent_request_id: idToUse,
+          choices: selectedCandidates.map((c, index) => {
+            const sitter = localizedSitters.find(s => s.id === c.sitterId);
+
+            return {
+              choice_order: index + 1,
+              babysitter_first_name: sitter?.name || "Babysitter",
+              babysitter_last_name: sitter?.lastName || "Unknown",
+              babysitter_email: sitter?.email || `${sitter?.name?.toLowerCase() || 'babysitter'}@example.com`,
+              babysitter_phone: sitter?.phone || "00000000000",
+              babysitter_address: sitter?.address || "Not Provided",
+              interview_date: c.interview.skipped ? undefined : c.interview.date,
+              interview_time: c.interview.skipped ? undefined : c.interview.time
+            };
+          })
+        });
+      }
+
       setIsConfirmModalProcessing(false);
       setIsConfirmModalOpen(false);
       setIsSubmitted(true);
+      
       try {
         if (typeof window !== 'undefined') window.sessionStorage.removeItem('selectedCandidates');
       } catch (e) {
         // ignore
       }
-    }, 1500);
+    } catch (error) {
+      console.error('Failed to save babysitter choices:', error);
+      setErrors({ candidates: 'Failed to save your selection. Please try again.' });
+      setIsConfirmModalProcessing(false);
+      // We keep the modal open so the user can see the error
+    }
   };
 
   const handleBackStep = () => {
@@ -2752,19 +2757,34 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden p-8 text-center"
+              className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden p-8"
             >
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
-                <div className="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                  <Check size={20} className="text-white" />
+              <button
+                onClick={() => !isConfirmModalProcessing && setIsConfirmModalOpen(false)}
+                className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="mb-6">
+                <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center border border-red-100 shadow-sm">
+                  <AlertCircle size={24} />
                 </div>
               </div>
+
               <h3 className="text-2xl font-display font-bold text-slate-800 mb-2">
                 {t.modals.confirmSelection.title}
               </h3>
               <p className="text-slate-500 mb-8">
                 {t.modals.confirmSelection.subtitle}
               </p>
+
+              {errors.candidates && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-medium">
+                  <AlertCircle size={20} />
+                  {errors.candidates}
+                </div>
+              )}
 
               <div className="flex gap-4">
                 <button

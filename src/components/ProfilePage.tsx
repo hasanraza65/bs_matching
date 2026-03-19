@@ -536,49 +536,53 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                     </div>
                                   </div>
 
-                                  <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
-                                    {choice.final_choice === 1 ? (
-                                      <button
-                                        onClick={() => onViewContract?.(choice.id)}
-                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                      >
-                                        <FileText size={16} />
-                                        {t.profilePage.interviews.viewContract}
-                                      </button>
-                                    ) : req.choices?.some((c: any) => c.final_choice === 1) ? null : (
-                                      <>
-                                        {choice.zoom_meeting_link ? (
-                                          <a
-                                            href={choice.zoom_meeting_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                          >
-                                            <Video size={16} />
-                                            {t.profilePage.interviews.joinMeeting}
-                                          </a>
-                                        ) : (
-                                          <button
-                                            disabled
-                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                          >
-                                            <Video size={16} />
-                                            {t.profilePage.interviews.joinMeeting}
-                                          </button>
-                                        )}
+                                    <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
+                                      {choice.final_choice === 1 ? (
                                         <button
-                                          onClick={() => handleFinalChoice(choice.id)}
+                                          onClick={() => onViewContract?.(choice.id)}
                                           className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                         >
-                                          <CheckCircle2 size={16} />
-                                          {t.profilePage.interviews.finalChoice}
+                                          <FileText size={16} />
+                                          {t.profilePage.interviews.viewContract}
                                         </button>
-                                        {choice.final_choice === 2 ? (
-                                          <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2">
-                                            <X size={16} />
-                                            {language === 'fr' ? 'Refusé' : 'Rejected'}
-                                          </div>
-                                        ) : (
+                                      ) : req.choices?.some((c: any) => c.final_choice === 1) ? null : (
+                                        <>
+                                          {choice.final_choice !== 2 && (
+                                            <>
+                                              {choice.zoom_meeting_link ? (
+                                                <a
+                                                  href={choice.zoom_meeting_link}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                                >
+                                                  <Video size={16} />
+                                                  {t.profilePage.interviews.joinMeeting}
+                                                </a>
+                                              ) : (
+                                                <button
+                                                  disabled
+                                                  className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                                >
+                                                  <Video size={16} />
+                                                  {t.profilePage.interviews.joinMeeting}
+                                                </button>
+                                              )}
+                                              <button
+                                                onClick={() => handleFinalChoice(choice.id)}
+                                                className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                              >
+                                                <CheckCircle2 size={16} />
+                                                {t.profilePage.interviews.finalChoice}
+                                              </button>
+                                            </>
+                                          )}
+                                          {choice.final_choice === 2 ? (
+                                            <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2">
+                                              <X size={16} />
+                                              {language === 'fr' ? 'Refusé' : 'Rejected'}
+                                            </div>
+                                          ) : (
                                           <button
                                             onClick={async () => {
                                               setRejectingChoice(choice.id);
