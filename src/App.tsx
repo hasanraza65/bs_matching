@@ -538,7 +538,7 @@ export default function App() {
     // Merge server-provided choices with any locally persisted selections
     if (data.choices && data.choices.length > 0) {
       const serverMapped = data.choices.map(c => ({
-        sitterId: 0,
+        sitterId: c.user_id,
         dbId: c.id,
         interview: {
           date: c.interview_date || '',

@@ -404,12 +404,21 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             <div>
                               <div className="flex items-center gap-3 mb-1">
                                 <span className="text-xl font-display font-bold text-slate-900 tracking-tight">REQ-{req.id}</span>
+                            {(() => {
+                              const hasSchedules = req.schedules && req.schedules.length > 0;
+                              const hasSlots = hasSchedules && req.schedules.every((s: any) => s.slots && s.slots.length > 0);
+                              const hasChoices = req.choices && req.choices.length > 0;
+                              const isActive = hasSchedules && hasSlots && hasChoices;
+
+                              return (
                                 <div className="flex items-center gap-2 px-3 py-1 bg-brand-accent/5 rounded-full border border-brand-accent/10">
                                   <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
                                   <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">
-                                    {req.status || t.profilePage.requests.pending}
+                                    {isActive ? t.profilePage.requests.active : t.profilePage.requests.pending}
                                   </span>
                                 </div>
+                              );
+                            })()}
                               </div>
                               <p className="text-xs text-slate-400 font-medium">Created on {req.created_at?.split('T')[0] || '--'}</p>
                             </div>
