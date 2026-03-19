@@ -537,15 +537,40 @@ export default function App() {
 
     // Merge server-provided choices with any locally persisted selections
     if (data.choices && data.choices.length > 0) {
-      const serverMapped = data.choices.map(c => ({
-        sitterId: c.user_id,
-        dbId: c.id,
-        interview: {
-          date: c.interview_date || '',
-          time: c.interview_time || '',
-          skipped: !c.interview_date
+      const serverMapped = data.choices.map(c => {
+        // Try to find sitter id from localized list if available
+        const sitter = localizedSitters.find(s =>
+          (c.bb_bs_id && s.id === c.bb_bs_id) ||
+          s.email === c.babysitter_email ||
+          (s.name.toLowerCase() === c.babysitter_first_name?.toLowerCase() &&
+            s.lastName?.toLowerCase() === c.babysitter_last_name?.toLowerCase())
+        );
+
+        // Normalize time to HH:mm
+        let normalizedTime = c.interview_time || '';
+        if (normalizedTime.includes(':')) {
+            const parts = normalizedTime.split(':');
+            if (parts.length >= 2) normalizedTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
         }
-      }));
+
+        return {
+          sitterId: sitter?.id || c.bb_bs_id || 0,
+          dbId: c.id,
+          interview: {
+            date: c.interview_date || '',
+            time: normalizedTime,
+            skipped: !c.interview_date
+          },
+          // Cache some sitter info for display before full list loads
+          sitterInfo: {
+            name: c.babysitter_first_name,
+            lastName: c.babysitter_last_name,
+            email: c.babysitter_email,
+            phone: c.babysitter_phone,
+            address: c.babysitter_address
+          }
+        };
+      });
 
       // Prefer in-memory selectedCandidates if available, otherwise fall back to sessionStorage
       let localSelections = selectedCandidates;
@@ -558,7 +583,7 @@ export default function App() {
           }
         }
       } catch (e) {
-        // ignore parse/storage errors and continue with empty localSelections
+        // ignore
       }
 
       const merged = mergeServerAndLocalChoices(localSelections || [], serverMapped);
@@ -617,18 +642,33 @@ export default function App() {
             const mappedChoices = response.data.map((choice: any) => {
               // Try to find the sitter in our local list by email or name
               const sitter = localizedSitters.find(s =>
+                (choice.bb_bs_id && s.id === choice.bb_bs_id) ||
                 s.email === choice.babysitter_email ||
                 (s.name.toLowerCase() === choice.babysitter_first_name?.toLowerCase() &&
                   s.lastName?.toLowerCase() === choice.babysitter_last_name?.toLowerCase())
               );
 
+              // Normalize time to HH:mm
+              let normalizedTime = choice.interview_time || '';
+              if (normalizedTime.includes(':')) {
+                  const parts = normalizedTime.split(':');
+                  if (parts.length >= 2) normalizedTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+              }
+
               return {
-                sitterId: sitter?.id || choice.babysitter_id || 0,
+                sitterId: sitter?.id || choice.bb_bs_id || choice.babysitter_id || 0,
                 dbId: choice.id,
                 interview: {
                   date: choice.interview_date || '',
-                  time: choice.interview_time || '',
+                  time: normalizedTime,
                   skipped: !choice.interview_date
+                },
+                sitterInfo: {
+                  name: choice.babysitter_first_name,
+                  lastName: choice.babysitter_last_name,
+                  email: choice.babysitter_email,
+                  phone: choice.babysitter_phone,
+                  address: choice.babysitter_address
                 }
               };
             });
@@ -1206,17 +1246,27 @@ export default function App() {
           parent_request_id: idToUse,
           choices: selectedCandidates.map((c, index) => {
             const sitter = localizedSitters.find(s => s.id === c.sitterId);
+            const info = (c as any).sitterInfo;
+
+            // Ensure time is in HH:mm format
+            let formattedTime = c.interview.time;
+            if (formattedTime) {
+              const parts = formattedTime.split(':');
+              if (parts.length >= 2) {
+                formattedTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+              }
+            }
 
             return {
               choice_order: index + 1,
               bb_bs_id: c.sitterId,
-              babysitter_first_name: sitter?.name || "Babysitter",
-              babysitter_last_name: sitter?.lastName || "Unknown",
-              babysitter_email: sitter?.email || `${sitter?.name?.toLowerCase() || 'babysitter'}@example.com`,
-              babysitter_phone: sitter?.phone || "00000000000",
-              babysitter_address: sitter?.address || "Not Provided",
+              babysitter_first_name: sitter?.name || info?.name || "Babysitter",
+              babysitter_last_name: sitter?.lastName || info?.lastName || "Unknown",
+              babysitter_email: sitter?.email || info?.email || `${sitter?.name?.toLowerCase() || 'babysitter'}@example.com`,
+              babysitter_phone: sitter?.phone || info?.phone || "00000000000",
+              babysitter_address: sitter?.address || info?.address || "Not Provided",
               interview_date: c.interview.skipped ? undefined : c.interview.date,
-              interview_time: c.interview.skipped ? undefined : c.interview.time
+              interview_time: c.interview.skipped ? undefined : formattedTime
             };
           })
         });
@@ -1302,7 +1352,31 @@ export default function App() {
 
   const editInterview = (sitterId: number) => {
     const candidate = selectedCandidates.find(c => c.sitterId === sitterId);
-    const sitter = localizedSitters.find(s => s.id === sitterId);
+    let sitter = localizedSitters.find(s => s.id === sitterId);
+    
+    // If not found in primary list, build a "proxy" sitter from candidate info
+    if (!sitter && candidate && (candidate as any).sitterInfo) {
+      const info = (candidate as any).sitterInfo;
+      sitter = {
+        id: sitterId,
+        key: `proxy-${sitterId}`,
+        name: info.name,
+        lastName: info.lastName,
+        email: info.email,
+        phone: info.phone,
+        address: info.address,
+        age: 20,
+        languages: ['English', 'French'],
+        experience: 0,
+        description: '',
+        fullBio: '',
+        photo: 'https://bloom-buddies.fr/public/uploads/profile_images/default.jpg',
+        status: 'Available',
+        rating: 4.5,
+        reviews: 0
+      };
+    }
+
     if (candidate && sitter) {
       setSchedulingSitter(sitter);
       setModalInterviewConfig({ ...candidate.interview });
@@ -2376,54 +2450,75 @@ export default function App() {
                               {t.step4.selectedTitle}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                              {selectedCandidates.map((candidate, index) => {
-                                const sitter = localizedSitters.find(s => s.id === candidate.sitterId);
-                                if (!sitter) return null;
-                                const rankLabel = t.step4.rankLabels[index];
+                                {selectedCandidates.map((candidate, index) => {
+                                  let sitter = localizedSitters.find(s => s.id === candidate.sitterId);
+                                  
+                                  // Fallback to proxy sitter if not loaded yet
+                                  if (!sitter && (candidate as any).sitterInfo) {
+                                    const info = (candidate as any).sitterInfo;
+                                    sitter = {
+                                      id: candidate.sitterId,
+                                      key: `proxy-${candidate.sitterId}`,
+                                      name: info.name,
+                                      lastName: info.lastName,
+                                      photo: 'https://bloom-buddies.fr/public/uploads/profile_images/default.jpg',
+                                      age: 20,
+                                      experience: 0,
+                                      languages: [],
+                                      description: '',
+                                      fullBio: '',
+                                      status: 'Available',
+                                      rating: 4.5,
+                                      reviews: 0
+                                    };
+                                  }
 
-                                return (
-                                  <motion.div
-                                    key={candidate.sitterId}
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="bg-white border-2 border-brand-accent/20 rounded-2xl p-4 shadow-sm relative group"
-                                  >
-                                    <div className="absolute -top-3 -left-3 w-8 h-8 bg-brand-accent text-white rounded-full flex items-center justify-center font-bold text-xs shadow-lg">
-                                      {rankLabel}
-                                    </div>
-                                    <div className="flex items-center gap-3 mb-3">
-                                      <img src={sitter.photo} alt={sitter.name} className="w-10 h-10 rounded-xl object-cover" />
-                                      <div className="min-w-0">
-                                        <p className="font-bold text-slate-800 text-sm truncate">{sitter.name}</p>
-                                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                                          {candidate.interview.skipped ? (
-                                            <span className="flex items-center gap-1"><X size={10} /> {t.common.noInterview}</span>
-                                          ) : (
-                                            <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                                              <Calendar size={10} /> {candidate.interview.date}
-                                            </span>
-                                          )}
+                                  if (!sitter) return null;
+                                  const rankLabel = t.step4.rankLabels[index];
+
+                                  return (
+                                    <motion.div
+                                      key={candidate.sitterId}
+                                      layout
+                                      initial={{ opacity: 0, scale: 0.9 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      className="bg-white border-2 border-brand-accent/20 rounded-2xl p-4 shadow-sm relative group"
+                                    >
+                                      <div className="absolute -top-3 -left-3 w-8 h-8 bg-brand-accent text-white rounded-full flex items-center justify-center font-bold text-xs shadow-lg">
+                                        {rankLabel}
+                                      </div>
+                                      <div className="flex items-center gap-3 mb-3">
+                                        <img src={sitter.photo} alt={sitter.name} className="w-10 h-10 rounded-xl object-cover" />
+                                        <div className="min-w-0">
+                                          <p className="font-bold text-slate-800 text-sm truncate">{sitter.name}</p>
+                                          <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                                            {candidate.interview.skipped ? (
+                                              <span className="flex items-center gap-1"><X size={10} /> {t.common.noInterview}</span>
+                                            ) : (
+                                              <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                                                <Calendar size={10} /> {candidate.interview.date}
+                                              </span>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <button
-                                        onClick={() => editInterview(sitter.id)}
-                                        className="flex-1 py-1.5 text-[10px] font-bold text-brand-accent bg-brand-accent/5 hover:bg-brand-accent/10 rounded-lg transition-colors"
-                                      >
-                                        {t.common.modify}
-                                      </button>
-                                      <button
-                                        onClick={() => removeCandidate(sitter.id)}
-                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    </div>
-                                  </motion.div>
-                                );
-                              })}
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => editInterview(sitter.id)}
+                                          className="flex-1 py-1.5 text-[10px] font-bold text-brand-accent bg-brand-accent/5 hover:bg-brand-accent/10 rounded-lg transition-colors"
+                                        >
+                                          {t.common.modify}
+                                        </button>
+                                        <button
+                                          onClick={() => removeCandidate(sitter.id)}
+                                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    </motion.div>
+                                  );
+                                })}
                             </div>
                           </motion.div>
                         )}

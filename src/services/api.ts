@@ -65,6 +65,7 @@ export interface Choice {
   babysitter_address: string;
   zoom_meeting_link?: string;
   final_choice?: number;
+  bb_bs_id?: number | null;
 }
 
 export interface ParentRequest {
@@ -635,6 +636,11 @@ export const api = {
 
   getAttestations: async (): Promise<AttestationsResponse> => {
     const response = await apiClient.get("/attestations");
+    return response.data;
+  },
+
+  getActiveRequests: async (): Promise<ParentRequest[]> => {
+    const response = await apiClient.get("/active-requests");
     return response.data;
   },
 
