@@ -601,6 +601,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
       // Clean choices payload - map back to BabysitterChoicePayload structure
       const choicesPayload = (updatedFields.choices || []).map((c: any) => ({
         choice_order: c.choice_order,
+        bb_bs_id: c.user_id,
         babysitter_first_name: c.babysitter_first_name,
         babysitter_last_name: c.babysitter_last_name,
         babysitter_email: c.babysitter_email,

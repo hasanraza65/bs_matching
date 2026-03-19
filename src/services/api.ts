@@ -216,6 +216,7 @@ export interface ContractResponse {
 
 export interface BabysitterChoicePayload {
   choice_order?: number;
+  bb_bs_id?: number | string;
   babysitter_first_name?: string;
   babysitter_last_name?: string;
   babysitter_email?: string;

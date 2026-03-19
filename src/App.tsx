@@ -1209,6 +1209,7 @@ export default function App() {
 
             return {
               choice_order: index + 1,
+              bb_bs_id: c.sitterId,
               babysitter_first_name: sitter?.name || "Babysitter",
               babysitter_last_name: sitter?.lastName || "Unknown",
               babysitter_email: sitter?.email || `${sitter?.name?.toLowerCase() || 'babysitter'}@example.com`,
