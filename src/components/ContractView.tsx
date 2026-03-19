@@ -1,7 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { generateContractPdf } from '../utils/contractPdfGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, ArrowLeft, ShieldCheck, Loader2, AlertCircle, CheckCircle2, CreditCard, Lock, Download, Check } from 'lucide-react';
+import {
+  Baby,
+  Clock,
+  Euro,
+  Calendar,
+  CalendarDays,
+  FileText,
+  Download,
+  ChevronRight,
+  CheckCircle2,
+  Clock3,
+  Receipt,
+  Award,
+  ArrowLeft,
+  User as UserIcon,
+  Trash2,
+  LogOut,
+  Loader2,
+  AlertCircle,
+  X,
+  Phone,
+  Mail,
+  MapPin,
+  Plus,
+  Video,
+  CreditCard,
+  Star,
+  Check,
+  ShieldCheck
+} from 'lucide-react';
 import { api, ContractResponse } from '../services/api';
 import { SlideToAccept } from './SlideToAccept';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -35,6 +64,20 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
     const [rejectError, setRejectError] = useState<string | null>(null);
     const contractRef = useRef<HTMLDivElement>(null);
 
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        confirmColor?: string;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        confirmColor: 'bg-red-500',
+        onConfirm: () => { },
+    });
+
     const stripe = useStripe();
     const elements = useElements();
 
@@ -52,7 +95,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
 
     const handleDownloadPDF = async () => {
         if (!contractData) return;
-        
+
         try {
             setIsDownloading(true);
             await generateContractPdf(contractData, language, trans, choiceId);
@@ -78,12 +121,12 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
 
         try {
             const amount = Math.round(getFirstMonthAmount());
-            
+
             // 1. Create Payment Intent
             const intentResponse = await api.createPaymentIntent(amount);
-            
+
             const clientSecret = intentResponse.client_secret || intentResponse.clientSecret;
-            
+
             if (!clientSecret) {
                 throw new Error(language === 'fr' ? "Erreur d'initialisation du paiement" : "Payment initialization error");
             }
@@ -96,7 +139,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                 clientSecret,
                 {
                     payment_method: {
-                        card: cardNumberElement as unknown as StripeCardNumberElement, 
+                        card: cardNumberElement as unknown as StripeCardNumberElement,
                     }
                 }
             );
@@ -108,7 +151,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
             if (paymentIntent && paymentIntent.status === 'succeeded') {
                 // 3. Confirm on Backend
                 const confirmResponse = await api.confirmPayment(paymentIntent.id, contractData.contract_id);
-                
+
                 if (confirmResponse.status) {
                     setIsPaymentProcessing(false);
                     setIsAccepted(true);
@@ -129,7 +172,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
             try {
                 setLoading(true);
                 const data = await api.getContract(choiceId);
-                
+
                 if (data.status == 0 || data.status == 1 || data.status == 2) {
                     setContractData(data);
                 } else {
@@ -221,7 +264,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                 </button>
 
                 {/* Contract Paper */}
-                <div 
+                <div
                     ref={contractRef}
                     className="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 sm:p-12 mb-8 relative overflow-hidden"
                 >
@@ -621,8 +664,8 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                 ) : (
                                     <Download size={20} />
                                 )}
-                                {isDownloading 
-                                    ? (language === 'fr' ? 'Génération...' : 'Generating...') 
+                                {isDownloading
+                                    ? (language === 'fr' ? 'Génération...' : 'Generating...')
                                     : (language === 'fr' ? 'Télécharger' : 'Download')
                                 }
                             </button>
@@ -637,36 +680,62 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                     ) : (
                         <>
                             <button
-                                onClick={async () => {
+                                onClick={() => {
                                     if (!contractData) return;
-                                    try {
-                                        setIsRejecting(true);
-                                        const resp = await api.rejectContract(contractData.contract_id);
-                                        if (resp && resp.status) {
-                                            // success: show success modal
-                                            setRejectError(null);
-                                            setShowRejectModal(true);
-                                        } else {
-                                            // show error modal
-                                            setRejectError(resp?.message || (language === 'fr' ? 'Échec du refus' : 'Reject failed'));
-                                            setShowRejectModal(true);
-                                        }
-                                    } catch (err: any) {
-                                        setRejectError(err?.message || (language === 'fr' ? 'Erreur réseau' : 'Network error'));
-                                        setShowRejectModal(true);
-                                    } finally {
-                                        setIsRejecting(false);
-                                    }
+
+                                    setConfirmModal({
+                                        isOpen: true,
+                                        title: language === 'fr' ? 'Refuser le contrat' : 'Reject Contract',
+                                        message:
+                                            language === 'fr'
+                                                ? 'Êtes-vous sûr de vouloir refuser ce contrat ?'
+                                                : 'Are you sure you want to reject this contract?',
+                                        confirmColor: 'bg-red-500',
+                                        onConfirm: async () => {
+                                            try {
+                                                setIsRejecting(true);
+
+                                                const resp = await api.rejectContract(contractData.contract_id);
+
+                                                if (resp && resp.status) {
+                                                    // ✅ success
+                                                    setRejectError(null);
+                                                    setShowRejectModal(true);
+                                                } else {
+                                                    // ❌ API error
+                                                    setRejectError(
+                                                        resp?.message ||
+                                                        (language === 'fr' ? 'Échec du refus' : 'Reject failed')
+                                                    );
+                                                    setShowRejectModal(true);
+                                                }
+                                            } catch (err: any) {
+                                                // ❌ network error
+                                                setRejectError(
+                                                    err?.message ||
+                                                    (language === 'fr' ? 'Erreur réseau' : 'Network error')
+                                                );
+                                                setShowRejectModal(true);
+                                            } finally {
+                                                setIsRejecting(false);
+                                            }
+                                        },
+                                    });
                                 }}
                                 disabled={isRejecting}
-                                className={`flex-1 py-4 bg-white text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed ${isRejecting ? 'relative' : ''}`}
+                                className={`flex-1 py-4 bg-white text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed ${isRejecting ? 'relative' : ''
+                                    }`}
                             >
                                 {isRejecting ? (
                                     <div className="flex items-center justify-center gap-2">
                                         <Loader2 className="animate-spin" size={18} />
-                                        <span className="text-sm">{language === 'fr' ? 'Refus en cours...' : 'Refusing...'}</span>
+                                        <span className="text-sm">
+                                            {language === 'fr' ? 'Refus en cours...' : 'Refusing...'}
+                                        </span>
                                     </div>
-                                ) : t.actions.refuse}
+                                ) : (
+                                    t.actions.refuse
+                                )}
                             </button>
                             <button
                                 onClick={() => setShowAcceptModal(true)}
@@ -836,7 +905,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                             className="bg-white rounded-[40px] p-10 w-full max-w-sm shadow-2xl relative z-10 overflow-hidden text-center"
                         >
                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-                            
+
                             <div className="relative mb-8">
                                 <div className="w-20 h-20 border-4 border-brand-blue/10 border-t-brand-blue rounded-full animate-spin mx-auto shadow-inner" />
                                 <div className="absolute inset-0 flex items-center justify-center text-brand-blue">
@@ -848,7 +917,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                 {language === 'fr' ? 'Préparation du PDF...' : 'Preparing PDF...'}
                             </h3>
                             <p className="text-slate-500 text-xs leading-relaxed px-4">
-                                {language === 'fr' 
+                                {language === 'fr'
                                     ? "Nous préparons votre contrat pour le téléchargement. Cela ne prendra que quelques instants."
                                     : "We are preparing your contract for download. This will only take a moment."
                                 }
@@ -915,6 +984,65 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                 )}
             </AnimatePresence>
 
+
+            {/* Confirmation Modal */}
+            <AnimatePresence>
+                {confirmModal.isOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl p-8 overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-pink/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+
+                            <div className="relative">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
+                                        <AlertCircle size={24} />
+                                    </div>
+                                    <button
+                                        onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                                        className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                <h3 className="text-xl font-display font-bold text-slate-800 mb-2">{confirmModal.title}</h3>
+                                <p className="text-slate-500 mb-8">{confirmModal.message}</p>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                                        className="flex-1 px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            confirmModal.onConfirm();
+                                            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                                        }}
+                                        className={`flex-1 px-6 py-3 ${confirmModal.confirmColor || 'bg-red-500'} text-white font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg`}
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <style>{`
                 .custom-scroll::-webkit-scrollbar {
                   width: 5px;
@@ -934,6 +1062,9 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
         </div>
     );
 };
+
+
+
 
 export const ContractView: React.FC<ContractViewProps> = (props) => (
     <Elements stripe={stripePromise}>

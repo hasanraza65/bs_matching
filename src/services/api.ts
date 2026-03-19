@@ -504,6 +504,31 @@ export const api = {
     }
   },
 
+  removeParentRequest: async (
+  id: number
+    ): Promise<{ status: boolean; message?: string; data?: any }> => {
+      try {
+        const response = await apiClient.delete(`/parent-requests/${id}`);
+
+        return {
+          status: response.status >= 200 && response.status < 300,
+          message:
+            typeof response.data === 'string'
+              ? response.data
+              : response.data?.message,
+          data: response.data,
+        };
+      } catch (error: any) {
+        return {
+          status: false,
+          message:
+            error?.response?.data?.message ||
+            error?.message ||
+            'Request failed',
+        };
+      }
+    },
+
   getContract: async (choiceId: number): Promise<ContractResponse> => {
     const response = await apiClient.get(`/contract/${choiceId}`);
     return response.data;

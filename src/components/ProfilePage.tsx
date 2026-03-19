@@ -46,12 +46,12 @@ interface ProfilePageProps {
   initialTab?: 'requests' | 'invoices' | 'tax' | 'cmg';
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ 
-  onBack, 
-  onLogout, 
-  onModifyRequest, 
-  onGoToAdmin, 
-  onCreateRequest, 
+export const ProfilePage: React.FC<ProfilePageProps> = ({
+  onBack,
+  onLogout,
+  onModifyRequest,
+  onGoToAdmin,
+  onCreateRequest,
   onViewContract,
   onUserLoaded,
   initialTab = 'requests'
@@ -142,14 +142,24 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       title: 'Remove Request',
       message: 'Are you sure you want to remove this request?',
       confirmColor: 'bg-red-500',
-      onConfirm: () => {
-        if (user) {
+      onConfirm: async () => {
+        if (!user) return;
+
+        const res = await api.removeParentRequest(Number(id));
+
+        if (res.status) {
+          // ✅ update UI only if API success
           setUser({
             ...user,
-            parent_requests: user.parent_requests?.filter(req => req.id.toString() !== id)
+            parent_requests: user.parent_requests?.filter(
+              (req) => req.id.toString() !== id
+            ),
           });
+        } else {
+          // ❌ handle error (you can improve this)
+          alert(res.message || 'Failed to delete request');
         }
-      }
+      },
     });
   };
 
@@ -251,9 +261,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
   const tabs = [
     { id: 'requests', label: t.profilePage.tabs.requests, icon: Baby },
+    { id: 'cmg', label: t.profilePage.tabs.cmg || 'CMG', icon: ShieldCheck },
     { id: 'invoices', label: t.profilePage.tabs.invoices, icon: Receipt },
     { id: 'tax', label: t.profilePage.tabs.tax, icon: FileText },
-    { id: 'cmg', label: t.profilePage.tabs.cmg || 'CMG', icon: ShieldCheck },
+    
   ];
 
   const calculateTotalHours = (schedules?: any[]) => {
@@ -404,21 +415,21 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             <div>
                               <div className="flex items-center gap-3 mb-1">
                                 <span className="text-xl font-display font-bold text-slate-900 tracking-tight">REQ-{req.id}</span>
-                            {(() => {
-                              const hasSchedules = req.schedules && req.schedules.length > 0;
-                              const hasSlots = hasSchedules && req.schedules.every((s: any) => s.slots && s.slots.length > 0);
-                              const hasChoices = req.choices && req.choices.length > 0;
-                              const isActive = hasSchedules && hasSlots && hasChoices;
+                                {(() => {
+                                  const hasSchedules = req.schedules && req.schedules.length > 0;
+                                  const hasSlots = hasSchedules && req.schedules.every((s: any) => s.slots && s.slots.length > 0);
+                                  const hasChoices = req.choices && req.choices.length > 0;
+                                  const isActive = hasSchedules && hasSlots && hasChoices;
 
-                              return (
-                                <div className="flex items-center gap-2 px-3 py-1 bg-brand-accent/5 rounded-full border border-brand-accent/10">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
-                                  <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">
-                                    {isActive ? t.profilePage.requests.active : t.profilePage.requests.pending}
-                                  </span>
-                                </div>
-                              );
-                            })()}
+                                  return (
+                                    <div className="flex items-center gap-2 px-3 py-1 bg-brand-accent/5 rounded-full border border-brand-accent/10">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
+                                      <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">
+                                        {isActive ? t.profilePage.requests.active : t.profilePage.requests.pending}
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
                               </div>
                               <p className="text-xs text-slate-400 font-medium">Created on {req.created_at?.split('T')[0] || '--'}</p>
                             </div>
@@ -545,72 +556,87 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                     </div>
                                   </div>
 
-                                    <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
-                                      {Number(choice.final_choice) === 1 ? (
-                                        <button
-                                          onClick={() => onViewContract?.(choice.id)}
-                                          className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                        >
-                                          <FileText size={16} />
-                                          {t.profilePage.interviews.viewContract}
-                                        </button>
-                                      ) : req.choices?.some((c: any) => Number(c.final_choice) === 1) ? null : (
-                                        <>
-                                          {Number(choice.final_choice) !== 2 && (
-                                            <>
-                                              {choice.zoom_meeting_link ? (
-                                                <a
-                                                  href={choice.zoom_meeting_link}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                                >
-                                                  <Video size={16} />
-                                                  {t.profilePage.interviews.joinMeeting}
-                                                </a>
-                                              ) : (
-                                                <button
-                                                  disabled
-                                                  className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                                >
-                                                  <Video size={16} />
-                                                  {t.profilePage.interviews.joinMeeting}
-                                                </button>
-                                              )}
-                                              <button
-                                                onClick={() => handleFinalChoice(choice.id)}
+                                  <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
+                                    {Number(choice.final_choice) === 1 ? (
+                                      <button
+                                        onClick={() => onViewContract?.(choice.id)}
+                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                      >
+                                        <FileText size={16} />
+                                        {t.profilePage.interviews.viewContract}
+                                      </button>
+                                    ) : req.choices?.some((c: any) => Number(c.final_choice) === 1) ? null : (
+                                      <>
+                                        {Number(choice.final_choice) !== 2 && (
+                                          <>
+                                            {choice.zoom_meeting_link ? (
+                                              <a
+                                                href={choice.zoom_meeting_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                               >
-                                                <CheckCircle2 size={16} />
-                                                {t.profilePage.interviews.finalChoice}
+                                                <Video size={16} />
+                                                {t.profilePage.interviews.joinMeeting}
+                                              </a>
+                                            ) : (
+                                              <button
+                                                disabled
+                                                className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                              >
+                                                <Video size={16} />
+                                                {t.profilePage.interviews.joinMeeting}
                                               </button>
-                                            </>
-                                          )}
-                                          {Number(choice.final_choice) === 2 ? (
-                                            <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2">
-                                              <X size={16} />
-                                              {language === 'fr' ? 'Refusé' : 'Rejected'}
-                                            </div>
-                                          ) : (
+                                            )}
+                                            <button
+                                              onClick={() => handleFinalChoice(choice.id)}
+                                              className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                            >
+                                              <CheckCircle2 size={16} />
+                                              {t.profilePage.interviews.finalChoice}
+                                            </button>
+                                          </>
+                                        )}
+                                        {Number(choice.final_choice) === 2 ? (
+                                          <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2">
+                                            <X size={16} />
+                                            {language === 'fr' ? 'Refusé' : 'Rejected'}
+                                          </div>
+                                        ) : (
                                           <button
-                                            onClick={async () => {
-                                              setRejectingChoice(choice.id);
-                                              try {
-                                                const resp = await api.rejectChoice(choice.id);
-                                                if (resp && resp.status) {
-                                                  // refresh user data to reflect updated choice statuses
-                                                  const userResp = await api.getUser();
-                                                  if (userResp.status && userResp.data) {
-                                                    setUser(userResp.data);
+                                            onClick={() => {
+                                              setConfirmModal({
+                                                isOpen: true,
+                                                title: language === 'fr' ? 'Refuser le choix' : 'Reject Choice',
+                                                message:
+                                                  language === 'fr'
+                                                    ? 'Êtes-vous sûr de vouloir refuser ce choix ?'
+                                                    : 'Are you sure you want to reject this choice?',
+                                                confirmColor: 'bg-red-500',
+                                                onConfirm: async () => {
+                                                  setRejectingChoice(choice.id);
+
+                                                  try {
+                                                    const resp = await api.rejectChoice(choice.id);
+
+                                                    if (resp && resp.status) {
+                                                      // ✅ refresh user data
+                                                      const userResp = await api.getUser();
+                                                      if (userResp.status && userResp.data) {
+                                                        setUser(userResp.data);
+                                                      }
+                                                    } else {
+                                                      console.error('Reject choice failed', resp.message);
+                                                      alert(resp.message || 'Failed to reject choice');
+                                                    }
+                                                  } catch (err) {
+                                                    console.error('Reject call error', err);
+                                                    alert('Something went wrong');
+                                                  } finally {
+                                                    setRejectingChoice(null);
                                                   }
-                                                } else {
-                                                  console.error('Reject choice failed', resp.message);
-                                                }
-                                              } catch (err) {
-                                                console.error('Reject call error', err);
-                                              } finally {
-                                                setRejectingChoice(null);
-                                              }
+                                                },
+                                              });
                                             }}
                                             disabled={rejectingChoice === choice.id}
                                             className="flex-1 sm:flex-none px-6 py-3.5 bg-red-500/10 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap flex items-center justify-center gap-2"
@@ -618,7 +644,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                             {rejectingChoice === choice.id ? (
                                               <div className="flex items-center gap-2">
                                                 <Loader2 size={14} className="animate-spin" />
-                                                <span className="text-xs">{language === 'fr' ? 'Refus...' : 'Rejecting...'}</span>
+                                                <span className="text-xs">
+                                                  {language === 'fr' ? 'Refus...' : 'Rejecting...'}
+                                                </span>
                                               </div>
                                             ) : (
                                               <>
@@ -847,7 +875,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           <p className="text-xs text-slate-400">{t.profilePage.tax.year} {cert.year}</p>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={() => handleDownloadAttestation(cert.file)}
                         className="p-3 bg-slate-50 text-slate-400 group-hover:bg-brand-accent group-hover:text-white rounded-2xl transition-all"
                       >
@@ -870,7 +898,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <div className="max-w-2xl mx-auto">
                 <div className="bg-white rounded-[40px] p-8 md:p-12 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-                  
+
                   <div className="relative space-y-8">
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 bg-brand-accent/10 rounded-[24px] flex items-center justify-center text-brand-accent shadow-sm">
@@ -904,11 +932,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className={`p-4 rounded-xl flex items-center gap-3 ${
-                            cmgMessage.type === 'success' 
-                              ? 'bg-green-50 text-green-600 border border-green-100' 
+                          className={`p-4 rounded-xl flex items-center gap-3 ${cmgMessage.type === 'success'
+                              ? 'bg-green-50 text-green-600 border border-green-100'
                               : 'bg-red-50 text-red-600 border border-red-100'
-                          }`}
+                            }`}
                         >
                           {cmgMessage.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
                           <span className="text-xs font-bold">{cmgMessage.text}</span>
@@ -922,9 +949,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             setCmgMessage(null);
                             const response = await api.updateCmg(cmgValue);
                             if (response.status) {
-                              setCmgMessage({ 
-                                text: (t.profilePage as any).cmg?.updateSuccess || 'Numéro CMG mis à jour avec succès', 
-                                type: 'success' 
+                              setCmgMessage({
+                                text: (t.profilePage as any).cmg?.updateSuccess || 'Numéro CMG mis à jour avec succès',
+                                type: 'success'
                               });
                               // Refresh user data to sync
                               const userRes = await api.getUser();
@@ -941,9 +968,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           }
                         }}
                         disabled={isCmgUpdating}
-                        className={`w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-lg shadow-slate-900/10 hover:bg-brand-accent hover:shadow-brand-accent/20 transition-all flex items-center justify-center gap-3 ${
-                          isCmgUpdating ? 'opacity-70 cursor-not-allowed' : ''
-                        }`}
+                        className={`w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-lg shadow-slate-900/10 hover:bg-brand-accent hover:shadow-brand-accent/20 transition-all flex items-center justify-center gap-3 ${isCmgUpdating ? 'opacity-70 cursor-not-allowed' : ''
+                          }`}
                       >
                         {isCmgUpdating ? (
                           <Loader2 size={20} className="animate-spin" />
@@ -960,7 +986,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           <AlertCircle size={16} />
                         </div>
                         <p className="text-[11px] text-slate-500 leading-relaxed">
-                          Your CMG number is essential for calculating your financial aid from the CAF. 
+                          Your CMG number is essential for calculating your financial aid from the CAF.
                           Please ensure it matches the one provided in your CAF account.
                         </p>
                       </div>
