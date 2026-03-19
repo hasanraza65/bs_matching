@@ -510,13 +510,13 @@ export default function App() {
       setHourlyRate(parseFloat(data.hourly_rate));
     }
     setFormData({
-      firstName: data.user.first_name,
-      lastName: data.user.last_name,
-      email: data.user.email,
+      firstName: data.user?.first_name || user?.first_name || '',
+      lastName: data.user?.last_name || user?.last_name || '',
+      email: data.user?.email || user?.email || '',
       address: data.parent_address,
       numChildren: data.children?.length || 1,
       childDOBs: data.children?.map(c => c.child_dob) || [''],
-      telephone: data.user.user_phone || '',
+      telephone: data.user?.user_phone || user?.user_phone || '',
       countryCode: '+1',
     });
 
@@ -565,7 +565,15 @@ export default function App() {
       setSelectedCandidates(merged);
     }
 
-    setCurrentStep(3);
+    const hasSchedules = data.schedules && data.schedules.length > 0;
+    const hasChoices = data.choices && data.choices.length > 0;
+
+    if (hasSchedules || hasChoices) {
+      setCurrentStep(4);
+    } else {
+      setCurrentStep(2);
+    }
+    
     setView('booking');
   };
 
@@ -783,23 +791,8 @@ export default function App() {
   }, [hasMoreSitters, isFetchingSitters, currentStep]);
 
   const handleModifyRequest = useCallback((request: any) => {
-    setFormData({
-      firstName: user?.first_name || '',
-      lastName: user?.last_name || '',
-      email: user?.email || '',
-      telephone: request.user?.user_phone || '', // PhoneInput expects full number
-      address: request.parent_address || '',
-      numChildren: request.children?.length || 1,
-      childDOBs: request.children?.map((c: any) => c.child_dob) || [''],
-      countryCode: '+1', // Keep current country code or try to parse from user_phone
-    });
-    setParentRequestId(request.id);
-    if (request.hourly_rate) {
-      setHourlyRate(parseFloat(request.hourly_rate));
-    }
     setIsModifying(true);
-    setView('booking');
-    setCurrentStep(1);
+    mapRequestToState(request);
   }, [user]);
 
   const handleCreateNewRequest = useCallback(() => {

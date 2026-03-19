@@ -537,7 +537,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                   </div>
 
                                     <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
-                                      {choice.final_choice === 1 ? (
+                                      {Number(choice.final_choice) === 1 ? (
                                         <button
                                           onClick={() => onViewContract?.(choice.id)}
                                           className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
@@ -545,9 +545,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                           <FileText size={16} />
                                           {t.profilePage.interviews.viewContract}
                                         </button>
-                                      ) : req.choices?.some((c: any) => c.final_choice === 1) ? null : (
+                                      ) : req.choices?.some((c: any) => Number(c.final_choice) === 1) ? null : (
                                         <>
-                                          {choice.final_choice !== 2 && (
+                                          {Number(choice.final_choice) !== 2 && (
                                             <>
                                               {choice.zoom_meeting_link ? (
                                                 <a
@@ -577,7 +577,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                               </button>
                                             </>
                                           )}
-                                          {choice.final_choice === 2 ? (
+                                          {Number(choice.final_choice) === 2 ? (
                                             <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2">
                                               <X size={16} />
                                               {language === 'fr' ? 'Refusé' : 'Rejected'}
