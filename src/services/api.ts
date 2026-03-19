@@ -65,6 +65,7 @@ export interface Choice {
   babysitter_address: string;
   zoom_meeting_link?: string;
   final_choice?: number;
+  bb_bs_id?: number | null;
 }
 
 export interface ParentRequest {
