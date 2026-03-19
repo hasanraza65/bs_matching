@@ -82,6 +82,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     confirmColor: 'bg-red-500',
     onConfirm: () => { },
   });
+  const [rejectingChoice, setRejectingChoice] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -297,15 +298,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <button
-                onClick={onBack}
-                className="inline-flex items-center gap-2 text-slate-400 hover:text-brand-accent transition-all group"
-              >
-                <div className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-brand-accent group-hover:bg-brand-accent group-hover:text-white transition-all">
-                  <ArrowLeft size={14} />
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t.common.back}</span>
-              </button>
-              <button
                 onClick={onCreateRequest}
                 className="inline-flex items-center gap-3 px-6 py-2.5 bg-brand-accent text-white rounded-full shadow-lg shadow-brand-accent/20 hover:bg-[#66B2AC] hover:-translate-y-0.5 transition-all group"
               >
@@ -412,12 +404,21 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             <div>
                               <div className="flex items-center gap-3 mb-1">
                                 <span className="text-xl font-display font-bold text-slate-900 tracking-tight">REQ-{req.id}</span>
+                            {(() => {
+                              const hasSchedules = req.schedules && req.schedules.length > 0;
+                              const hasSlots = hasSchedules && req.schedules.every((s: any) => s.slots && s.slots.length > 0);
+                              const hasChoices = req.choices && req.choices.length > 0;
+                              const isActive = hasSchedules && hasSlots && hasChoices;
+
+                              return (
                                 <div className="flex items-center gap-2 px-3 py-1 bg-brand-accent/5 rounded-full border border-brand-accent/10">
                                   <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
                                   <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">
-                                    {req.status || t.profilePage.requests.pending}
+                                    {isActive ? t.profilePage.requests.active : t.profilePage.requests.pending}
                                   </span>
                                 </div>
+                              );
+                            })()}
                               </div>
                               <p className="text-xs text-slate-400 font-medium">Created on {req.created_at?.split('T')[0] || '--'}</p>
                             </div>
@@ -544,47 +545,89 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                     </div>
                                   </div>
 
-                                  <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
-                                    {choice.final_choice === 1 ? (
-                                      <button
-                                        onClick={() => onViewContract?.(choice.id)}
-                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                      >
-                                        <FileText size={16} />
-                                        {t.profilePage.interviews.viewContract}
-                                      </button>
-                                    ) : req.choices?.some((c: any) => c.final_choice === 1) ? null : (
-                                      <>
-                                        {choice.zoom_meeting_link ? (
-                                          <a
-                                            href={choice.zoom_meeting_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                          >
-                                            <Video size={16} />
-                                            {t.profilePage.interviews.joinMeeting}
-                                          </a>
-                                        ) : (
-                                          <button
-                                            disabled
-                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                          >
-                                            <Video size={16} />
-                                            {t.profilePage.interviews.joinMeeting}
-                                          </button>
-                                        )}
+                                    <div className="relative z-10 flex items-center wrap gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto">
+                                      {Number(choice.final_choice) === 1 ? (
                                         <button
-                                          onClick={() => handleFinalChoice(choice.id)}
+                                          onClick={() => onViewContract?.(choice.id)}
                                           className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                         >
-                                          <CheckCircle2 size={16} />
-                                          {t.profilePage.interviews.finalChoice}
+                                          <FileText size={16} />
+                                          {t.profilePage.interviews.viewContract}
                                         </button>
-                                        <button className="flex-1 sm:flex-none px-6 py-3.5 bg-red-500/10 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap flex items-center justify-center gap-2">
-                                          <X size={16} />
-                                          {t.profilePage.interviews.reject}
-                                        </button>
+                                      ) : req.choices?.some((c: any) => Number(c.final_choice) === 1) ? null : (
+                                        <>
+                                          {Number(choice.final_choice) !== 2 && (
+                                            <>
+                                              {choice.zoom_meeting_link ? (
+                                                <a
+                                                  href={choice.zoom_meeting_link}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                                >
+                                                  <Video size={16} />
+                                                  {t.profilePage.interviews.joinMeeting}
+                                                </a>
+                                              ) : (
+                                                <button
+                                                  disabled
+                                                  className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                                >
+                                                  <Video size={16} />
+                                                  {t.profilePage.interviews.joinMeeting}
+                                                </button>
+                                              )}
+                                              <button
+                                                onClick={() => handleFinalChoice(choice.id)}
+                                                className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                              >
+                                                <CheckCircle2 size={16} />
+                                                {t.profilePage.interviews.finalChoice}
+                                              </button>
+                                            </>
+                                          )}
+                                          {Number(choice.final_choice) === 2 ? (
+                                            <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2">
+                                              <X size={16} />
+                                              {language === 'fr' ? 'Refusé' : 'Rejected'}
+                                            </div>
+                                          ) : (
+                                          <button
+                                            onClick={async () => {
+                                              setRejectingChoice(choice.id);
+                                              try {
+                                                const resp = await api.rejectChoice(choice.id);
+                                                if (resp && resp.status) {
+                                                  // refresh user data to reflect updated choice statuses
+                                                  const userResp = await api.getUser();
+                                                  if (userResp.status && userResp.data) {
+                                                    setUser(userResp.data);
+                                                  }
+                                                } else {
+                                                  console.error('Reject choice failed', resp.message);
+                                                }
+                                              } catch (err) {
+                                                console.error('Reject call error', err);
+                                              } finally {
+                                                setRejectingChoice(null);
+                                              }
+                                            }}
+                                            disabled={rejectingChoice === choice.id}
+                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-red-500/10 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                          >
+                                            {rejectingChoice === choice.id ? (
+                                              <div className="flex items-center gap-2">
+                                                <Loader2 size={14} className="animate-spin" />
+                                                <span className="text-xs">{language === 'fr' ? 'Refus...' : 'Rejecting...'}</span>
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <X size={16} />
+                                                {t.profilePage.interviews.reject}
+                                              </>
+                                            )}
+                                          </button>
+                                        )}
                                       </>
                                     )}
                                   </div>

@@ -39,8 +39,11 @@ import {
   AlertCircle,
   User,
   Info,
-  Video
+  Video,
+  Link as LinkIcon,
+  Copy
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { api, ParentRequest } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -132,6 +135,7 @@ const calculateAge = (dob: string) => {
 };
 
 const INITIAL_COLUMNS: KanbanColumn[] = [
+  { id: 'New Leads', title: 'New Leads', color: 'bg-orange-500' },
   { id: 'In Matching', title: 'In Matching', color: 'bg-blue-500' },
   { id: 'Matched', title: 'Matched', color: 'bg-purple-500' },
   { id: 'Contract Signed', title: 'Contract Signed', color: 'bg-emerald-500' },
@@ -316,6 +320,12 @@ const SortableCard = ({
     );
   }
 
+  const { t } = useLanguage();
+  const hasSchedules = request.schedules && request.schedules.length > 0;
+  const hasSlots = hasSchedules && request.schedules.every((s: any) => s.slots && s.slots.length > 0);
+  const hasChoices = request.choices && request.choices.length > 0;
+  const isActive = hasSchedules && hasSlots && hasChoices;
+
   return (
     <div
       ref={setNodeRef}
@@ -326,9 +336,17 @@ const SortableCard = ({
       className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group relative"
     >
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="font-bold text-slate-900">{request.user.first_name} {request.user.last_name}</h4>
-          <span className="text-[10px] font-bold text-slate-400">#{request.id}</span>
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="font-bold text-slate-900 truncate">{request.user.first_name} {request.user.last_name}</h4>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-brand-accent/5 rounded-full border border-brand-accent/10">
+              <div className={`w-1 h-1 rounded-full ${isActive ? 'bg-brand-accent' : 'bg-brand-accent/40'}`} />
+              <span className="text-[9px] font-bold text-brand-accent uppercase tracking-wider">
+                {isActive ? 'Active' : 'Pending'}
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-slate-400">#{request.id}</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-4 text-xs text-slate-500">
@@ -583,6 +601,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
       // Clean choices payload - map back to BabysitterChoicePayload structure
       const choicesPayload = (updatedFields.choices || []).map((c: any) => ({
         choice_order: c.choice_order,
+        bb_bs_id: c.user_id,
         babysitter_first_name: c.babysitter_first_name,
         babysitter_last_name: c.babysitter_last_name,
         babysitter_email: c.babysitter_email,
@@ -634,7 +653,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         children: newReq.children.map((c: any) => ({ child_dob: c.child_dob })),
         schedules: newReq.schedules,
         hourly_rate: newReq.hourly_rate,
-        board_status: isAddingToColumn || 'In Matching',
+        board_status: isAddingToColumn || 'New Leads',
         from_admin: true,
       });
 
@@ -1122,7 +1141,7 @@ const RequestDetailsModal = ({
   onUpdate: (updatedFields: Partial<KanbanRequest>) => void;
 }) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters' | 'notes'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters'>('overview');
   const [formData, setFormData] = useState<KanbanRequest>({
     ...request,
     schedules: request.schedules || [],
@@ -1362,7 +1381,6 @@ const RequestDetailsModal = ({
             { id: 'overview', label: 'Overview', icon: Info },
             { id: 'schedule', label: 'Schedule', icon: Calendar },
             { id: 'sitters', label: 'Babysitters', icon: Baby },
-            { id: 'notes', label: 'Internal Notes', icon: Edit2 },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1391,6 +1409,20 @@ const RequestDetailsModal = ({
             >
               {activeTab === 'overview' && (
                 <div className="space-y-8">
+                  {formData.schedules && formData.schedules.length > 0 && formData.schedules.every(s => s.slots && s.slots.length > 0) && (
+                    <div className="flex justify-end mb-4">
+                      <button
+                        onClick={() => {
+                          const link = `https://ponctuel.bloom-buddies.fr/price/${formData.id}`;
+                          navigator.clipboard.writeText(link);
+                          toast.success('Price Quote link copied!');
+                        }}
+                        className="px-4 py-2 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all flex items-center gap-2 border border-emerald-100"
+                      >
+                        <LinkIcon size={14} /> Copy Price Quote Link
+                      </button>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Family Information</h4>
@@ -1490,15 +1522,6 @@ const RequestDetailsModal = ({
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Contact Details</h4>
                       <div className="space-y-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp</label>
-                          <input
-                            type="text"
-                            value={formData.lastContact.whatsapp}
-                            onChange={(e) => handleChange('lastContact', { ...formData.lastContact, whatsapp: e.target.value })}
-                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phone</label>
                           <PhoneInput
                             country={'fr'}
@@ -1510,15 +1533,6 @@ const RequestDetailsModal = ({
                             buttonClass="!bg-transparent !border-none !rounded-l-xl"
                             searchClass="!bg-white !text-slate-900"
                             dropdownClass="!bg-white !text-slate-900 !rounded-xl !shadow-xl !border-slate-100"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Email</label>
-                          <input
-                            type="text"
-                            value={formData.lastContact.email}
-                            onChange={(e) => handleChange('lastContact', { ...formData.lastContact, email: e.target.value })}
-                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold"
                           />
                         </div>
                       </div>
@@ -1536,12 +1550,14 @@ const RequestDetailsModal = ({
                         Manage all dates and times for this request. Total: <span className="text-slate-900 font-bold">{formData.hours.toFixed(2)}h</span>
                       </p>
                     </div>
-                    <button
-                      onClick={handleAddSchedule}
-                      className="px-4 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-sm"
-                    >
-                      + Add New Date
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleAddSchedule}
+                        className="px-4 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-sm"
+                      >
+                        + Add New Date
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-6">
@@ -1751,20 +1767,6 @@ const RequestDetailsModal = ({
                       <p className="text-slate-400 font-medium">No babysitters selected yet.</p>
                     </div>
                   )}
-                </div>
-              )}
-
-              {activeTab === 'notes' && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Internal Admin Notes</label>
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e) => handleChange('notes', e.target.value)}
-                      placeholder="Add private notes about this family or request..."
-                      className="w-full h-48 p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all resize-none text-sm font-medium"
-                    />
-                  </div>
                 </div>
               )}
             </motion.div>

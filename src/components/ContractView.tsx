@@ -30,6 +30,9 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
     const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState<string | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isRejecting, setIsRejecting] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [rejectError, setRejectError] = useState<string | null>(null);
     const contractRef = useRef<HTMLDivElement>(null);
 
     const stripe = useStripe();
@@ -624,13 +627,46 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                 }
                             </button>
                         </>
+                    ) : contractData?.status === 2 ? (
+                        <>
+                            <div className="flex-1 py-4 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 flex items-center justify-center gap-2">
+                                <AlertCircle size={20} />
+                                {language === 'fr' ? 'Refusé' : 'Rejected'}
+                            </div>
+                        </>
                     ) : (
                         <>
                             <button
-                                onClick={onRefuse} // Use onRefuse here
-                                className="flex-1 py-4 bg-white text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                                onClick={async () => {
+                                    if (!contractData) return;
+                                    try {
+                                        setIsRejecting(true);
+                                        const resp = await api.rejectContract(contractData.contract_id);
+                                        if (resp && resp.status) {
+                                            // success: show success modal
+                                            setRejectError(null);
+                                            setShowRejectModal(true);
+                                        } else {
+                                            // show error modal
+                                            setRejectError(resp?.message || (language === 'fr' ? 'Échec du refus' : 'Reject failed'));
+                                            setShowRejectModal(true);
+                                        }
+                                    } catch (err: any) {
+                                        setRejectError(err?.message || (language === 'fr' ? 'Erreur réseau' : 'Network error'));
+                                        setShowRejectModal(true);
+                                    } finally {
+                                        setIsRejecting(false);
+                                    }
+                                }}
+                                disabled={isRejecting}
+                                className={`flex-1 py-4 bg-white text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed ${isRejecting ? 'relative' : ''}`}
                             >
-                                {t.actions.refuse}
+                                {isRejecting ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="animate-spin" size={18} />
+                                        <span className="text-sm">{language === 'fr' ? 'Refus en cours...' : 'Refusing...'}</span>
+                                    </div>
+                                ) : t.actions.refuse}
                             </button>
                             <button
                                 onClick={() => setShowAcceptModal(true)}
@@ -817,6 +853,63 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                     : "We are preparing your contract for download. This will only take a moment."
                                 }
                             </p>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Reject success modal */}
+            <AnimatePresence>
+                {showRejectModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowRejectModal(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                            className="bg-white rounded-[28px] p-8 w-full max-w-sm shadow-2xl relative z-10 text-center"
+                        >
+                            {!rejectError ? (
+                                <>
+                                    <div className="w-20 h-20 bg-green-50 rounded-full mx-auto flex items-center justify-center mb-4">
+                                        <Check size={28} className="text-green-600" />
+                                    </div>
+                                    <h3 className="text-lg font-display font-bold text-slate-900 mb-2">
+                                        {language === 'fr' ? 'Contrat refusé' : 'Contract rejected'}
+                                    </h3>
+                                    <p className="text-sm text-slate-500 mb-6">
+                                        {language === 'fr'
+                                            ? "Le contrat a été refusé avec succès."
+                                            : 'The contract was rejected successfully.'}
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="w-20 h-20 bg-red-50 rounded-full mx-auto flex items-center justify-center mb-4">
+                                        <AlertCircle size={28} className="text-red-600" />
+                                    </div>
+                                    <h3 className="text-lg font-display font-bold text-slate-900 mb-2">
+                                        {language === 'fr' ? 'Erreur' : 'Error'}
+                                    </h3>
+                                    <p className="text-sm text-slate-500 mb-6">
+                                        {rejectError}
+                                    </p>
+                                </>
+                            )}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => { setShowRejectModal(false); onRefuse(); }}
+                                    className="w-full py-3 bg-brand-blue text-white font-bold rounded-2xl"
+                                >
+                                    {language === 'fr' ? 'Fermer' : 'Close'}
+                                </button>
+                            </div>
                         </motion.div>
                     </div>
                 )}
