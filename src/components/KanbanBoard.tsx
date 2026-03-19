@@ -83,7 +83,7 @@ export interface KanbanColumn {
   color: string;
 }
 
-const transformToKanbanRequest = (req: ParentRequest): KanbanRequest => ({
+export const transformToKanbanRequest = (req: ParentRequest): KanbanRequest => ({
   ...req,
   family: `${req.user.first_name} ${req.user.last_name}`,
   hours: calculateTotalHours(req.schedules || []),
@@ -1131,7 +1131,7 @@ const NewRequestModal = ({
   );
 };
 
-const RequestDetailsModal = ({
+export const RequestDetailsModal = ({
   request,
   onClose,
   onUpdate

@@ -50,7 +50,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
-import { KanbanBoard } from './KanbanBoard';
+import { KanbanBoard, RequestDetailsModal, transformToKanbanRequest, KanbanRequest } from './KanbanBoard';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -322,28 +322,98 @@ const ActiveRequestsView = () => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const fetchActiveRequests = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const result = await api.getActiveRequests();
+            setRequests(result);
+        } catch (err: any) {
+            setError('Failed to load active requests. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     React.useEffect(() => {
-        let cancelled = false;
-        const fetchActiveRequests = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const result = await api.getActiveRequests();
-                if (!cancelled) {
-                    setRequests(result);
-                }
-            } catch (err: any) {
-                if (!cancelled) {
-                    setError('Failed to load active requests. Please try again.');
-                }
-            } finally {
-                if (!cancelled) setIsLoading(false);
-            }
-        };
         fetchActiveRequests();
-        return () => { cancelled = true; };
     }, []);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            // Clean children payload
+            const childrenPayload = (updatedFields.children || []).map((c: any) => ({
+                id: c.id,
+                child_dob: c.child_dob
+            }));
+
+            // Clean choices payload
+            const choicesPayload = (updatedFields.choices || []).map((c: any) => ({
+                choice_order: c.choice_order,
+                bb_bs_id: c.user_id,
+                babysitter_first_name: c.babysitter_first_name,
+                babysitter_last_name: c.babysitter_last_name,
+                babysitter_email: c.babysitter_email,
+                babysitter_phone: c.babysitter_phone,
+                babysitter_address: c.babysitter_address,
+                interview_date: c.interview_date,
+                interview_time: c.interview_time
+            }));
+
+            // Clean schedules payload
+            const schedulesPayload = (updatedFields.schedules || []).map((s: any) => ({
+                schedule_date: s.schedule_date,
+                slots: (s.slots || []).map((slot: any) => ({
+                    start_time: slot.start_time,
+                    end_time: slot.end_time
+                }))
+            }));
+
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: childrenPayload,
+                choices: choicesPayload,
+                schedules: schedulesPayload,
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -423,9 +493,22 @@ const ActiveRequestsView = () => {
                                         <ActiveRequestSchedulesCell schedules={req.schedules ?? []} />
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
-                                            <MoreVertical size={18} />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button 
+                                                onClick={() => handleEdit(req)}
+                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                title="Edit"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(req.id)}
+                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -433,6 +516,16 @@ const ActiveRequestsView = () => {
                     </table>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
