@@ -1,9 +1,20 @@
 export const fr = {
   common: {
+    pleaseselectdate : "Veuillez selectioner une date et une heure",
+    continuetomatching : "Choisir ma nounou",
+    FirstName: "Prénom",
+    LastName: "Nom de famille",
+    Email: "Adresse mail",
+    QuoteDate: "Date du devis",
+    ScheduleSummary: "Emploi du temps",
+    failedtosaveschedule: "Veuillez répondre à tous champs",
+    Slot: "Séance",
+    AddTimeSlot: "Nouvelle séance",
     step: "Étape",
     of: "sur",
     next: "Étape suivante",
     back: "Retour",
+    newrequestbtn: "Nouvelle demande",
     modify: "Modifier",
     total: "Total",
     hours: "heures",
@@ -43,7 +54,7 @@ export const fr = {
   },
   steps: {
     familyInfo: "Informations Famille",
-    scheduleQuote: "Planning & Devis",
+    scheduleQuote: "Planning",
     matching: "Sélection Babysitters",
   },
   step1: {
@@ -66,7 +77,7 @@ export const fr = {
     },
   },
   step2: {
-    title: "Planning & Devis",
+    title: "Planning ",
     subtitle:
       "Sélectionnez vos dates et visualisez votre devis personnalisé instantanément.",
     calendarTitle: "Sélectionner les dates",
@@ -76,7 +87,7 @@ export const fr = {
     startTime: "Heure de début",
     endTime: "Heure de fin",
     priceBreakdown: "Détail du prix",
-    childcarePackage: "Forfait garde d'enfants",
+    childcarePackage: "Garde d'enfant ponctuel",
     totalBeforeAid: "Total avant aides",
     financialAid: "Aides financières",
     official: "Officiel",
@@ -90,7 +101,7 @@ export const fr = {
     cmgEligible: "Basé sur vos {h} heures, vous êtes éligible au CMG.",
     cmgNotEligible:
       "Le CMG est disponible à partir de 16 heures de garde mensuelles.",
-    validateButton: "Commencer la mise en relation",
+    validateButton: "Voir devis",
     validationNote:
       "Commencez la mise en relation avec des babysitters premium basés sur votre planning et devis personnalisé.",
     tooltips: {
@@ -111,7 +122,7 @@ export const fr = {
   },
   step3: {
     title: "Devis Détaillé",
-    subtitle: "Consultez le détail de vos coûts estimés",
+    subtitle: "Consultez le détail de vos coûts",
   },
   step4: {
     title: "Sélectionnez vos candidates",
@@ -127,7 +138,7 @@ export const fr = {
     selectThird: "Sélectionner 3e candidate",
     selectFourth: "Sélectionner 4e candidate",
     selected: "Sélectionnée",
-    submitSelection: "Envoyer ma sélection",
+    submitSelection: "Valider ma demande",
     paymentNote:
       "La finalisation de votre sélection nécessite un petit paiement de confirmation de {amount}.",
     years: "ans",
@@ -156,7 +167,7 @@ export const fr = {
       preferredDate: "Date préférée",
       preferredTime: "Heure préférée",
       timezone: "Fuseau horaire : Europe/Paris (CET)",
-      confirm: "Confirmer la sélection",
+      confirm: "Choisir san entretien",
     },
     profile: {
       aboutMe: "À propos de moi",
@@ -240,7 +251,7 @@ export const fr = {
     },
   },
   login: {
-    title: "Bon retour !",
+    title: "Se connecter !",
     subtitle: "Connectez-vous pour gérer vos demandes de garde.",
     emailLabel: "Adresse Email",
     emailPlaceholder: "votre@email.com",

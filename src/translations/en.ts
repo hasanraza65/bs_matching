@@ -1,9 +1,21 @@
 export const en = {
   common: {
+    pleaseselectdate : "Please select both date and time for the interview",
+    continuetomatching : "Continue to Matching",
+    FirstName: "First Name",
+    LastName: "Last Name",
+    Email: "Email",
+    QuoteDate: "Quote Date",
+    ScheduleSummary: "Schedule Summary",
+    UserInformation: "User Information",
+    failedtosaveschedule: "Failed to save schedule. Please try again.",
+    Slot: "Session",
+    AddTimeSlot: "New Session",
     step: "Step",
     of: "of",
     next: "Next Step",
     back: "Back",
+    newrequestbtn: "New Request",
     modify: "Modify",
     total: "Total",
     hours: "hours",
@@ -65,7 +77,7 @@ export const en = {
     },
   },
   step2: {
-    title: "Schedule & Quote",
+    title: "Schedule",
     subtitle:
       "Select your dates and see your personalized price quote instantly.",
     calendarTitle: "Select Dates",
@@ -88,7 +100,7 @@ export const en = {
     cmgEligible: "Based on your {h} hours, you are eligible for the CMG.",
     cmgNotEligible:
       "CMG is available starting from 16 hours of monthly childcare.",
-    validateButton: "Start Matching",
+    validateButton: "View Price Quote",
     validationNote:
       "Start matching with premium babysitters based on your personalized schedule and quote.",
     tooltips: {
@@ -109,7 +121,7 @@ export const en = {
   },
   step3: {
     title: "Price Quote",
-    subtitle: "Review your estimated costs",
+    subtitle: "Review your costs",
   },
   step4: {
     title: "Select Your Candidates",
@@ -153,7 +165,7 @@ export const en = {
       preferredDate: "Preferred Date",
       preferredTime: "Preferred Time",
       timezone: "Timezone: Europe/Paris (CET)",
-      confirm: "Confirm Selection",
+      confirm: "Choose Without Maintenance",
     },
     profile: {
       aboutMe: "About Me",
@@ -237,7 +249,7 @@ export const en = {
     },
   },
   login: {
-    title: "Welcome Back",
+    title: "Login",
     subtitle: "Sign in to manage your childcare requests.",
     emailLabel: "Email Address",
     emailPlaceholder: "your@email.com",

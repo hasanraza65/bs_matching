@@ -379,7 +379,7 @@ export default function App() {
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [profileInitialTab, setProfileInitialTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>('requests');
-  
+
   const autocompleteRef = useRef<any>(null);
   const initAutocomplete = useCallback((node: HTMLInputElement | null) => {
     if (node && (window as any).google) {
@@ -393,14 +393,14 @@ export default function App() {
           const newAddress = place.formatted_address;
           const newLat = place.geometry.location.lat();
           const newLng = place.geometry.location.lng();
-          
+
           setFormData(prev => ({
             ...prev,
             address: newAddress,
             lat: newLat,
             lng: newLng,
           }));
-          
+
           // Clear address error if it exists
           setErrors(prev => {
             const next = { ...prev };
@@ -549,8 +549,8 @@ export default function App() {
         // Normalize time to HH:mm
         let normalizedTime = c.interview_time || '';
         if (normalizedTime.includes(':')) {
-            const parts = normalizedTime.split(':');
-            if (parts.length >= 2) normalizedTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+          const parts = normalizedTime.split(':');
+          if (parts.length >= 2) normalizedTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
         }
 
         return {
@@ -598,14 +598,14 @@ export default function App() {
     } else {
       setCurrentStep(2);
     }
-    
+
     setView('booking');
   };
 
   useEffect(() => {
     const fetchSchedules = async () => {
       if (currentStep === 2 && parentRequestId) {
-          try {
+        try {
           setIsRegistering(true);
           const response = await api.getParentSchedules(parentRequestId);
           if (response.status && response.data) {
@@ -651,8 +651,8 @@ export default function App() {
               // Normalize time to HH:mm
               let normalizedTime = choice.interview_time || '';
               if (normalizedTime.includes(':')) {
-                  const parts = normalizedTime.split(':');
-                  if (parts.length >= 2) normalizedTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                const parts = normalizedTime.split(':');
+                if (parts.length >= 2) normalizedTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
               }
 
               return {
@@ -707,7 +707,7 @@ export default function App() {
       if (response.status && response.data) {
         const userData = response.data;
         setUser(userData);
-        
+
         // Sync formData with user data if it's a parent
         if (!isAdmin) {
           setFormData(prev => ({
@@ -762,7 +762,7 @@ export default function App() {
                 fullBio: item.babysitter_profiles_personal || '',
                 photo,
                 status: item.user_status === 1 ? 'Online' : 'Available',
-                rating: (item.rating1 && !isNaN(parseFloat(item.rating1))) ? parseFloat(item.rating1) : 4.5,
+               // rating: (item.rating1 && !isNaN(parseFloat(item.rating1))) ? parseFloat(item.rating1) : 4.5,
                 reviews: Math.floor(Math.random() * 50),
                 email: item.email,
                 phone: item.user_phone,
@@ -1010,7 +1010,7 @@ export default function App() {
     }
   };
 
-    // Status tracking effect removed
+  // Status tracking effect removed
 
   const handleNextStep = async () => {
     if (currentStep === 1) {
@@ -1069,10 +1069,10 @@ export default function App() {
               setIsLoggedIn(true);
             }
 
-            const requestId = 
-              response.data?.parent_request?.id || 
-              response.data?.id || 
-              response.parent_request?.id || 
+            const requestId =
+              response.data?.parent_request?.id ||
+              response.data?.id ||
+              response.parent_request?.id ||
               response.id;
 
             if (requestId) {
@@ -1122,7 +1122,7 @@ export default function App() {
     } else if (currentStep === 2) {
       if (validateStep2()) {
         let idToUse = parentRequestId;
-        
+
         // Fallback: If parentRequestId is null, try to find the latest request from the user object
         if (!idToUse && isLoggedIn && user?.parent_requests?.length) {
           const sortedRequests = [...user.parent_requests].sort((a, b) => b.id - a.id);
@@ -1185,7 +1185,7 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (error) {
               console.error('Failed to save schedules:', error);
-              setErrors({ schedule: 'Failed to save schedule. Please try again.' });
+              setErrors({ schedule: t.common.failedtosaveschedule });
             } finally {
               setIsRegistering(false);
             }
@@ -1198,7 +1198,7 @@ export default function App() {
       }
     } else if (currentStep === 3) {
       let idToUse = parentRequestId;
-      
+
       // Fallback: If parentRequestId is null, try to find the latest request from the user object
       if (!idToUse && isLoggedIn && user?.parent_requests?.length) {
         const sortedRequests = [...user.parent_requests].sort((a, b) => b.id - a.id);
@@ -1233,7 +1233,7 @@ export default function App() {
   const handleConfirmSubmission = async () => {
     setIsConfirmModalProcessing(true);
     setErrors({});
-    
+
     try {
       let idToUse = parentRequestId;
       if (!idToUse && isLoggedIn && user?.parent_requests?.length) {
@@ -1275,7 +1275,7 @@ export default function App() {
       setIsConfirmModalProcessing(false);
       setIsConfirmModalOpen(false);
       setIsSubmitted(true);
-      
+
       try {
         if (typeof window !== 'undefined') window.sessionStorage.removeItem('selectedCandidates');
       } catch (e) {
@@ -1301,7 +1301,7 @@ export default function App() {
 
     if (!modalInterviewConfig.skipped) {
       if (!modalInterviewConfig.date || !modalInterviewConfig.time) {
-        setModalError('Please select both date and time for the interview');
+        setModalError(t.common.pleaseselectdate);
         return;
       }
 
@@ -1353,7 +1353,7 @@ export default function App() {
   const editInterview = (sitterId: number) => {
     const candidate = selectedCandidates.find(c => c.sitterId === sitterId);
     let sitter = localizedSitters.find(s => s.id === sitterId);
-    
+
     // If not found in primary list, build a "proxy" sitter from candidate info
     if (!sitter && candidate && (candidate as any).sitterInfo) {
       const info = (candidate as any).sitterInfo;
@@ -1643,7 +1643,7 @@ export default function App() {
                   <UserIcon size={18} />
                   <span className="hidden md:inline">
                     {view === 'profile' || view === 'login'
-                      ? t.common.back || 'Booking'
+                      ? t.common.newrequestbtn || 'Booking'
                       : (isLoggedIn ? t.profilePage.title : t.login.title)}
                   </span>
                 </button>
@@ -1815,16 +1815,16 @@ export default function App() {
                             <MapPin size={16} className="text-brand-accent" />
                             {t.step1.address}
                           </label>
-                            <input
-                              type="text"
-                              name="address"
-                              ref={initAutocomplete}
-                              value={formData.address}
-                              onChange={handleInputChange}
-                              placeholder={t.step1.placeholders.address}
-                              className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${errors.address ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200 focus:border-brand-accent'
-                                }`}
-                            />
+                          <input
+                            type="text"
+                            name="address"
+                            ref={initAutocomplete}
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            placeholder={t.step1.placeholders.address}
+                            className={`w-full px-4 py-3 rounded-xl border bg-slate-50/50 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${errors.address ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200 focus:border-brand-accent'
+                              }`}
+                          />
                           {errors.address && (
                             <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
                               <AlertCircle size={12} /> {errors.address}
@@ -2147,7 +2147,7 @@ export default function App() {
                                         <div key={slot.id} className="space-y-3">
                                           <div className="flex items-center justify-between">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                              Slot #{sIdx + 1}
+                                              {t.common.Slot} #{sIdx + 1}
                                             </span>
                                             {item.slots.length > 1 && (
                                               <button
@@ -2196,7 +2196,7 @@ export default function App() {
                                         className="w-full py-2 border border-dashed border-slate-200 rounded-xl text-slate-400 hover:text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 transition-all text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2"
                                       >
                                         <Plus size={14} />
-                                        Add Time Slot
+                                        {t.common.AddTimeSlot}
                                       </button>
                                     </div>
                                   </motion.div>
@@ -2270,24 +2270,33 @@ export default function App() {
                           <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                               <UserIcon size={16} className="text-brand-accent" />
-                              User Information
+                              {t.common.UserInformation}
                             </h3>
+
                             <div className="space-y-3">
                               <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500">First Name</span>
+                                <span className="text-xs text-slate-500">{t.common.FirstName}</span>
                                 <span className="text-sm font-bold text-slate-800">{formData.firstName}</span>
                               </div>
+
                               <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500">Last Name</span>
+                                <span className="text-xs text-slate-500">{t.common.LastName}</span>
                                 <span className="text-sm font-bold text-slate-800">{formData.lastName}</span>
                               </div>
+
                               <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500">Email</span>
+                                <span className="text-xs text-slate-500">{t.common.Email}</span>
                                 <span className="text-sm font-bold text-slate-800">{formData.email}</span>
                               </div>
+
                               <div className="flex justify-between items-center pt-3 border-t border-slate-200">
-                                <span className="text-xs text-slate-500">Quote Date</span>
-                                <span className="text-sm font-bold text-brand-accent">{new Date().toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                <span className="text-xs text-slate-500">{t.common.QuoteDate}</span>
+                                <span className="text-sm font-bold text-brand-accent">
+                                  {new Date().toLocaleDateString(
+                                    language === 'fr' ? 'fr-FR' : 'en-US',
+                                    { day: 'numeric', month: 'long', year: 'numeric' }
+                                  )}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -2295,20 +2304,28 @@ export default function App() {
                           <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                               <Calendar size={16} className="text-brand-accent" />
-                              Schedule Summary {selectedMonth && `(${selectedMonth})`}
+                              {t.common.ScheduleSummary} {selectedMonth && `(${selectedMonth})`}
                             </h3>
+
                             <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                               {dateSchedule
                                 .filter(item => {
                                   if (!selectedMonth) return true;
-                                  const monthStr = item.date.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+                                  const monthStr = item.date.toLocaleString(
+                                    language === 'fr' ? 'fr-FR' : 'en-US',
+                                    { month: 'long', year: 'numeric' }
+                                  );
                                   return monthStr === selectedMonth;
                                 })
                                 .map(item => (
                                   <div key={item.id} className="flex justify-between items-center py-2 border-b border-slate-200 last:border-0">
                                     <span className="text-xs font-medium text-slate-600">
-                                      {item.date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' })}
+                                      {item.date.toLocaleDateString(
+                                        language === 'fr' ? 'fr-FR' : 'en-US',
+                                        { day: 'numeric', month: 'short' }
+                                      )}
                                     </span>
+
                                     <div className="flex flex-col items-end">
                                       {item.slots.map(slot => (
                                         <span key={slot.id} className="text-[10px] text-slate-400">
@@ -2392,7 +2409,7 @@ export default function App() {
                             ) : (
                               <>
                                 <ChevronRight size={22} />
-                                Continue to Matching
+                                {t.common.continuetomatching}
                               </>
                             )}
                           </motion.button>
@@ -2450,75 +2467,75 @@ export default function App() {
                               {t.step4.selectedTitle}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {selectedCandidates.map((candidate, index) => {
-                                  let sitter = localizedSitters.find(s => s.id === candidate.sitterId);
-                                  
-                                  // Fallback to proxy sitter if not loaded yet
-                                  if (!sitter && (candidate as any).sitterInfo) {
-                                    const info = (candidate as any).sitterInfo;
-                                    sitter = {
-                                      id: candidate.sitterId,
-                                      key: `proxy-${candidate.sitterId}`,
-                                      name: info.name,
-                                      lastName: info.lastName,
-                                      photo: 'https://bloom-buddies.fr/public/uploads/profile_images/default.jpg',
-                                      age: 20,
-                                      experience: 0,
-                                      languages: [],
-                                      description: '',
-                                      fullBio: '',
-                                      status: 'Available',
-                                      rating: 4.5,
-                                      reviews: 0
-                                    };
-                                  }
+                              {selectedCandidates.map((candidate, index) => {
+                                let sitter = localizedSitters.find(s => s.id === candidate.sitterId);
 
-                                  if (!sitter) return null;
-                                  const rankLabel = t.step4.rankLabels[index];
+                                // Fallback to proxy sitter if not loaded yet
+                                if (!sitter && (candidate as any).sitterInfo) {
+                                  const info = (candidate as any).sitterInfo;
+                                  sitter = {
+                                    id: candidate.sitterId,
+                                    key: `proxy-${candidate.sitterId}`,
+                                    name: info.name,
+                                    lastName: info.lastName,
+                                    photo: 'https://bloom-buddies.fr/public/uploads/profile_images/default.jpg',
+                                    age: 20,
+                                    experience: 0,
+                                    languages: [],
+                                    description: '',
+                                    fullBio: '',
+                                    status: 'Available',
+                                    rating: 4.5,
+                                    reviews: 0
+                                  };
+                                }
 
-                                  return (
-                                    <motion.div
-                                      key={candidate.sitterId}
-                                      layout
-                                      initial={{ opacity: 0, scale: 0.9 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                      className="bg-white border-2 border-brand-accent/20 rounded-2xl p-4 shadow-sm relative group"
-                                    >
-                                      <div className="absolute -top-3 -left-3 w-8 h-8 bg-brand-accent text-white rounded-full flex items-center justify-center font-bold text-xs shadow-lg">
-                                        {rankLabel}
-                                      </div>
-                                      <div className="flex items-center gap-3 mb-3">
-                                        <img src={sitter.photo} alt={sitter.name} className="w-10 h-10 rounded-xl object-cover" />
-                                        <div className="min-w-0">
-                                          <p className="font-bold text-slate-800 text-sm truncate">{sitter.name}</p>
-                                          <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                                            {candidate.interview.skipped ? (
-                                              <span className="flex items-center gap-1"><X size={10} /> {t.common.noInterview}</span>
-                                            ) : (
-                                              <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                                                <Calendar size={10} /> {candidate.interview.date}
-                                              </span>
-                                            )}
-                                          </div>
+                                if (!sitter) return null;
+                                const rankLabel = t.step4.rankLabels[index];
+
+                                return (
+                                  <motion.div
+                                    key={candidate.sitterId}
+                                    layout
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="bg-white border-2 border-brand-accent/20 rounded-2xl p-4 shadow-sm relative group"
+                                  >
+                                    <div className="absolute -top-3 -left-3 w-8 h-8 bg-brand-accent text-white rounded-full flex items-center justify-center font-bold text-xs shadow-lg">
+                                      {rankLabel}
+                                    </div>
+                                    <div className="flex items-center gap-3 mb-3">
+                                      <img src={sitter.photo} alt={sitter.name} className="w-10 h-10 rounded-xl object-cover" />
+                                      <div className="min-w-0">
+                                        <p className="font-bold text-slate-800 text-sm truncate">{sitter.name}</p>
+                                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                                          {candidate.interview.skipped ? (
+                                            <span className="flex items-center gap-1"><X size={10} /> {t.common.noInterview}</span>
+                                          ) : (
+                                            <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                                              <Calendar size={10} /> {candidate.interview.date}
+                                            </span>
+                                          )}
                                         </div>
                                       </div>
-                                      <div className="flex gap-2">
-                                        <button
-                                          onClick={() => editInterview(sitter.id)}
-                                          className="flex-1 py-1.5 text-[10px] font-bold text-brand-accent bg-brand-accent/5 hover:bg-brand-accent/10 rounded-lg transition-colors"
-                                        >
-                                          {t.common.modify}
-                                        </button>
-                                        <button
-                                          onClick={() => removeCandidate(sitter.id)}
-                                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        >
-                                          <Trash2 size={14} />
-                                        </button>
-                                      </div>
-                                    </motion.div>
-                                  );
-                                })}
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => editInterview(sitter.id)}
+                                        className="flex-1 py-1.5 text-[10px] font-bold text-brand-accent bg-brand-accent/5 hover:bg-brand-accent/10 rounded-lg transition-colors"
+                                      >
+                                        {t.common.modify}
+                                      </button>
+                                      <button
+                                        onClick={() => removeCandidate(sitter.id)}
+                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
                             </div>
                           </motion.div>
                         )}
@@ -2529,7 +2546,7 @@ export default function App() {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl" />
 
                         {/* Header */}
-                        <div 
+                        <div
                           className="flex items-center justify-between border-b border-slate-100 relative z-10 cursor-pointer"
                           onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
                         >
@@ -2537,7 +2554,7 @@ export default function App() {
                             <Filter size={18} className="text-brand-accent" />
                             <span className="text-[11px] font-bold uppercase tracking-widest">{t.common.filters}</span>
                           </div>
-                          <button 
+                          <button
                             className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
                             aria-label={isFiltersExpanded ? 'Collapse filters' : 'Expand filters'}
                           >
@@ -2669,7 +2686,7 @@ export default function App() {
                                 : 'border-slate-100 hover:border-brand-accent/30 hover:shadow-lg'
                                 }`}
                             >
-                                {/* Status badge moved inline with header (no absolute badge) */}
+                              {/* Status badge moved inline with header (no absolute badge) */}
 
                               <div className="p-6 flex-1 flex flex-col">
                                 <div className="flex items-center gap-4 mb-4">
@@ -2692,10 +2709,12 @@ export default function App() {
                                     <div>
                                       <h3 className="font-display font-bold text-slate-800">{sitter.name} {sitter.lastName}</h3>
                                       <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} • {formatExperienceShortFromMonths((sitter as any).experienceMonths || 0)}</p>
+                                     {/* 
                                       <div className="flex items-center gap-1 mt-1">
                                         <Star size={12} className="text-amber-400 fill-amber-400" />
                                         <span className="text-xs font-bold text-slate-700">{sitter.rating}</span>
-                                      </div>
+                                      </div> 
+                                      */}
                                     </div>
 
                                     {/* Status dot with tooltip on hover */}
@@ -2708,7 +2727,7 @@ export default function App() {
                                       </Tooltip>
                                     </div>
                                   </div>
-                                 </div>
+                                </div>
 
                                 <div className="space-y-3 mb-6">
                                   <div className="flex flex-wrap gap-1.5">
@@ -2819,9 +2838,10 @@ export default function App() {
                           )}
                         </motion.button>
                       </div>
+                      {/* 
                       <p className="text-[10px] text-slate-400 text-center mt-6 px-4">
                         {t.step4.paymentNote.replace('{amount}', formatCurrency(19))}
-                      </p>
+                      </p>*/}
                     </div>
                   </motion.div>
                 )}
@@ -3219,11 +3239,15 @@ export default function App() {
                     <div className="flex items-center gap-3">
                       <span className="text-slate-500 font-medium">{viewingBabysitter.age} {t.modals.profile.yearsOld}</span>
                       <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                      {/* 
                       <div className="flex items-center gap-1">
                         <Star size={14} className="text-amber-400 fill-amber-400" />
                         <span className="font-bold text-slate-700">{viewingBabysitter.rating}</span>
                         <span className="text-slate-400 text-sm">({viewingBabysitter.reviews} {t.common.reviews})</span>
                       </div>
+
+                      */}
+
                     </div>
                   </div>
 
