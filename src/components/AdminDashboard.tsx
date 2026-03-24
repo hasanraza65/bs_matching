@@ -609,7 +609,7 @@ const SignedContractsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Babysitter</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Contract Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Accepted At</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
