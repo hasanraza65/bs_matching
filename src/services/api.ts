@@ -80,6 +80,7 @@ export interface ParentRequest {
   hourly_rate?: string;
   schedules?: Schedule[];
   choices?: Choice[];
+  contract?: Contract;
   created_at?: string;
   updated_at?: string;
 }
@@ -643,6 +644,11 @@ export const api = {
 
   getActiveRequests: async (): Promise<ParentRequest[]> => {
     const response = await apiClient.get("/active-requests");
+    return response.data;
+  },
+
+  getSignedContractRequests: async (): Promise<ParentRequest[]> => {
+    const response = await apiClient.get("/contract-signed-requests");
     return response.data;
   },
 
