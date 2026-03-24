@@ -58,7 +58,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminPage = 'dashboard' | 'requests' | 'active-requests' | 'interviews' | 'invoices' | 'contracts' | 'attestations' | 'users';
+type AdminPage = 'dashboard' | 'requests' | 'active-requests' | 'signed-contracts' | 'interviews' | 'invoices' | 'contracts' | 'attestations' | 'users';
 
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
@@ -72,6 +72,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'requests', label: 'All Requests', icon: ClipboardList },
     { id: 'active-requests', label: 'Active Requests', icon: Activity },
+    { id: 'signed-contracts', label: 'Signed Contract', icon: ShieldCheck },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
     { id: 'contracts', label: 'Contracts', icon: FileText },
     { id: 'attestations', label: 'Attestations Fiscales', icon: History },
@@ -217,6 +218,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               {activePage === 'dashboard' && <DashboardView />}
               {activePage === 'requests' && <RequestsView />}
               {activePage === 'active-requests' && <ActiveRequestsView />}
+              {activePage === 'signed-contracts' && <SignedContractsView />}
               {activePage === 'interviews' && <InterviewsView />}
               {activePage === 'invoices' && <InvoicesView />}
               {activePage === 'attestations' && <AttestationsView />}
@@ -545,6 +547,145 @@ const ActiveRequestsView = () => {
                     />
                 )}
             </AnimatePresence>
+        </div>
+    );
+};
+
+const SignedContractsView = () => {
+    const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const fetchSignedContracts = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const result = await api.getSignedContractRequests();
+            setRequests(result);
+        } catch (err: any) {
+            setError('Failed to load signed contracts. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchSignedContracts();
+    }, []);
+
+    const filteredRequests = requests.filter(req => {
+        const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
+        const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
+        const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
+        return parentName.includes(searchQuery.toLowerCase()) || 
+               sitterName.includes(searchQuery.toLowerCase()) ||
+               req.id.toString().includes(searchQuery);
+    });
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg font-bold text-slate-900">Signed Contracts List</h3>
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search contracts..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Babysitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Accepted At</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {isLoading && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <Loader2 className="animate-spin" size={20} />
+                                            <span className="text-sm font-medium">Loading signed contracts...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && error && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <AlertCircle size={18} />
+                                            <span className="text-sm font-medium">{error}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredRequests.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                        No signed contracts found.
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredRequests.map((req) => {
+                                const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
+                                return (
+                                    <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
+                                                <span className="text-xs text-slate-400">{req.user?.email}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {hiredSitter ? (
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-slate-800">{hiredSitter.babysitter_first_name} {hiredSitter.babysitter_last_name}</span>
+                                                    <span className="text-xs text-slate-400">{hiredSitter.babysitter_email}</span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-400 italic text-sm">Not assigned</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.contract?.status === 1 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                                                {req.contract?.status === 1 ? (req.contract?.response_date || 'Signed') : 'Pending'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-slate-500">
+                                            {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button 
+                                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                                                title="View Details"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 };
