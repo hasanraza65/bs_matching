@@ -28,6 +28,7 @@ import {
   Video,
   ExternalLink,
   Heart,
+  CheckCircle2,
   Check,
   X,
   CalendarDays,
@@ -332,6 +333,7 @@ export default function App() {
   const [isModifying, setIsModifying] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [selectedChoiceId, setSelectedChoiceId] = useState<number | null>(null);
+  const [autoShowCongrats, setAutoShowCongrats] = useState(false);
 
   // Step 4 State (Babysitter Matching)
   const [selectedCandidates, setSelectedCandidates] = useState<Array<{
@@ -869,8 +871,9 @@ export default function App() {
 
   const handleBackToBooking = useCallback(() => setView('booking'), []);
   const handleGoToAdmin = useCallback(() => setView('admin-dashboard'), []);
-  const handleViewContract = useCallback((choiceId: number) => {
+  const handleViewContract = useCallback((choiceId: number, showCongrats = false) => {
     setSelectedChoiceId(choiceId);
+    setAutoShowCongrats(showCongrats);
     setView('contract');
   }, []);
 
@@ -1712,6 +1715,8 @@ export default function App() {
                 <ContractView
                   choiceId={selectedChoiceId || 0}
                   userName={`${user.first_name} ${user.last_name}`}
+                  autoShowCongrats={autoShowCongrats}
+                  onCongratsClose={() => setAutoShowCongrats(false)}
                   onBack={() => setView('profile')}
                   onAccept={() => {
                     setView('profile');
@@ -2866,54 +2871,57 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden p-8"
+              className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl p-8 overflow-hidden"
             >
-              <button
-                onClick={() => !isConfirmModalProcessing && setIsConfirmModalOpen(false)}
-                className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
-              >
-                <X size={20} />
-              </button>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-pink/10 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
 
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center border border-red-100 shadow-sm">
-                  <AlertCircle size={24} />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-12 h-12 bg-brand-accent/10 text-brand-accent rounded-2xl flex items-center justify-center border border-slate-50 shadow-sm">
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <button
+                    onClick={() => !isConfirmModalProcessing && setIsConfirmModalOpen(false)}
+                    className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
-              </div>
 
-              <h3 className="text-2xl font-display font-bold text-slate-800 mb-2">
-                {t.modals.confirmSelection.title}
-              </h3>
-              <p className="text-slate-500 mb-8">
-                {t.modals.confirmSelection.subtitle}
-              </p>
+                <h3 className="text-2xl font-display font-bold text-slate-800 mb-2">
+                  {t.modals.confirmSelection.title}
+                </h3>
+                <p className="text-slate-500 mb-8 whitespace-pre-line leading-relaxed font-bold">
+                  {t.modals.confirmSelection.subtitle}
+                </p>
 
-              {errors.candidates && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-medium">
-                  <AlertCircle size={20} />
-                  {errors.candidates}
+                {errors.candidates && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-medium">
+                    <AlertCircle size={20} />
+                    {errors.candidates}
+                  </div>
+                )}
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => !isConfirmModalProcessing && setIsConfirmModalOpen(false)}
+                    disabled={isConfirmModalProcessing}
+                    className="flex-1 py-4 px-6 rounded-2xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 transition-colors"
+                  >
+                    {t.modals.confirmSelection.cancel}
+                  </button>
+                  <button
+                    onClick={handleConfirmSubmission}
+                    disabled={isConfirmModalProcessing}
+                    className="flex-1 py-4 px-6 bg-brand-accent hover:bg-[#66B2AC] text-white font-bold rounded-2xl shadow-lg shadow-brand-accent/20 flex items-center justify-center gap-2 transition-all"
+                  >
+                    {isConfirmModalProcessing ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      t.modals.confirmSelection.confirm
+                    )}
+                  </button>
                 </div>
-              )}
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setIsConfirmModalOpen(false)}
-                  disabled={isConfirmModalProcessing}
-                  className="flex-1 py-4 px-6 rounded-2xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 transition-colors"
-                >
-                  {t.modals.confirmSelection.cancel}
-                </button>
-                <button
-                  onClick={handleConfirmSubmission}
-                  disabled={isConfirmModalProcessing}
-                  className="flex-1 py-4 px-6 bg-brand-accent hover:bg-[#66B2AC] text-white font-bold rounded-2xl shadow-lg shadow-brand-accent/20 flex items-center justify-center gap-2 transition-all"
-                >
-                  {isConfirmModalProcessing ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    t.modals.confirmSelection.confirm
-                  )}
-                </button>
               </div>
             </motion.div>
           </div>
