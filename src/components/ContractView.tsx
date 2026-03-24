@@ -29,7 +29,8 @@ import {
   CreditCard,
   Star,
   Check,
-  ShieldCheck
+  ShieldCheck,
+  Lock
 } from 'lucide-react';
 import { api, ContractResponse } from '../services/api';
 import { SlideToAccept } from './SlideToAccept';
@@ -845,7 +846,8 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                     <div className={`px-2 transition-opacity duration-300 relative z-10 ${isPaymentProcessing ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                                         <SlideToAccept
                                             onAccept={handleSlideToAcceptAndPay}
-                                            label={paymentT.payButton ? paymentT.payButton.replace('{amount}', `${getFirstMonthAmount().toFixed(2)} €`) : "Slide to Accept & Pay"}
+                                            text={paymentT.payButton ? paymentT.payButton.replace('{amount}', `${getFirstMonthAmount().toFixed(2)} €`) : "Slide to Accept & Pay"}
+                                            reset={!!paymentError && !isPaymentProcessing}
                                         />
                                     </div>
 
