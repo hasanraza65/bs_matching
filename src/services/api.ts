@@ -348,6 +348,7 @@ export const api = {
     from_admin?: boolean;
     lat?: number;
     lng?: number;
+    choices?: BabysitterChoicePayload[];
   }): Promise<ParentRequestResponse> => {
     const response = await apiClient.post("/parent-requests", data);
     return {
