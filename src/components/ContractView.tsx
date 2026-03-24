@@ -46,9 +46,11 @@ interface ContractViewProps {
     onAccept: () => void;
     onRefuse: () => void;
     choiceId: number;
+    autoShowCongrats?: boolean;
+    onCongratsClose?: () => void;
 }
 
-const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAccept, onRefuse, choiceId }) => {
+const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAccept, onRefuse, choiceId, autoShowCongrats, onCongratsClose }) => {
     const { t: trans, language } = useLanguage();
     const t = trans.contract;
 
@@ -56,8 +58,16 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showAcceptModal, setShowAcceptModal] = useState(false);
+    const [showCongratsModal, setShowCongratsModal] = useState(false);
     const [isAccepted, setIsAccepted] = useState(false);
     const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (autoShowCongrats) {
+            setShowCongratsModal(true);
+        }
+    }, [autoShowCongrats]);
     const [paymentError, setPaymentError] = useState<string | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isRejecting, setIsRejecting] = useState(false);
@@ -780,13 +790,13 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                             )}
                                         </div>
                                         <h3 className="text-xl font-display font-bold text-slate-900 mb-2 uppercase tracking-tight">
-                                            {isPaymentProcessing ? paymentT.processing : t.actions.slide}
+                                            {isPaymentProcessing ? (paymentT.processing || 'Processing...') : (t.actions as any).slide || 'Sign'}
                                         </h3>
                                         <p className="text-slate-500 text-xs leading-relaxed px-4">
-                                            {language === 'fr'
-                                                ? "En glissant, vous acceptez les termes du contrat et procédez au paiement."
-                                                : "By sliding, you agree to the contract terms and proceed with payment."
-                                            }
+                                            {(t.actions as any).signingSubtitle || (language === 'fr'
+                                                ? "En glissant, votre contrat sera signé et votre paiement reçu."
+                                                : "By sliding, your contract will be signed and your payment received"
+                                            )}
                                         </p>
                                     </div>
 
@@ -846,7 +856,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                     <div className={`px-2 transition-opacity duration-300 relative z-10 ${isPaymentProcessing ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                                         <SlideToAccept
                                             onAccept={handleSlideToAcceptAndPay}
-                                            text={paymentT.payButton ? paymentT.payButton.replace('{amount}', `${getFirstMonthAmount().toFixed(2)} €`) : "Slide to Accept & Pay"}
+                                            text={(t.actions as any).signingSlider || (language === 'fr' ? 'Glisser pour signer' : 'Slide to sign')}
                                             reset={!!paymentError && !isPaymentProcessing}
                                         />
                                     </div>
@@ -856,7 +866,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                         disabled={isPaymentProcessing}
                                         className={`w-full mt-6 text-slate-400 font-bold text-sm tracking-wide transition-colors relative z-10 ${isPaymentProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:text-slate-600'}`}
                                     >
-                                        Cancel
+                                        {paymentT.cancel || (language === 'fr' ? 'Annuler' : 'Cancel')}
                                     </button>
                                 </>
                             ) : (
@@ -1004,12 +1014,12 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl p-8 overflow-hidden"
                         >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-pink/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-pink/10 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
 
-                            <div className="relative">
+                            <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-6">
-                                    <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
-                                        <AlertCircle size={24} />
+                                    <div className={`w-12 h-12 ${confirmModal.iconType === 'success' ? 'bg-brand-accent/10 text-brand-accent' : 'bg-red-50 text-red-500'} rounded-2xl flex items-center justify-center border border-slate-50 shadow-sm`}>
+                                        {confirmModal.iconType === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
                                     </div>
                                     <button
                                         onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
@@ -1020,23 +1030,25 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                 </div>
 
                                 <h3 className="text-xl font-display font-bold text-slate-800 mb-2">{confirmModal.title}</h3>
-                                <p className="text-slate-500 mb-8">{confirmModal.message}</p>
+                                <p className="text-slate-500 mb-8 whitespace-pre-line leading-relaxed font-bold">
+                                    {confirmModal.message}
+                                </p>
 
                                 <div className="flex gap-3">
                                     <button
                                         onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
                                         className="flex-1 px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors"
                                     >
-                                        Cancel
+                                        {language === 'fr' ? 'Annuler' : 'Cancel'}
                                     </button>
                                     <button
                                         onClick={() => {
                                             confirmModal.onConfirm();
                                             setConfirmModal(prev => ({ ...prev, isOpen: false }));
                                         }}
-                                        className={`flex-1 px-6 py-3 ${confirmModal.confirmColor || 'bg-red-500'} text-white font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg`}
+                                        className={`flex-1 px-6 py-3 ${confirmModal.confirmColor || 'bg-brand-accent'} text-white font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg`}
                                     >
-                                        Confirm
+                                        {language === 'fr' ? 'Confirmer' : 'Confirm'}
                                     </button>
                                 </div>
                             </div>
@@ -1061,6 +1073,45 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                   background: #cbd5e1;
                 }
             `}</style>
+            <AnimatePresence>
+                {showCongratsModal && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => {
+                                setShowCongratsModal(false);
+                                onCongratsClose?.();
+                            }}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-sm bg-white rounded-[32px] shadow-2xl overflow-hidden text-center p-8"
+                        >
+                            <div className="w-20 h-20 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Star size={40} className="text-brand-accent animate-pulse" />
+                            </div>
+                            <h3 className="text-2xl font-display font-bold text-slate-800 mb-4">{t.actions.congrats.title}</h3>
+                            <p className="text-slate-500 mb-8 leading-relaxed">
+                                {t.actions.congrats.subtitle}
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setShowCongratsModal(false);
+                                    onCongratsClose?.();
+                                }}
+                                className="w-full py-4 bg-brand-accent text-white font-bold rounded-2xl hover:bg-brand-accent/90 transition-all shadow-lg shadow-brand-accent/20 active:scale-[0.98]"
+                            >
+                                {t.actions.congrats.ok}
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

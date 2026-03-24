@@ -225,6 +225,7 @@ export interface BabysitterChoicePayload {
   babysitter_address?: string;
   interview_date?: string;
   interview_time?: string;
+  final_choice?: number;
 }
 
 export const api = {

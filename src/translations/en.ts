@@ -156,6 +156,7 @@ export const en = {
     success: "Payment Successful!",
     redirecting: "Finalizing your request...",
     securityNote: "Your payment information is encrypted and secure.",
+    cancel: "Cancel",
   },
   modals: {
     interview: {
@@ -181,10 +182,11 @@ export const en = {
       backToStart: "Go to Dashboard",
     },
     confirmSelection: {
-      title: "Confirm Selection",
-      subtitle:
-        "Are you sure you want to submit your selection? This will send your request to our team.",
-      confirm: "Submit",
+      title: "Confirm my request",
+      subtitle: "I wish to confirm my childcare request\nI accept the terms and conditions of Bloom Buddies",
+      hireTitle: "Confirm my request",
+      hireSubtitle: "I wish to confirm my childcare request\nI accept the terms and conditions of Bloom Buddies",
+      confirm: "Confirm",
       cancel: "Cancel",
     },
   },
@@ -192,9 +194,10 @@ export const en = {
     title: "My Account",
     subtitle: "Manage your requests, interviews, and documents.",
     createRequest: "Create Request",
+    familyPrefix: "Family",
     tabs: {
-      requests: "Active Requests",
-      interviews: "Interviews",
+      requests: "My childcare requests",
+      requestsTitle: "My childcare requests",
       invoices: "Invoices",
       tax: "Tax Certificates",
       cmg: "CMG",
@@ -213,6 +216,8 @@ export const en = {
     },
     interviews: {
       title: "Babysitter Interviews",
+      sectionTitle: "Your interviews",
+      sectionSubtitle: "Your candidates and meetings",
       joinMeeting: "Join Meeting",
       with: "Interview with",
       date: "Date",
@@ -220,10 +225,11 @@ export const en = {
       status: "Status",
       scheduled: "Scheduled",
       completed: "Completed",
-      finalChoice: "Final Choice",
+      finalChoice: "Hire",
       reject: "Reject",
       viewContract: "View Contract",
       noInterviews: "No interviews scheduled.",
+      rejected: "Rejected",
     },
     invoices: {
       number: "Invoice #",
@@ -241,11 +247,18 @@ export const en = {
       noCertificates: "No tax certificates available yet.",
     },
     cmg: {
-      title: "CMG Number",
-      fieldLabel: "Your CMG Number",
+      title: "CAF allocation number",
+      subtitle: "Input your CAF allocation number",
+      fieldLabel: "CAF allocation number",
       placeholder: "e.g. abc123456",
       submit: "Save",
-      updateSuccess: "CMG number updated successfully",
+      updateSuccess: "CAF number updated successfully",
+      description: "Your allocation number is important for the transmission of your childcare data for you to receive your CAF reimbursements.",
+    },
+    support: {
+      title: "Need help with your documents?",
+      subtitle: "Our support team is available 24/7 to assist you.",
+      button: "Contact Support",
     },
   },
   login: {
@@ -532,12 +545,19 @@ export const en = {
         "Les obligations prévues au titre du mandat prennent effet à compter de la date de signature du présent contrat d'accueil et perdurent jusqu'à son terme ou à la renonciation au mandat par l'une des parties.",
     },
     actions: {
-      accept: "Accepter",
-      refuse: "Refuser",
-      slide: "Glisser pour accepter",
-      back: "Retour au profil",
-      success: "Contrat accepté avec succès !",
-      loading: "Chargement des détails du contrat...",
+      accept: "Sign",
+      refuse: "Refuse",
+      slide: "Sign",
+      signingSubtitle: "By sliding, your contract will be signed and your payment received",
+      signingSlider: "Slide to sign",
+      back: "Back to profile",
+      success: "Contract accepted successfully!",
+      loading: "Loading contract details...",
+      congrats: {
+        title: "Congratulations !!!",
+        subtitle: "Kindly sign your contract and pay your invoice to confirm the reservation",
+        ok: "Ok"
+      }
     },
     signatureLocationDate: "Fait à Paris, le {date}",
     electronicSignature: "Signature électronique sécurisée",

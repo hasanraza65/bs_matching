@@ -41,7 +41,7 @@ interface ProfilePageProps {
   onModifyRequest: (request: any) => void;
   onGoToAdmin: () => void;
   onCreateRequest: () => void;
-  onViewContract?: (choiceId: number) => void;
+  onViewContract?: (choiceId: number, autoShowCongrats?: boolean) => void;
   onUserLoaded?: (user: User) => void;
   initialTab?: 'requests' | 'invoices' | 'tax' | 'cmg';
 }
@@ -74,12 +74,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     title: string;
     message: string;
     confirmColor?: string;
+    iconType?: 'warning' | 'success';
+    confirmText?: string;
+    cancelText?: string;
     onConfirm: () => void;
   }>({
     isOpen: false,
     title: '',
     message: '',
     confirmColor: 'bg-red-500',
+    iconType: 'warning',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
     onConfirm: () => { },
   });
   const [rejectingChoice, setRejectingChoice] = useState<number | null>(null);
@@ -139,9 +145,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const handleRemoveRequest = (id: string) => {
     setConfirmModal({
       isOpen: true,
-      title: 'Remove Request',
-      message: 'Are you sure you want to remove this request?',
+      title: language === 'fr' ? 'Supprimer la demande' : 'Remove Request',
+      message: language === 'fr' ? 'Êtes-vous sûr de vouloir supprimer cette demande ?' : 'Are you sure you want to remove this request?',
       confirmColor: 'bg-red-500',
+      iconType: 'warning',
+      confirmText: t.modals.confirmSelection.confirm,
+      cancelText: t.modals.confirmSelection.cancel,
       onConfirm: async () => {
         if (!user) return;
 
@@ -163,12 +172,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     });
   };
 
-  const handleFinalChoice = (choiceId: number) => {
+  const handleFinalChoice = (choiceId: number, name: string) => {
     setConfirmModal({
       isOpen: true,
-      title: t.modals.confirmSelection.title,
-      message: t.modals.confirmSelection.subtitle,
+      title: t.modals.confirmSelection.hireTitle,
+      message: t.modals.confirmSelection.hireSubtitle,
       confirmColor: 'bg-brand-accent',
+      iconType: 'success',
+      confirmText: t.modals.confirmSelection.confirm,
+      cancelText: t.modals.confirmSelection.cancel,
       onConfirm: async () => {
         try {
           setIsLoading(true);
@@ -177,6 +189,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             const userResponse = await api.getUser();
             if (userResponse.status && userResponse.data) {
               setUser(userResponse.data);
+              // Auto-redirect to contract with congratulations pop-up
+              setTimeout(() => {
+                onViewContract?.(choiceId, true);
+              }, 500);
             }
           }
         } catch (error) {
@@ -186,6 +202,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         }
       }
     });
+  };
+  const handleUndoRejection = async (choiceId: number) => {
+    try {
+      setIsLoading(true);
+      // Reset final_choice to 0 (Pending) using the update API
+      const response = await api.updateBabysitterChoice(choiceId, { final_choice: 0 });
+      if (response.status) {
+        const userResponse = await api.getUser();
+        if (userResponse.status && userResponse.data) {
+          setUser(userResponse.data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to undo rejection:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSetDefaultCard = async (paymentMethodId: string) => {
@@ -215,6 +248,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       title: language === 'fr' ? 'Supprimer la carte' : 'Delete Card',
       message: language === 'fr' ? 'Êtes-vous sûr de vouloir supprimer cette carte ?' : 'Are you sure you want to delete this card?',
       confirmColor: 'bg-red-500',
+      iconType: 'warning',
+      confirmText: t.modals.confirmSelection.confirm,
+      cancelText: t.modals.confirmSelection.cancel,
       onConfirm: async () => {
         try {
           setIsLoading(true);
@@ -264,7 +300,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     { id: 'cmg', label: t.profilePage.tabs.cmg || 'CMG', icon: ShieldCheck },
     { id: 'invoices', label: t.profilePage.tabs.invoices, icon: Receipt },
     { id: 'tax', label: t.profilePage.tabs.tax, icon: FileText },
-    
+
   ];
 
   const calculateTotalHours = (schedules?: any[]) => {
@@ -328,7 +364,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <UserIcon size={32} />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-brand-accent uppercase tracking-widest mb-0.5">Premium Account</p>
+              <p className="text-[11px] font-bold text-brand-accent tracking-wide mb-0.5">
+                {language === 'fr' ? 'Famille Bloom' : 'Bloom Family'}
+              </p>
               <p className="text-xl font-display font-bold text-slate-800">{user?.first_name} {user?.last_name}</p>
               {user?.children && user.children.length > 0 && (
                 <p className="text-[10px] text-slate-400 font-medium">
@@ -356,6 +394,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           ))}
         </div>
       )}
+
 
       {/* Minimal Inline Tab Navigation */}
       <div className="relative mb-12 border-b border-slate-100">
@@ -513,8 +552,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           <div className="pt-10 border-t border-slate-100">
                             <div className="flex items-center justify-between mb-8">
                               <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.interviews.title || 'Babysitter Interviews'}</p>
-                                <p className="text-xs text-slate-500">Your selected candidates and scheduled meetings</p>
+                                <h3 className="text-lg font-display font-bold text-slate-800">{t.profilePage.interviews.sectionTitle}</h3>
+                                <p className="text-sm text-slate-500">{t.profilePage.interviews.sectionSubtitle}</p>
                               </div>
                               <div className="px-3 py-1 bg-brand-blue/10 rounded-full">
                                 <span className="text-[9px] font-bold text-brand-blue uppercase tracking-wider">{req.choices.length} Candidates</span>
@@ -589,19 +628,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                               </button>
                                             )}
                                             <button
-                                              onClick={() => handleFinalChoice(choice.id)}
+                                              onClick={() => handleFinalChoice(choice.id, `${choice.babysitter_first_name} ${choice.babysitter_last_name}`)}
                                               className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                             >
                                               <CheckCircle2 size={16} />
-                                              {t.profilePage.interviews.finalChoice}
+                                              {t.profilePage.interviews.finalChoice || 'Hire'}
                                             </button>
                                           </>
                                         )}
                                         {Number(choice.final_choice) === 2 ? (
-                                          <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2">
-                                            <X size={16} />
-                                            {language === 'fr' ? 'Refusé' : 'Rejected'}
-                                          </div>
+                                          <button
+                                            onClick={() => handleUndoRejection(choice.id)}
+                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 active:scale-95 transition-all text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                          >
+                                            <ArrowLeft size={16} />
+                                            {t.common.back}
+                                          </button>
                                         ) : (
                                           <button
                                             onClick={() => {
@@ -906,9 +948,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       </div>
                       <div>
                         <h3 className="text-2xl font-display font-bold text-slate-900 tracking-tight">
-                          {(t.profilePage as any).cmg?.title || 'Numéro CMG'}
+                          {(t.profilePage as any).cmg?.title || 'CAF Numéro allocataire'}
                         </h3>
-                        <p className="text-sm text-slate-400 font-medium">Manage your Complementary Choice of Childcare mode</p>
+                        <p className="text-sm text-slate-400 font-medium">{(t.profilePage as any).cmg?.subtitle || 'Renseigner votre numéro allocataire CAF.'}</p>
                       </div>
                     </div>
 
@@ -933,8 +975,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           className={`p-4 rounded-xl flex items-center gap-3 ${cmgMessage.type === 'success'
-                              ? 'bg-green-50 text-green-600 border border-green-100'
-                              : 'bg-red-50 text-red-600 border border-red-100'
+                            ? 'bg-green-50 text-green-600 border border-green-100'
+                            : 'bg-red-50 text-red-600 border border-red-100'
                             }`}
                         >
                           {cmgMessage.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
@@ -986,8 +1028,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           <AlertCircle size={16} />
                         </div>
                         <p className="text-[11px] text-slate-500 leading-relaxed">
-                          Your CMG number is essential for calculating your financial aid from the CAF.
-                          Please ensure it matches the one provided in your CAF account.
+                          {(t.profilePage as any).cmg?.description || 'Votre numéro allocataire est important pour la transmission de vos données de garde afin d\'avoir vos remboursements CAF.'}
                         </p>
                       </div>
                     </div>
@@ -1006,12 +1047,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             <CheckCircle2 size={24} />
           </div>
           <div>
-            <p className="font-bold text-slate-800">Need help with your documents?</p>
-            <p className="text-sm text-slate-500">Our support team is available 24/7 to assist you.</p>
+            <p className="font-bold text-slate-800">{(t.profilePage as any).support?.title || 'Need help with your documents?'}</p>
+            <p className="text-sm text-slate-500">{(t.profilePage as any).support?.subtitle || 'Our support team is available 24/7 to assist you.'}</p>
           </div>
         </div>
         <button className="px-6 py-3 bg-brand-blue text-white font-bold rounded-2xl hover:bg-brand-blue/90 transition-colors shadow-lg shadow-brand-blue/20">
-          Contact Support
+          {(t.profilePage as any).support?.button || 'Contact Support'}
         </button>
       </div>
 
@@ -1036,8 +1077,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
               <div className="relative">
                 <div className="flex items-center justify-between mb-6">
-                  <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
-                    <AlertCircle size={24} />
+                  <div className={`w-12 h-12 ${confirmModal.iconType === 'success' ? 'bg-brand-accent/10 text-brand-accent' : 'bg-red-50 text-red-500'} rounded-2xl flex items-center justify-center border border-slate-50 shadow-sm`}>
+                    {confirmModal.iconType === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
                   </div>
                   <button
                     onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
@@ -1048,14 +1089,16 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 </div>
 
                 <h3 className="text-xl font-display font-bold text-slate-800 mb-2">{confirmModal.title}</h3>
-                <p className="text-slate-500 mb-8">{confirmModal.message}</p>
+                <p className="text-slate-500 mb-8 whitespace-pre-line leading-relaxed font-bold">
+                  {confirmModal.message}
+                </p>
 
                 <div className="flex gap-3">
                   <button
                     onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
                     className="flex-1 px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors"
                   >
-                    Cancel
+                    {confirmModal.cancelText}
                   </button>
                   <button
                     onClick={() => {
@@ -1064,7 +1107,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     }}
                     className={`flex-1 px-6 py-3 ${confirmModal.confirmColor || 'bg-red-500'} text-white font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg`}
                   >
-                    Confirm
+                    {confirmModal.confirmText}
                   </button>
                 </div>
               </div>
