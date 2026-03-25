@@ -48,7 +48,9 @@ import {
   CreditCard,
   DollarSign,
   Briefcase,
-  Plus
+  Plus,
+  Link as LinkIcon,
+  Video
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { KanbanBoard, RequestDetailsModal, transformToKanbanRequest, KanbanRequest } from './KanbanBoard';
@@ -58,7 +60,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminPage = 'dashboard' | 'requests' | 'active-requests' | 'signed-contracts' | 'interviews' | 'invoices' | 'contracts' | 'attestations' | 'users';
+type AdminPage = 'dashboard' | 'new-requests' | 'completed-requests' | 'ongoing-requests' | 'requests' | 'active-requests' | 'signed-contracts' | 'interviews' | 'invoices' | 'contracts' | 'attestations' | 'users';
 
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
@@ -71,13 +73,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'requests', label: 'All Requests', icon: ClipboardList },
+    { id: 'new-requests', label: 'New Request', icon: Plus },
     { id: 'active-requests', label: 'Active Requests', icon: Activity },
+    { id: 'ongoing-requests', label: 'Ongoing Requests', icon: Clock },
+    { id: 'completed-requests', label: 'Completed Request', icon: CheckCircle2 },
     { id: 'signed-contracts', label: 'Signed Contract', icon: ShieldCheck },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
     { id: 'contracts', label: 'Contracts', icon: FileText },
     { id: 'attestations', label: 'Attestations Fiscales', icon: History },
     { id: 'users', label: 'All Users', icon: Users },
-
   ];
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -216,6 +220,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               transition={{ duration: 0.2 }}
             >
               {activePage === 'dashboard' && <DashboardView />}
+              {activePage === 'new-requests' && <NewRequestsView />}
+              {activePage === 'completed-requests' && <CompletedRequestsView />}
+              {activePage === 'ongoing-requests' && <OngoingRequestsView />}
               {activePage === 'requests' && <RequestsView />}
               {activePage === 'active-requests' && <ActiveRequestsView />}
               {activePage === 'signed-contracts' && <SignedContractsView />}
@@ -322,12 +329,673 @@ const DashboardView = () => {
   );
 };
 
+const NewRequestsView = () => {
+    const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const fetchNewRequests = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const result = await api.getNewRequests();
+            setRequests(result);
+        } catch (err: any) {
+            setError('Failed to load new requests. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchNewRequests();
+    }, []);
+
+    const filteredRequests = requests.filter(req => {
+        const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
+        return parentName.includes(searchQuery.toLowerCase()) || 
+               req.id.toString().includes(searchQuery) ||
+               req.parent_address?.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg font-bold text-slate-900">New Requests List</h3>
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Filter new requests..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                        />
+                    </div>
+                    <button 
+                        onClick={fetchNewRequests}
+                        className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                        <History size={18} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {isLoading && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <Loader2 className="animate-spin" size={20} />
+                                            <span className="text-sm font-medium">Loading new requests...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && error && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <AlertCircle size={18} />
+                                            <span className="text-sm font-medium">{error}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredRequests.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                        No new requests found.
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredRequests.map((req) => (
+                                <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
+                                            <span className="text-xs text-slate-400">{req.user?.email}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{req.parent_address || 'No address provided'}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.board_status === 'New Leads' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
+                                            {req.board_status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-slate-500">
+                                        {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button 
+                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                title="View Details"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const OngoingRequestsView = () => {
+    const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const fetchOngoingRequests = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const result = await api.getOngoingRequests();
+            setRequests(result);
+        } catch (err: any) {
+            setError('Failed to load ongoing requests. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchOngoingRequests();
+    }, []);
+
+    const filteredRequests = requests.filter(req => {
+        const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
+        const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
+        const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
+        return parentName.includes(searchQuery.toLowerCase()) || 
+               sitterName.includes(searchQuery.toLowerCase()) ||
+               req.id.toString().includes(searchQuery) ||
+               req.parent_address?.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg font-bold text-slate-900">Ongoing Requests List</h3>
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search ongoing requests..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                        />
+                    </div>
+                    <button 
+                        onClick={fetchOngoingRequests}
+                        className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                        <History size={18} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Sitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {isLoading && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <Loader2 className="animate-spin" size={20} />
+                                            <span className="text-sm font-medium">Loading ongoing requests...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && error && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <AlertCircle size={18} />
+                                            <span className="text-sm font-medium">{error}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredRequests.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                        No ongoing requests found.
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredRequests.map((req) => {
+                                const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
+                                return (
+                                    <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
+                                                <span className="text-xs text-slate-400">{req.user?.email}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {hiredSitter ? (
+                                                <div className="flex flex-col space-y-1">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-slate-800">{hiredSitter.babysitter_first_name} {hiredSitter.babysitter_last_name}</span>
+                                                        <span className="text-xs text-slate-400">{hiredSitter.babysitter_email}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                                                        <Phone size={10} />
+                                                        <span>{hiredSitter.babysitter_phone}</span>
+                                                    </div>
+                                                    {hiredSitter.interview_date && (
+                                                        <div className="flex items-center gap-2 text-[10px] text-blue-600 font-medium">
+                                                            <Calendar size={10} />
+                                                            <span>Interview: {hiredSitter.interview_date} {hiredSitter.interview_time}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-400 italic text-sm">Not assigned</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
+                                        <td className="px-6 py-4">
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-blue-50 text-blue-600">
+                                                Ongoing
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-slate-500">
+                                            {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button 
+                                                    onClick={() => {
+                                                        const link = `https://ponctuel.bloom-buddies.fr/price/${req.id}`;
+                                                        navigator.clipboard.writeText(link);
+                                                        toast.success('Price Quote link copied!');
+                                                    }}
+                                                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                                    title="Copy Price Quote Link"
+                                                >
+                                                    <LinkIcon size={18} />
+                                                </button>
+                                                {hiredSitter?.zoom_meeting_link && (
+                                                    <a 
+                                                        href={hiredSitter.zoom_meeting_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                        title="Join Zoom Meeting"
+                                                    >
+                                                        <Video size={18} />
+                                                    </a>
+                                                )}
+                                                <button 
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                    title="View Details"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CompletedRequestsView = () => {
+    const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const fetchCompletedRequests = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const result = await api.getCompletedRequests();
+            setRequests(result);
+        } catch (err: any) {
+            setError('Failed to load completed requests. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCompletedRequests();
+    }, []);
+
+    const filteredRequests = requests.filter(req => {
+        const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
+        const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
+        const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
+        return parentName.includes(searchQuery.toLowerCase()) || 
+               sitterName.includes(searchQuery.toLowerCase()) ||
+               req.id.toString().includes(searchQuery) ||
+               req.parent_address?.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg font-bold text-slate-900">Completed Requests List</h3>
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search completed requests..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                        />
+                    </div>
+                    <button 
+                        onClick={fetchCompletedRequests}
+                        className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                        <History size={18} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Sitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Completed At</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {isLoading && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <Loader2 className="animate-spin" size={20} />
+                                            <span className="text-sm font-medium">Loading completed requests...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && error && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <AlertCircle size={18} />
+                                            <span className="text-sm font-medium">{error}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredRequests.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                        No completed requests found.
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredRequests.map((req) => {
+                                const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
+                                return (
+                                    <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
+                                                <span className="text-xs text-slate-400">{req.user?.email}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {hiredSitter ? (
+                                                <div className="flex flex-col space-y-1">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-slate-800">{hiredSitter.babysitter_first_name} {hiredSitter.babysitter_last_name}</span>
+                                                        <span className="text-xs text-slate-400">{hiredSitter.babysitter_email}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                                                        <Phone size={10} />
+                                                        <span>{hiredSitter.babysitter_phone}</span>
+                                                    </div>
+                                                    {hiredSitter.interview_date && (
+                                                        <div className="flex items-center gap-2 text-[10px] text-blue-600 font-medium">
+                                                            <Calendar size={10} />
+                                                            <span>Interview: {hiredSitter.interview_date} {hiredSitter.interview_time}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-400 italic text-sm">Not assigned</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
+                                        <td className="px-6 py-4">
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-emerald-50 text-emerald-600">
+                                                Completed
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-slate-500">
+                                            {req.updated_at ? new Date(req.updated_at).toLocaleDateString() : '-'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button 
+                                                    onClick={() => {
+                                                        const link = `https://ponctuel.bloom-buddies.fr/price/${req.id}`;
+                                                        navigator.clipboard.writeText(link);
+                                                        toast.success('Price Quote link copied!');
+                                                    }}
+                                                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                                    title="Copy Price Quote Link"
+                                                >
+                                                    <LinkIcon size={18} />
+                                                </button>
+                                                {hiredSitter?.zoom_meeting_link && (
+                                                    <a 
+                                                        href={hiredSitter.zoom_meeting_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                        title="Join Zoom Meeting"
+                                                    >
+                                                        <Video size={18} />
+                                                    </a>
+                                                )}
+                                                <button 
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                    title="View Details"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SitterChoicesModal: React.FC<{ 
+    choices: any[], 
+    requestId: number, 
+    onClose: () => void 
+}> = ({ choices, requestId, onClose }) => {
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden"
+            >
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-900">Sitter Choices</h3>
+                        <p className="text-sm text-slate-500">Request #{requestId}</p>
+                    </div>
+                    <button 
+                        onClick={onClose}
+                        className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-slate-900 shadow-sm border border-transparent hover:border-slate-100"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+                
+                <div className="p-6 max-h-[70vh] overflow-y-auto">
+                    <div className="flex flex-col border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm">
+                        <div className="grid grid-cols-[1.5fr,1fr,1fr,120px] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-left">
+                            <span>Babysitter Info</span>
+                            <span>Contact</span>
+                            <span>Interview</span>
+                            <span className="text-right">Actions</span>
+                        </div>
+                        <div className="divide-y divide-slate-50">
+                            {choices.map((choice) => (
+                                <div key={choice.id} className="grid grid-cols-[1.5fr,1fr,1fr,120px] gap-4 px-6 py-5 hover:bg-slate-50/50 transition-colors items-center group/modal-row">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-bold text-slate-800 truncate">
+                                            {choice.babysitter_first_name} {choice.babysitter_last_name}
+                                        </p>
+                                        <p className="text-xs text-slate-400 truncate">{choice.babysitter_email}</p>
+                                    </div>
+                                    <div className="text-xs text-slate-600 font-medium">
+                                        {choice.babysitter_phone || 'N/A'}
+                                    </div>
+                                    <div>
+                                        {choice.interview_date ? (
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                                                    <Calendar size={12} className="text-brand-accent/70" />
+                                                    <span>{choice.interview_date}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                                    <Clock size={12} className="text-slate-300" />
+                                                    <span>{choice.interview_time?.substring(0, 5)}</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-slate-300 italic">Not scheduled</span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <button 
+                                            onClick={() => {
+                                                const link = `https://ponctuel.bloom-buddies.fr/babysitting-matching/${requestId}`;
+                                                navigator.clipboard.writeText(link);
+                                                toast.success('Price quote link copied!');
+                                            }}
+                                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all border border-transparent hover:border-emerald-100"
+                                            title="Copy Price Quote Link"
+                                        >
+                                            <LinkIcon size={16} />
+                                        </button>
+                                        {choice.zoom_meeting_link && (
+                                            <a 
+                                                href={choice.zoom_meeting_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100"
+                                                title="Join Zoom Meeting"
+                                            >
+                                                <Video size={16} />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+const ActiveRequestChoicesCell: React.FC<{ 
+    choices: any[], 
+    requestId: number, 
+    onShowMore: (choices: any[], reqId: number) => void 
+}> = ({ choices, requestId, onShowMore }) => {
+    if (!choices || choices.length === 0) return <span className="text-slate-400 text-sm italic">No choices</span>;
+
+    const visibleChoices = choices.slice(0, 2);
+    const hasMore = choices.length > 2;
+
+    return (
+        <div className="flex items-center gap-2 flex-wrap min-w-[150px]">
+            {visibleChoices.map((choice) => (
+                <div 
+                    key={choice.id} 
+                    className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-full hover:bg-white transition-all shadow-sm group/tag"
+                >
+                    <span className="text-[11px] font-bold text-slate-700 whitespace-nowrap">
+                        {choice.babysitter_first_name}
+                    </span>
+                    <div className="flex items-center gap-1 opacity-40 group-hover/tag:opacity-100 transition-opacity">
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const link = `https://ponctuel.bloom-buddies.fr/babysitting-matching/${requestId}`;
+                                navigator.clipboard.writeText(link);
+                                toast.success('Link copied!');
+                            }}
+                            className="p-0.5 hover:text-emerald-600 transition-colors"
+                            title="Copy Quote"
+                        >
+                            <LinkIcon size={10} />
+                        </button>
+                        {choice.zoom_meeting_link && (
+                            <a 
+                                href={choice.zoom_meeting_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="p-0.5 hover:text-blue-600 transition-colors"
+                                title="Zoom"
+                            >
+                                <Video size={10} />
+                            </a>
+                        )}
+                    </div>
+                </div>
+            ))}
+            {hasMore && (
+                <button 
+                    onClick={() => onShowMore(choices, requestId)}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-full text-[10px] font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+                >
+                    <Plus size={10} />
+                    <span>{choices.length - 2} more</span>
+                </button>
+            )}
+        </div>
+    );
+};
+
 const ActiveRequestsView = () => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number } | null>(null);
 
     const fetchActiveRequests = async () => {
         setIsLoading(true);
@@ -440,6 +1108,13 @@ const ActiveRequestsView = () => {
                         <Plus size={18} />
                         Add New Request
                     </button>
+                    <button 
+                        onClick={fetchActiveRequests}
+                        className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                        title="Refresh"
+                    >
+                        <History size={18} />
+                    </button>
                 </div>
             </div>
 
@@ -448,19 +1123,20 @@ const ActiveRequestsView = () => {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Schedules</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Sitter Choices</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Schedules</th>
+                                <th className="px-4 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading active requests...</span>
@@ -470,7 +1146,7 @@ const ActiveRequestsView = () => {
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -480,31 +1156,38 @@ const ActiveRequestsView = () => {
                             )}
                             {!isLoading && !error && requests.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No active requests found.
                                     </td>
                                 </tr>
                             )}
                             {!isLoading && !error && requests.map((req) => (
                                 <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
-                                    <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
-                                            <span className="text-xs text-slate-400">{req.user?.email}</span>
+                                    <td className="px-4 py-4 font-bold text-slate-900">#{req.id}</td>
+                                    <td className="px-4 py-4">
+                                        <div className="flex flex-col max-w-[120px]">
+                                            <span className="font-bold text-slate-800 truncate">{req.user?.first_name} {req.user?.last_name}</span>
+                                            <span className="text-xs text-slate-400 truncate">{req.user?.email}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{req.parent_address}</td>
-                                    <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-4">
+                                        <ActiveRequestChoicesCell 
+                                            choices={req.choices ?? []} 
+                                            requestId={req.id} 
+                                            onShowMore={(choices, reqId) => setViewingSitterChoices({ choices, reqId })}
+                                        />
+                                    </td>
+                                    <td className="px-4 py-4 text-sm text-slate-600 max-w-[180px] truncate">{req.parent_address}</td>
+                                    <td className="px-4 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
+                                    <td className="px-4 py-4">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.board_status === 'In Matching' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
                                             {req.board_status}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-4">
                                         <ActiveRequestSchedulesCell schedules={req.schedules ?? []} />
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-4 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button 
                                                 onClick={() => handleEdit(req)}
@@ -528,6 +1211,16 @@ const ActiveRequestsView = () => {
                     </table>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {viewingSitterChoices && (
+                    <SitterChoicesModal
+                        requestId={viewingSitterChoices.reqId}
+                        choices={viewingSitterChoices.choices}
+                        onClose={() => setViewingSitterChoices(null)}
+                    />
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {editingRequest && (
