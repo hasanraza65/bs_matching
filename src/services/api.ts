@@ -651,6 +651,21 @@ export const api = {
     const response = await apiClient.get("/contract-signed-requests");
     return response.data;
   },
+  
+  getNewRequests: async (): Promise<ParentRequest[]> => {
+    const response = await apiClient.get("/new-requests");
+    return response.data;
+  },
+
+  getCompletedRequests: async (): Promise<ParentRequest[]> => {
+    const response = await apiClient.get("/completed-requests");
+    return response.data;
+  },
+
+  getOngoingRequests: async (): Promise<ParentRequest[]> => {
+    const response = await apiClient.get("/ongoing-requests");
+    return response.data;
+  },
 
 };
 
