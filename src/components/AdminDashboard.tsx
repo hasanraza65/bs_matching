@@ -69,6 +69,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [viewingUserId, setViewingUserId] = useState<number | null>(null);
   const [viewingChoiceId, setViewingChoiceId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUserIdForInvoices, setSelectedUserIdForInvoices] = useState<number | null>(null);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -128,7 +129,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActivePage(item.id as AdminPage)}
+                  onClick={() => {
+                    setActivePage(item.id as AdminPage);
+                    if (item.id === 'invoices') setSelectedUserIdForInvoices(null);
+                  }}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${isActive
                     ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
                     : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
@@ -221,13 +225,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             >
               {activePage === 'dashboard' && <DashboardView />}
               {activePage === 'new-requests' && <NewRequestsView />}
-              {activePage === 'completed-requests' && <CompletedRequestsView />}
-              {activePage === 'ongoing-requests' && <OngoingRequestsView />}
+              {activePage === 'completed-requests' && <CompletedRequestsView onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
+              {activePage === 'ongoing-requests' && <OngoingRequestsView onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
               {activePage === 'requests' && <RequestsView />}
               {activePage === 'active-requests' && <ActiveRequestsView />}
               {activePage === 'signed-contracts' && <SignedContractsView />}
               {activePage === 'interviews' && <InterviewsView />}
-              {activePage === 'invoices' && <InvoicesView />}
+              {activePage === 'invoices' && <InvoicesView userId={selectedUserIdForInvoices} onClearUserFilter={() => setSelectedUserIdForInvoices(null)} />}
               {activePage === 'attestations' && <AttestationsView />}
               {viewingChoiceId ? (
 
@@ -335,6 +339,63 @@ const NewRequestsView = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     const fetchNewRequests = async () => {
         setIsLoading(true);
@@ -402,9 +463,9 @@ const NewRequestsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Price Quote</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -446,21 +507,38 @@ const NewRequestsView = () => {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{req.parent_address || 'No address provided'}</td>
                                     <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.board_status === 'New Leads' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
-                                            {req.board_status}
-                                        </span>
-                                    </td>
                                     <td className="px-6 py-4 text-sm text-slate-500">
                                         {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <button 
+                                            onClick={() => {
+                                                const link = `${window.location.origin}/price/${req.id}`;
+                                                navigator.clipboard.writeText(link);
+                                                toast.success('Price Quote link copied!');
+                                            }}
+                                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 mx-auto bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs shadow-sm shadow-emerald-200/50"
+                                            title="Copy Price Quote Link"
+                                        >
+                                            <LinkIcon size={14} />
+                                            <span>Copy Link</span>
+                                        </button>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button 
+                                                onClick={() => handleEdit(req)}
                                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                title="View Details"
+                                                title="Edit"
                                             >
-                                                <Eye size={18} />
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(req.id)}
+                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={18} />
                                             </button>
                                         </div>
                                     </td>
@@ -480,16 +558,83 @@ const NewRequestsView = () => {
                 )}
             </AnimatePresence>
 
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
+
         </div>
         
     );
 };
 
-const OngoingRequestsView = () => {
+const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: number) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     const fetchOngoingRequests = async () => {
         setIsLoading(true);
@@ -551,7 +696,6 @@ const OngoingRequestsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Sitter</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -618,43 +762,18 @@ const OngoingRequestsView = () => {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-blue-50 text-blue-600">
-                                                Ongoing
-                                            </span>
-                                        </td>
                                         <td className="px-6 py-4 text-sm text-slate-500">
                                             {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
-                                                    onClick={() => {
-                                                        const link = `https://ponctuel.bloom-buddies.fr/price/${req.id}`;
-                                                        navigator.clipboard.writeText(link);
-                                                        toast.success('Price Quote link copied!');
-                                                    }}
-                                                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                                    title="Copy Price Quote Link"
+                                                    onClick={() => onViewInvoices?.(req.user_id)}
+                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs shadow-sm shadow-slate-200"
+                                                    title="View Invoices"
                                                 >
-                                                    <LinkIcon size={18} />
-                                                </button>
-                                                {hiredSitter?.zoom_meeting_link && (
-                                                    <a 
-                                                        href={hiredSitter.zoom_meeting_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                        title="Join Zoom Meeting"
-                                                    >
-                                                        <Video size={18} />
-                                                    </a>
-                                                )}
-                                                <button 
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="View Details"
-                                                >
-                                                    <Eye size={18} />
+                                                    <Receipt size={14} />
+                                                    <span>View Invoices</span>
                                                 </button>
                                             </div>
                                         </td>
@@ -665,15 +784,82 @@ const OngoingRequestsView = () => {
                     </table>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
-const CompletedRequestsView = () => {
+const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: number) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     const fetchCompletedRequests = async () => {
         setIsLoading(true);
@@ -735,7 +921,6 @@ const CompletedRequestsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Sitter</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Completed At</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -802,43 +987,18 @@ const CompletedRequestsView = () => {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-emerald-50 text-emerald-600">
-                                                Completed
-                                            </span>
-                                        </td>
                                         <td className="px-6 py-4 text-sm text-slate-500">
                                             {req.updated_at ? new Date(req.updated_at).toLocaleDateString() : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
-                                                    onClick={() => {
-                                                        const link = `https://ponctuel.bloom-buddies.fr/price/${req.id}`;
-                                                        navigator.clipboard.writeText(link);
-                                                        toast.success('Price Quote link copied!');
-                                                    }}
-                                                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                                    title="Copy Price Quote Link"
+                                                    onClick={() => onViewInvoices?.(req.user_id)}
+                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs shadow-sm shadow-slate-200"
+                                                    title="View Invoices"
                                                 >
-                                                    <LinkIcon size={18} />
-                                                </button>
-                                                {hiredSitter?.zoom_meeting_link && (
-                                                    <a 
-                                                        href={hiredSitter.zoom_meeting_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                        title="Join Zoom Meeting"
-                                                    >
-                                                        <Video size={18} />
-                                                    </a>
-                                                )}
-                                                <button 
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="View Details"
-                                                >
-                                                    <Eye size={18} />
+                                                    <Receipt size={14} />
+                                                    <span>View Invoices</span>
                                                 </button>
                                             </div>
                                         </td>
@@ -849,6 +1009,16 @@ const CompletedRequestsView = () => {
                     </table>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -952,55 +1122,83 @@ const SitterChoicesModal: React.FC<{
 const ActiveRequestChoicesCell: React.FC<{ 
     choices: any[], 
     requestId: number, 
-    onShowMore: (choices: any[], reqId: number) => void 
-}> = ({ choices, requestId, onShowMore }) => {
+    onShowMore: (choices: any[], reqId: number) => void,
+    onRefresh?: () => void
+}> = ({ choices, requestId, onShowMore, onRefresh }) => {
     if (!choices || choices.length === 0) return <span className="text-slate-400 text-sm italic">No choices</span>;
 
     const visibleChoices = choices.slice(0, 2);
     const hasMore = choices.length > 2;
 
+    const handleSelectFinal = async (choiceId: number) => {
+        try {
+            const response = await api.selectFinalChoice(choiceId);
+            if (response.status) {
+                toast.success(response.message || 'Choice finalized successfully');
+                if (onRefresh) onRefresh();
+            } else {
+                toast.error(response.message || 'Failed to finalize choice');
+            }
+        } catch (error) {
+            toast.error('An error occurred while finalizing choice');
+        }
+    };
+    const hasAcceptedChoice = choices.some(c => Number(c.final_choice) === 1);
+
     return (
-        <div className="flex items-center gap-2 flex-wrap min-w-[150px]">
+        <div className="flex flex-col gap-3 min-w-[200px]">
             {visibleChoices.map((choice) => (
-                <div 
-                    key={choice.id} 
-                    className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-full hover:bg-white transition-all shadow-sm group/tag"
-                >
-                    <span className="text-[11px] font-bold text-slate-700 whitespace-nowrap">
-                        {choice.babysitter_first_name}
-                    </span>
-                    <div className="flex items-center gap-1 opacity-40 group-hover/tag:opacity-100 transition-opacity">
-                        <button 
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                const link = `https://ponctuel.bloom-buddies.fr/babysitting-matching/${requestId}`;
-                                navigator.clipboard.writeText(link);
-                                toast.success('Link copied!');
-                            }}
-                            className="p-0.5 hover:text-emerald-600 transition-colors"
-                            title="Copy Quote"
-                        >
-                            <LinkIcon size={10} />
-                        </button>
-                        {choice.zoom_meeting_link && (
-                            <a 
-                                href={choice.zoom_meeting_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="p-0.5 hover:text-blue-600 transition-colors"
-                                title="Zoom"
-                            >
-                                <Video size={10} />
-                            </a>
-                        )}
+                <div key={choice.id} className="flex flex-col space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100 group/choice hover:bg-white transition-all">
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <span className="font-bold text-slate-800 text-sm">{choice.babysitter_first_name} {choice.babysitter_last_name}</span>
+                            <span className="text-[10px] text-slate-400 truncate max-w-[150px]">{choice.babysitter_email}</span>
+                        </div>
                     </div>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                        <Phone size={10} />
+                        <span>{choice.babysitter_phone}</span>
+                    </div>
+                    {choice.interview_date && (
+                        <div className="flex items-center gap-2 text-[10px] text-blue-600 font-bold bg-blue-50/50 p-1.5 rounded-lg border border-blue-100/50">
+                            <Calendar size={10} />
+                            <span>Interview: {choice.interview_date} {choice.interview_time}</span>
+                        </div>
+                    )}
+                    {Number(choice.final_choice) === 1 ? (
+                        <div className="mt-1 flex items-center gap-1 w-full">
+                            <div className="flex-1 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 cursor-default pointer-events-none">
+                                <CheckCircle2 size={12} />
+                                Accepted
+                            </div>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const link = `${window.location.origin}/contract/${requestId}`;
+                                    navigator.clipboard.writeText(link);
+                                    toast.success('Contract link copied!');
+                                }}
+                                className="p-1.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex items-center justify-center shrink-0"
+                                title="Copy Contract Link"
+                            >
+                                <LinkIcon size={14} />
+                            </button>
+                        </div>
+                    ) : !hasAcceptedChoice ? (
+                        <button
+                            onClick={() => handleSelectFinal(choice.id)}
+                            className="mt-1 w-full py-1.5 bg-slate-900 text-white text-[10px] font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm flex items-center justify-center gap-1"
+                        >
+                            <CheckCircle2 size={12} />
+                            Make it Final Choice
+                        </button>
+                    ) : null}
                 </div>
             ))}
             {hasMore && (
                 <button 
                     onClick={() => onShowMore(choices, requestId)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-full text-[10px] font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+                    className="flex items-center justify-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 w-fit"
                 >
                     <Plus size={10} />
                     <span>{choices.length - 2} more</span>
@@ -1015,7 +1213,6 @@ const ActiveRequestsView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number } | null>(null);
 
     const fetchActiveRequests = async () => {
@@ -1123,13 +1320,6 @@ const ActiveRequestsView = () => {
                         />
                     </div>
                     <button 
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2"
-                    >
-                        <Plus size={18} />
-                        Add New Request
-                    </button>
-                    <button 
                         onClick={fetchActiveRequests}
                         className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
                         title="Refresh"
@@ -1145,11 +1335,10 @@ const ActiveRequestsView = () => {
                         <thead>
                             <tr className="bg-slate-50/50">
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Details</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Sitter Choices</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Price Quote</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Schedules</th>
                                 <th className="px-4 py-4 text-right">Actions</th>
                             </tr>
@@ -1157,7 +1346,7 @@ const ActiveRequestsView = () => {
                         <tbody className="divide-y divide-slate-100">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading active requests...</span>
@@ -1167,7 +1356,7 @@ const ActiveRequestsView = () => {
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -1177,7 +1366,7 @@ const ActiveRequestsView = () => {
                             )}
                             {!isLoading && !error && requests.length === 0 && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No active requests found.
                                     </td>
                                 </tr>
@@ -1186,9 +1375,13 @@ const ActiveRequestsView = () => {
                                 <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="px-4 py-4 font-bold text-slate-900">#{req.id}</td>
                                     <td className="px-4 py-4">
-                                        <div className="flex flex-col max-w-[120px]">
-                                            <span className="font-bold text-slate-800 truncate">{req.user?.first_name} {req.user?.last_name}</span>
-                                            <span className="text-xs text-slate-400 truncate">{req.user?.email}</span>
+                                        <div className="flex flex-col min-w-[150px]">
+                                            <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
+                                            <span className="text-xs text-slate-400">{req.user?.email}</span>
+                                            <div className="flex items-start gap-1 mt-1 text-[10px] text-slate-500 max-w-[200px]">
+                                                <MapPin size={10} className="mt-0.5 shrink-0" />
+                                                <span className="leading-tight">{req.parent_address}</span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4">
@@ -1196,20 +1389,42 @@ const ActiveRequestsView = () => {
                                             choices={req.choices ?? []} 
                                             requestId={req.id} 
                                             onShowMore={(choices, reqId) => setViewingSitterChoices({ choices, reqId })}
+                                            onRefresh={fetchActiveRequests}
                                         />
                                     </td>
-                                    <td className="px-4 py-4 text-sm text-slate-600 max-w-[180px] truncate">{req.parent_address}</td>
-                                    <td className="px-4 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                    <td className="px-4 py-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.board_status === 'In Matching' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
-                                            {req.board_status}
-                                        </span>
+                                    <td className="px-4 py-4 text-center">
+                                         <button 
+                                            onClick={() => {
+                                                const link = `https://ponctuel.bloom-buddies.fr/babysitting-matching/${req.id}`;
+                                                navigator.clipboard.writeText(link);
+                                                toast.success('Price Quote link copied!');
+                                            }}
+                                            className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 shadow-sm mx-auto flex items-center justify-center"
+                                            title="Copy Price Quote"
+                                         >
+                                            <LinkIcon size={18} />
+                                         </button>
                                     </td>
+                                    <td className="px-4 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
                                     <td className="px-4 py-4">
                                         <ActiveRequestSchedulesCell schedules={req.schedules ?? []} />
                                     </td>
                                     <td className="px-4 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
+                                            {(() => {
+                                                const zoomChoice = req.choices?.find((c: any) => c.zoom_meeting_link);
+                                                return zoomChoice && (
+                                                    <a 
+                                                        href={zoomChoice.zoom_meeting_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100"
+                                                        title={`Zoom Meeting with ${zoomChoice.babysitter_first_name}`}
+                                                    >
+                                                        <Video size={18} />
+                                                    </a>
+                                                );
+                                            })()}
                                             <button 
                                                 onClick={() => handleEdit(req)}
                                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -1249,18 +1464,11 @@ const ActiveRequestsView = () => {
                         request={editingRequest}
                         onClose={() => setEditingRequest(null)}
                         onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                        showOnlySitters={true}
                     />
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>
-                {isAddModalOpen && (
-                    <AddNewActiveRequestModal
-                        onClose={() => setIsAddModalOpen(false)}
-                        onSuccess={fetchActiveRequests}
-                    />
-                )}
-            </AnimatePresence>
         </div>
     );
 };
@@ -1270,6 +1478,63 @@ const SignedContractsView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     const fetchSignedContracts = async () => {
         setIsLoading(true);
@@ -1323,7 +1588,6 @@ const SignedContractsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Babysitter</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Accepted At</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -1377,21 +1641,26 @@ const SignedContractsView = () => {
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.contract?.status === 1 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                                                {req.contract?.status === 1 ? (req.contract?.response_date || 'Signed') : 'Pending'}
-                                            </span>
-                                        </td>
                                         <td className="px-6 py-4 text-sm text-slate-500">
                                             {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button 
-                                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                                                title="View Details"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button 
+                                                    onClick={() => handleEdit(req)}
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                    title="Edit"
+                                                >
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(req.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -1400,184 +1669,269 @@ const SignedContractsView = () => {
                     </table>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 const RequestsView = () => {
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
-  const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+    const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
     const fetchRequests = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const { api } = await import('../services/api');
-        const result = await api.getParentRequests();
-        if (!cancelled) {
-          setRequests(result.data);
+        setIsLoading(true);
+        setError(null);
+        try {
+            const { api } = await import('../services/api');
+            const result = await api.getParentRequests();
+            setRequests(result.data);
+        } catch {
+            setError('Failed to load requests. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
-      } catch {
-        if (!cancelled) {
-          setError('Failed to load requests. Please try again.');
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
     };
-    fetchRequests();
-    return () => { cancelled = true; };
-  }, []);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              type="text"
-              placeholder="Filter requests..."
-              className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
-            />
-          </div>
-          <button className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
-            <Filter size={18} />
-          </button>
-        </div>
+    useEffect(() => {
+        fetchRequests();
+    }, []);
 
-        <div className="flex items-center gap-4">
-          {/* View Toggle */}
-          <div className="bg-white p-1 rounded-xl border border-slate-200 flex items-center shadow-sm">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'table' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-                }`}
-            >
-              <TableIcon size={14} />
-              Table View
-            </button>
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-                }`}
-            >
-              <LayoutGrid size={14} />
-              Kanban View
-            </button>
-          </div>
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
 
-          <button className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
-            Export CSV
-          </button>
-        </div>
-      </div>
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
 
-      <AnimatePresence mode="wait">
-        {viewMode === 'table' ? (
-          <motion.div
-            key="table"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-slate-50/50">
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Family Name</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Children</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Dates</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-right"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {isLoading && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center">
-                        <div className="flex items-center justify-center gap-3 text-slate-400">
-                          <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                          </svg>
-                          <span className="text-sm font-medium">Loading requests…</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  {!isLoading && error && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center">
-                        <div className="flex items-center justify-center gap-2 text-red-500">
-                          <AlertCircle size={18} />
-                          <span className="text-sm font-medium">{error}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  {!isLoading && !error && requests.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
-                        No requests found.
-                      </td>
-                    </tr>
-                  )}
-                  {!isLoading && !error && requests.map((req) => (
-                    <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-slate-800">
-                        {req.user.first_name} {req.user.last_name}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {req.children.length}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        <ScheduleDatesCell schedules={req.schedules ?? []} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500">
-                          {req.board_status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
-                          <MoreVertical size={18} />
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Filter requests..."
+                            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                        />
+                    </div>
+                    <button className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
+                        <Filter size={18} />
+                    </button>
+                    <button 
+                        onClick={fetchRequests}
+                        className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                        title="Refresh"
+                    >
+                        <History size={18} />
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    {/* View Toggle */}
+                    <div className="bg-white p-1 rounded-xl border border-slate-200 flex items-center shadow-sm">
+                        <button
+                            onClick={() => setViewMode('table')}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'table' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            <TableIcon size={14} />
+                            Table View
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <button
+                            onClick={() => setViewMode('kanban')}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            <LayoutGrid size={14} />
+                            Kanban View
+                        </button>
+                    </div>
+
+                    <button className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                        Export CSV
+                    </button>
+                </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-xs text-slate-400 font-medium">
-                {isLoading ? 'Loading…' : `Showing ${requests.length} ${requests.length === 1 ? 'entry' : 'entries'}`}
-              </p>
-              <div className="flex items-center gap-2">
-                <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
-                <button className="p-2 border border-slate-200 rounded-lg text-slate-900 hover:bg-slate-50">Next</button>
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="kanban"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            <KanbanBoard initialRequests={requests} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+            <AnimatePresence mode="wait">
+                {viewMode === 'table' ? (
+                    <motion.div
+                        key="table"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+                    >
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="bg-slate-50/50">
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Family Name</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Children</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Dates</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {isLoading && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-12 text-center">
+                                                <div className="flex items-center justify-center gap-3 text-slate-400">
+                                                    <Loader2 className="animate-spin w-5 h-5" />
+                                                    <span className="text-sm font-medium">Loading requests…</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {!isLoading && error && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-12 text-center">
+                                                <div className="flex items-center justify-center gap-2 text-red-500">
+                                                    <AlertCircle size={18} />
+                                                    <span className="text-sm font-medium">{error}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {!isLoading && !error && requests.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                                No requests found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {!isLoading && !error && requests.map((req) => (
+                                        <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
+                                            <td className="px-6 py-4 font-bold text-slate-800">
+                                                {req.user?.first_name} {req.user?.last_name}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600">
+                                                {req.children?.length}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600">
+                                                <ScheduleDatesCell schedules={req.schedules ?? []} />
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => handleEdit(req)}
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit2 size={18} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDelete(req.id)}
+                                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="p-6 border-t border-slate-100 flex items-center justify-between">
+                            <p className="text-xs text-slate-400 font-medium">
+                                {isLoading ? 'Loading…' : `Showing ${requests.length} ${requests.length === 1 ? 'entry' : 'entries'}`}
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
+                                <button className="p-2 border border-slate-200 rounded-lg text-slate-900 hover:bg-slate-50">Next</button>
+                            </div>
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="kanban"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        <KanbanBoard initialRequests={requests} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
+        </div>
+    );
 };
 
 // --- Helper: Schedule Dates Cell ---
@@ -1751,7 +2105,7 @@ const InterviewsView = () => {
   );
 };
 
-const InvoicesView = () => {
+const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, onClearUserFilter?: () => void }) => {
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
@@ -1768,7 +2122,8 @@ const InvoicesView = () => {
         const { api } = await import('../services/api');
         const result = await api.getAllInvoices({
           month: selectedMonth,
-          year: selectedYear
+          year: selectedYear,
+          user_id: userId || undefined
         });
 
         if (!cancelled) {
@@ -1784,7 +2139,7 @@ const InvoicesView = () => {
     };
     fetchInvoices();
     return () => { cancelled = true; };
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, userId]);
 
   const formatBillingMonth = (dateStr: string) => {
     try {
@@ -1823,6 +2178,15 @@ const InvoicesView = () => {
             </option>
           ))}
         </select>
+
+        {userId && (
+          <button
+            onClick={onClearUserFilter}
+            className="ml-auto flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 transition-colors"
+          >
+            Show All Invoices
+          </button>
+        )}
 
       </div>
 

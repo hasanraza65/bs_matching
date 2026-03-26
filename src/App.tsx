@@ -433,7 +433,10 @@ export default function App() {
           if (response.status && response.data) {
             setIsLoggedIn(true);
             setUser(response.data);
-            setView('profile');
+            const currentPath = window.location.pathname;
+            if (!currentPath.includes('/contract/') && !currentPath.includes('/price/') && !currentPath.includes('/cmg/')) {
+              setView('profile');
+            }
             // Pre-fill form data if user is logged in
             setFormData(prev => ({
               ...prev,
@@ -492,6 +495,13 @@ export default function App() {
           setView('login');
         }
         window.history.replaceState({}, '', '/');
+      }
+
+      const contractMatch = path.match(/\/contract\/(\d+)/);
+      if (contractMatch) {
+        const id = parseInt(contractMatch[1]);
+        setSelectedChoiceId(id);
+        setView('contract');
       }
     };
     handleUrlRoute();
@@ -1711,19 +1721,17 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full"
             >
-              {user && (
-                <ContractView
-                  choiceId={selectedChoiceId || 0}
-                  userName={`${user.first_name} ${user.last_name}`}
-                  autoShowCongrats={autoShowCongrats}
-                  onCongratsClose={() => setAutoShowCongrats(false)}
-                  onBack={() => setView('profile')}
-                  onAccept={() => {
-                    setView('profile');
-                  }}
-                  onRefuse={() => setView('profile')}
-                />
-              )}
+              <ContractView
+                choiceId={selectedChoiceId || 0}
+                userName={user ? `${user.first_name} ${user.last_name}` : ''}
+                autoShowCongrats={autoShowCongrats}
+                onCongratsClose={() => setAutoShowCongrats(false)}
+                onBack={() => setView('profile')}
+                onAccept={() => {
+                  setView('profile');
+                }}
+                onRefuse={() => setView('profile')}
+              />
             </motion.div>
           ) : (
             <motion.div

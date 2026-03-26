@@ -691,62 +691,10 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                     ) : (
                         <>
                             <button
-                                onClick={() => {
-                                    if (!contractData) return;
-
-                                    setConfirmModal({
-                                        isOpen: true,
-                                        title: language === 'fr' ? 'Refuser le contrat' : 'Reject Contract',
-                                        message:
-                                            language === 'fr'
-                                                ? 'Êtes-vous sûr de vouloir refuser ce contrat ?'
-                                                : 'Are you sure you want to reject this contract?',
-                                        confirmColor: 'bg-red-500',
-                                        onConfirm: async () => {
-                                            try {
-                                                setIsRejecting(true);
-
-                                                const resp = await api.rejectContract(contractData.contract_id);
-
-                                                if (resp && resp.status) {
-                                                    // ✅ success
-                                                    setRejectError(null);
-                                                    setShowRejectModal(true);
-                                                } else {
-                                                    // ❌ API error
-                                                    setRejectError(
-                                                        resp?.message ||
-                                                        (language === 'fr' ? 'Échec du refus' : 'Reject failed')
-                                                    );
-                                                    setShowRejectModal(true);
-                                                }
-                                            } catch (err: any) {
-                                                // ❌ network error
-                                                setRejectError(
-                                                    err?.message ||
-                                                    (language === 'fr' ? 'Erreur réseau' : 'Network error')
-                                                );
-                                                setShowRejectModal(true);
-                                            } finally {
-                                                setIsRejecting(false);
-                                            }
-                                        },
-                                    });
-                                }}
-                                disabled={isRejecting}
-                                className={`flex-1 py-4 bg-white text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed ${isRejecting ? 'relative' : ''
-                                    }`}
+                                onClick={onBack}
+                                className="flex-1 py-4 bg-white text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
                             >
-                                {isRejecting ? (
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Loader2 className="animate-spin" size={18} />
-                                        <span className="text-sm">
-                                            {language === 'fr' ? 'Refus en cours...' : 'Refusing...'}
-                                        </span>
-                                    </div>
-                                ) : (
-                                    t.actions.refuse
-                                )}
+                                {t.actions.back}
                             </button>
                             <button
                                 onClick={() => setShowAcceptModal(true)}

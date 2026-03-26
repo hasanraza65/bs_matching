@@ -649,6 +649,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         first_name: newReq.first_name,
         last_name: newReq.last_name,
         email: newReq.email,
+        user_phone: newReq.user_phone || '',
         parent_address: newReq.parent_address,
         children: newReq.children.map((c: any) => ({ child_dob: c.child_dob })),
         schedules: newReq.schedules,
@@ -1134,19 +1135,22 @@ const NewRequestModal = ({
 export const RequestDetailsModal = ({
   request,
   onClose,
-  onUpdate
+  onUpdate,
+  showOnlySitters = false
 }: {
   request: KanbanRequest;
   onClose: () => void;
   onUpdate: (updatedFields: Partial<KanbanRequest>) => void;
+  showOnlySitters?: boolean;
 }) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters'>(showOnlySitters ? 'sitters' : 'overview');
   const [formData, setFormData] = useState<KanbanRequest>({
     ...request,
     schedules: request.schedules || [],
     choices: request.choices || [],
   });
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const parentAddressDetailsRef = useRef<HTMLInputElement>(null);
   const babysitterAddressRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -1336,8 +1340,20 @@ export const RequestDetailsModal = ({
   };
 
   const handleSave = () => {
+    // Check if children or schedules have changed
+    const childrenChanged = JSON.stringify(formData.children.map(c => ({ id: c.id, dob: c.child_dob }))) !== 
+                          JSON.stringify((request.children || []).map(c => ({ id: c.id, dob: c.child_dob })));
+    
+    const schedulesChanged = JSON.stringify(formData.schedules.map(s => ({ date: s.schedule_date, slots: s.slots.map((sl: any) => ({ start: sl.start_time, end: sl.end_time })) }))) !== 
+                            JSON.stringify((request.schedules || []).map(s => ({ date: s.schedule_date, slots: s.slots.map((sl: any) => ({ start: sl.start_time, end: sl.end_time })) })));
+
     onUpdate(formData);
-    onClose();
+    
+    if (childrenChanged || schedulesChanged) {
+      setShowSuccess(true);
+    } else {
+      onClose();
+    }
   };
 
   return (
@@ -1357,57 +1373,62 @@ export const RequestDetailsModal = ({
         className="relative w-full max-w-3xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Modal Header */}
-        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white">
-              <User size={28} />
+        {!showSuccess && (
+          <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white">
+                <User size={28} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">{formData.user.first_name} {formData.user.last_name}</h2>
+                <p className="text-sm text-slate-400 font-medium">Request #{formData.id} • {formData.board_status.replace('-', ' ')}</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">{formData.user.first_name} {formData.user.last_name}</h2>
-              <p className="text-sm text-slate-400 font-medium">Request #{formData.id} • {formData.board_status.replace('-', ' ')}</p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-slate-200 rounded-full transition-all text-slate-400 hover:text-slate-900"
+            >
+              <X size={24} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-200 rounded-full transition-all text-slate-400 hover:text-slate-900"
-          >
-            <X size={24} />
-          </button>
-        </div>
+        )}
 
         {/* Modal Tabs */}
-        <div className="px-8 pt-4 flex items-center gap-8 border-b border-slate-100">
-          {[
-            { id: 'overview', label: 'Overview', icon: Info },
-            { id: 'schedule', label: 'Schedule', icon: Calendar },
-            { id: 'sitters', label: 'Babysitters', icon: Baby },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`pb-4 text-sm font-bold flex items-center gap-2 transition-all relative ${activeTab === tab.id ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
-                }`}
-            >
-              <tab.icon size={16} />
-              {tab.label}
-              {activeTab === tab.id && (
-                <motion.div layoutId="modal-tab" className="absolute bottom-0 left-0 right-0 h-1 bg-slate-900 rounded-t-full" />
-              )}
-            </button>
-          ))}
-        </div>
+        {!showSuccess && !showOnlySitters && (
+          <div className="px-8 pt-4 flex items-center gap-8 border-b border-slate-100">
+            {[
+              { id: 'overview', label: 'Overview', icon: Info },
+              { id: 'schedule', label: 'Schedule', icon: Calendar },
+              { id: 'sitters', label: 'Babysitters', icon: Baby },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`pb-4 text-sm font-bold flex items-center gap-2 transition-all relative ${activeTab === tab.id ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+              >
+                <tab.icon size={16} />
+                {tab.label}
+                {activeTab === tab.id && (
+                  <motion.div layoutId="modal-tab" className="absolute bottom-0 left-0 right-0 h-1 bg-slate-900 rounded-t-full" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Modal Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {activeTab === 'overview' && (
+        {!showSuccess && (
+          <div className="flex-1 overflow-y-auto p-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {activeTab === 'overview' && (
                 <div className="space-y-8">
                   {formData.schedules && formData.schedules.length > 0 && formData.schedules.every(s => s.slots && s.slots.length > 0) && (
                     <div className="flex justify-end mb-4">
@@ -1772,25 +1793,67 @@ export const RequestDetailsModal = ({
             </motion.div>
           </AnimatePresence>
         </div>
+        )}
 
         {/* Modal Footer */}
-        <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <p className="text-[10px] text-slate-400 font-medium italic">Changes will be saved to the CRM</p>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-8 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
-            >
-              Save Changes
-            </button>
+        {!showSuccess && (
+          <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <p className="text-[10px] text-slate-400 font-medium italic">Changes will be saved to the CRM</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-8 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {showSuccess && (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center p-16 text-center space-y-8 h-full"
+          >
+            <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-[32px] flex items-center justify-center shadow-inner animate-in zoom-in duration-500">
+              <CheckCircle2 size={48} />
+            </div>
+            <div className="space-y-3">
+              <h2 className="text-3xl font-black text-slate-900">Success!</h2>
+              <p className="text-slate-600 font-bold text-lg">Price quote sent successfully</p>
+            </div>
+            <p className="text-slate-400 max-w-xs leading-relaxed font-medium">
+              The request has been updated and the automated system has regenerated the quote with your changes.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
+              <button
+                onClick={() => {
+                  const link = `https://ponctuel.bloom-buddies.fr/price/${formData.id}`;
+                  navigator.clipboard.writeText(link);
+                  toast.success('Price Quote link copied!');
+                }}
+                className="w-full sm:w-auto px-8 py-4 bg-emerald-50 text-emerald-600 text-sm font-black rounded-2xl hover:bg-emerald-100 transition-all border border-emerald-100 flex items-center justify-center gap-2 shadow-sm active:scale-95"
+              >
+                <LinkIcon size={18} />
+                Copy Price Quote
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full sm:w-auto px-12 py-4 bg-slate-900 text-white text-sm font-black rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
+              >
+                Done
+              </button>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
