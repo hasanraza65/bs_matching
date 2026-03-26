@@ -637,13 +637,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                           </>
                                         )}
                                         {Number(choice.final_choice) === 2 ? (
-                                          <button
-                                            onClick={() => handleUndoRejection(choice.id)}
-                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 active:scale-95 transition-all text-xs whitespace-nowrap flex items-center justify-center gap-2"
-                                          >
-                                            <ArrowLeft size={16} />
-                                            {t.common.back}
-                                          </button>
+                                          <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-500 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2 cursor-not-allowed">
+                                            <X size={16} />
+                                            {language === 'fr' ? 'Refusé' : 'Rejected'}
+                                          </div>
                                         ) : (
                                           <button
                                             onClick={() => {
