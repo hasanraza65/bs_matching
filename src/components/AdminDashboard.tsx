@@ -334,6 +334,7 @@ const NewRequestsView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const fetchNewRequests = async () => {
         setIsLoading(true);
@@ -374,6 +375,15 @@ const NewRequestsView = () => {
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
+
+                    <button 
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2"
+                    >
+                        <Plus size={18} />
+                        Add New Request
+                    </button>
+
                     <button 
                         onClick={fetchNewRequests}
                         className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
@@ -460,7 +470,18 @@ const NewRequestsView = () => {
                     </table>
                 </div>
             </div>
+
+              <AnimatePresence>
+                {isAddModalOpen && (
+                    <AddNewActiveRequestModal
+                        onClose={() => setIsAddModalOpen(false)}
+                        onSuccess={fetchNewRequests}
+                    />
+                )}
+            </AnimatePresence>
+
         </div>
+        
     );
 };
 
