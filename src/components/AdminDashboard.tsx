@@ -1149,11 +1149,23 @@ const ActiveRequestChoicesCell: React.FC<{
         <div className="flex flex-col gap-3 min-w-[200px]">
             {visibleChoices.map((choice) => (
                 <div key={choice.id} className="flex flex-col space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100 group/choice hover:bg-white transition-all">
-                    <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                            <span className="font-bold text-slate-800 text-sm">{choice.babysitter_first_name} {choice.babysitter_last_name}</span>
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-slate-800 text-sm truncate">{choice.babysitter_first_name} {choice.babysitter_last_name}</span>
                             <span className="text-[10px] text-slate-400 truncate max-w-[150px]">{choice.babysitter_email}</span>
                         </div>
+                        {choice.zoom_meeting_link && (
+                            <a 
+                                href={choice.zoom_meeting_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 text-blue-500 bg-blue-50 rounded-lg hover:bg-blue-500 hover:text-white transition-colors shrink-0"
+                                title="Join Zoom Meeting"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <Video size={14} />
+                            </a>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-500">
                         <Phone size={10} />
@@ -1174,7 +1186,7 @@ const ActiveRequestChoicesCell: React.FC<{
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    const link = `${window.location.origin}/contract/${requestId}`;
+                                    const link = `${window.location.origin}/contract/${choice.id}`;
                                     navigator.clipboard.writeText(link);
                                     toast.success('Contract link copied!');
                                 }}
@@ -1393,9 +1405,9 @@ const ActiveRequestsView = () => {
                                         />
                                     </td>
                                     <td className="px-4 py-4 text-center">
-                                         <button 
+                                        <button 
                                             onClick={() => {
-                                                const link = `https://ponctuel.bloom-buddies.fr/babysitting-matching/${req.id}`;
+                                                const link = `${window.location.origin}/price/${req.id}`;
                                                 navigator.clipboard.writeText(link);
                                                 toast.success('Price Quote link copied!');
                                             }}
@@ -1411,20 +1423,6 @@ const ActiveRequestsView = () => {
                                     </td>
                                     <td className="px-4 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            {(() => {
-                                                const zoomChoice = req.choices?.find((c: any) => c.zoom_meeting_link);
-                                                return zoomChoice && (
-                                                    <a 
-                                                        href={zoomChoice.zoom_meeting_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100"
-                                                        title={`Zoom Meeting with ${zoomChoice.babysitter_first_name}`}
-                                                    >
-                                                        <Video size={18} />
-                                                    </a>
-                                                );
-                                            })()}
                                             <button 
                                                 onClick={() => handleEdit(req)}
                                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -2236,7 +2234,9 @@ const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, o
                 <td className="px-6 py-4 font-bold text-slate-800">{item.invoice_num}</td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-900">User #{item.user_id}</span>
+                    <span className="text-sm font-bold text-slate-900">
+                      {item.user ? `${item.user.first_name || ''} ${item.user.last_name || ''}`.trim() || `User #${item.user_id}` : `User #${item.user_id}`}
+                    </span>
                     <span className="text-[10px] text-slate-400">Request #{item.parent_request_id}</span>
                   </div>
                 </td>
@@ -2254,8 +2254,8 @@ const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, o
                   <button
                     onClick={async () => {
                       const { generateInvoicePdf } = await import('../utils/invoicePdfGenerator');
-                      const placeholderUser = { first_name: 'Customer', last_name: `(#${item.user_id})`, email: '-', user_address: '-' } as any;
-                      generateInvoicePdf(item, placeholderUser, 'fr', {} as any);
+                      const pdfUser = item.user || { first_name: 'Customer', last_name: `(#${item.user_id})`, email: '-', user_address: '-' } as any;
+                      generateInvoicePdf(item, pdfUser, 'fr', {} as any);
                     }}
                     className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold"
                   >

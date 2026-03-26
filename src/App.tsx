@@ -426,6 +426,7 @@ export default function App() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const initialPath = window.location.pathname;
       const token = api.getToken();
       if (token) {
         try {
@@ -433,8 +434,7 @@ export default function App() {
           if (response.status && response.data) {
             setIsLoggedIn(true);
             setUser(response.data);
-            const currentPath = window.location.pathname;
-            if (!currentPath.includes('/contract/') && !currentPath.includes('/price/') && !currentPath.includes('/cmg/')) {
+            if (!initialPath.includes('/contract/') && !initialPath.includes('/price/') && !initialPath.includes('/cmg/')) {
               setView('profile');
             }
             // Pre-fill form data if user is logged in
@@ -474,9 +474,7 @@ export default function App() {
           setIsRegistering(true);
           const data = await api.getSingleParentRequest(id);
           if (data) {
-            mapRequestToState(data);
-            // Clear the URL to prevent re-triggering this hook on re-renders/navigation
-            window.history.replaceState({}, '', '/');
+            mapRequestToState(data, 4);
           }
         } catch (error) {
           console.error('Failed to fetch parent request from URL:', error);
@@ -494,7 +492,6 @@ export default function App() {
         } else {
           setView('login');
         }
-        window.history.replaceState({}, '', '/');
       }
 
       const contractMatch = path.match(/\/contract\/(\d+)/);
@@ -516,7 +513,7 @@ export default function App() {
     }
   }, [currentStep, dateSchedule, selectedMonth]);
 
-  const mapRequestToState = (data: ParentRequest) => {
+  const mapRequestToState = (data: ParentRequest, targetStep?: number) => {
     setParentRequestId(data.id);
     if (data.hourly_rate) {
       setHourlyRate(parseFloat(data.hourly_rate));
@@ -605,7 +602,9 @@ export default function App() {
     const hasSchedules = data.schedules && data.schedules.length > 0;
     const hasChoices = data.choices && data.choices.length > 0;
 
-    if (hasSchedules || hasChoices) {
+    if (targetStep) {
+      setCurrentStep(targetStep);
+    } else if (hasSchedules || hasChoices) {
       setCurrentStep(4);
     } else {
       setCurrentStep(2);
@@ -1056,6 +1055,7 @@ export default function App() {
               first_name: formData.firstName,
               last_name: formData.lastName,
               email: formData.email,
+              user_phone: formData.telephone,
               parent_address: formData.address,
               children: formData.childDOBs.map(dob => ({ child_dob: dob })),
               schedules: [], // Schedules will be added in step 2
