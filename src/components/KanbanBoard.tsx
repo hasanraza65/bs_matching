@@ -1135,14 +1135,16 @@ const NewRequestModal = ({
 export const RequestDetailsModal = ({
   request,
   onClose,
-  onUpdate
+  onUpdate,
+  showOnlySitters = false
 }: {
   request: KanbanRequest;
   onClose: () => void;
   onUpdate: (updatedFields: Partial<KanbanRequest>) => void;
+  showOnlySitters?: boolean;
 }) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters'>(showOnlySitters ? 'sitters' : 'overview');
   const [formData, setFormData] = useState<KanbanRequest>({
     ...request,
     schedules: request.schedules || [],
@@ -1392,7 +1394,7 @@ export const RequestDetailsModal = ({
         )}
 
         {/* Modal Tabs */}
-        {!showSuccess && (
+        {!showSuccess && !showOnlySitters && (
           <div className="px-8 pt-4 flex items-center gap-8 border-b border-slate-100">
             {[
               { id: 'overview', label: 'Overview', icon: Info },

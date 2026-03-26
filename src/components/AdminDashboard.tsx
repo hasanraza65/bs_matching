@@ -1170,55 +1170,69 @@ const SitterChoicesModal: React.FC<{
 const ActiveRequestChoicesCell: React.FC<{ 
     choices: any[], 
     requestId: number, 
-    onShowMore: (choices: any[], reqId: number) => void 
-}> = ({ choices, requestId, onShowMore }) => {
+    onShowMore: (choices: any[], reqId: number) => void,
+    onRefresh?: () => void
+}> = ({ choices, requestId, onShowMore, onRefresh }) => {
     if (!choices || choices.length === 0) return <span className="text-slate-400 text-sm italic">No choices</span>;
 
     const visibleChoices = choices.slice(0, 2);
     const hasMore = choices.length > 2;
 
+    const handleSelectFinal = async (choiceId: number) => {
+        try {
+            const response = await api.selectFinalChoice(choiceId);
+            if (response.status) {
+                toast.success(response.message || 'Choice finalized successfully');
+                if (onRefresh) onRefresh();
+            } else {
+                toast.error(response.message || 'Failed to finalize choice');
+            }
+        } catch (error) {
+            toast.error('An error occurred while finalizing choice');
+        }
+    };
+    const hasAcceptedChoice = choices.some(c => Number(c.final_choice) === 1);
+
     return (
-        <div className="flex items-center gap-2 flex-wrap min-w-[150px]">
+        <div className="flex flex-col gap-3 min-w-[200px]">
             {visibleChoices.map((choice) => (
-                <div 
-                    key={choice.id} 
-                    className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-full hover:bg-white transition-all shadow-sm group/tag"
-                >
-                    <span className="text-[11px] font-bold text-slate-700 whitespace-nowrap">
-                        {choice.babysitter_first_name}
-                    </span>
-                    <div className="flex items-center gap-1 opacity-40 group-hover/tag:opacity-100 transition-opacity">
-                        <button 
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                const link = `https://ponctuel.bloom-buddies.fr/babysitting-matching/${requestId}`;
-                                navigator.clipboard.writeText(link);
-                                toast.success('Link copied!');
-                            }}
-                            className="p-0.5 hover:text-emerald-600 transition-colors"
-                            title="Copy Quote"
-                        >
-                            <LinkIcon size={10} />
-                        </button>
-                        {choice.zoom_meeting_link && (
-                            <a 
-                                href={choice.zoom_meeting_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="p-0.5 hover:text-blue-600 transition-colors"
-                                title="Zoom"
-                            >
-                                <Video size={10} />
-                            </a>
-                        )}
+                <div key={choice.id} className="flex flex-col space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100 group/choice hover:bg-white transition-all">
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <span className="font-bold text-slate-800 text-sm">{choice.babysitter_first_name} {choice.babysitter_last_name}</span>
+                            <span className="text-[10px] text-slate-400 truncate max-w-[150px]">{choice.babysitter_email}</span>
+                        </div>
                     </div>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                        <Phone size={10} />
+                        <span>{choice.babysitter_phone}</span>
+                    </div>
+                    {choice.interview_date && (
+                        <div className="flex items-center gap-2 text-[10px] text-blue-600 font-bold bg-blue-50/50 p-1.5 rounded-lg border border-blue-100/50">
+                            <Calendar size={10} />
+                            <span>Interview: {choice.interview_date} {choice.interview_time}</span>
+                        </div>
+                    )}
+                    {Number(choice.final_choice) === 1 ? (
+                        <div className="mt-1 w-full py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 cursor-default pointer-events-none">
+                            <CheckCircle2 size={12} />
+                            Accepted
+                        </div>
+                    ) : !hasAcceptedChoice ? (
+                        <button
+                            onClick={() => handleSelectFinal(choice.id)}
+                            className="mt-1 w-full py-1.5 bg-slate-900 text-white text-[10px] font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm flex items-center justify-center gap-1"
+                        >
+                            <CheckCircle2 size={12} />
+                            Make it Final Choice
+                        </button>
+                    ) : null}
                 </div>
             ))}
             {hasMore && (
                 <button 
                     onClick={() => onShowMore(choices, requestId)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-full text-[10px] font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+                    className="flex items-center justify-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 w-fit"
                 >
                     <Plus size={10} />
                     <span>{choices.length - 2} more</span>
@@ -1233,7 +1247,6 @@ const ActiveRequestsView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number } | null>(null);
 
     const fetchActiveRequests = async () => {
@@ -1341,13 +1354,6 @@ const ActiveRequestsView = () => {
                         />
                     </div>
                     <button 
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2"
-                    >
-                        <Plus size={18} />
-                        Add New Request
-                    </button>
-                    <button 
                         onClick={fetchActiveRequests}
                         className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
                         title="Refresh"
@@ -1363,9 +1369,9 @@ const ActiveRequestsView = () => {
                         <thead>
                             <tr className="bg-slate-50/50">
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Details</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Sitter Choices</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Price Quote</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Schedules</th>
                                 <th className="px-4 py-4 text-right">Actions</th>
@@ -1374,7 +1380,7 @@ const ActiveRequestsView = () => {
                         <tbody className="divide-y divide-slate-100">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading active requests...</span>
@@ -1384,7 +1390,7 @@ const ActiveRequestsView = () => {
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -1394,7 +1400,7 @@ const ActiveRequestsView = () => {
                             )}
                             {!isLoading && !error && requests.length === 0 && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No active requests found.
                                     </td>
                                 </tr>
@@ -1403,9 +1409,13 @@ const ActiveRequestsView = () => {
                                 <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="px-4 py-4 font-bold text-slate-900">#{req.id}</td>
                                     <td className="px-4 py-4">
-                                        <div className="flex flex-col max-w-[120px]">
-                                            <span className="font-bold text-slate-800 truncate">{req.user?.first_name} {req.user?.last_name}</span>
-                                            <span className="text-xs text-slate-400 truncate">{req.user?.email}</span>
+                                        <div className="flex flex-col min-w-[150px]">
+                                            <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
+                                            <span className="text-xs text-slate-400">{req.user?.email}</span>
+                                            <div className="flex items-start gap-1 mt-1 text-[10px] text-slate-500 max-w-[200px]">
+                                                <MapPin size={10} className="mt-0.5 shrink-0" />
+                                                <span className="leading-tight">{req.parent_address}</span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4">
@@ -1413,15 +1423,42 @@ const ActiveRequestsView = () => {
                                             choices={req.choices ?? []} 
                                             requestId={req.id} 
                                             onShowMore={(choices, reqId) => setViewingSitterChoices({ choices, reqId })}
+                                            onRefresh={fetchActiveRequests}
                                         />
                                     </td>
-                                    <td className="px-4 py-4 text-sm text-slate-600 max-w-[180px] truncate">{req.parent_address}</td>
+                                    <td className="px-4 py-4 text-center">
+                                         <button 
+                                            onClick={() => {
+                                                const link = `https://ponctuel.bloom-buddies.fr/babysitting-matching/${req.id}`;
+                                                navigator.clipboard.writeText(link);
+                                                toast.success('Price Quote link copied!');
+                                            }}
+                                            className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 shadow-sm mx-auto flex items-center justify-center"
+                                            title="Copy Price Quote"
+                                         >
+                                            <LinkIcon size={18} />
+                                         </button>
+                                    </td>
                                     <td className="px-4 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
                                     <td className="px-4 py-4">
                                         <ActiveRequestSchedulesCell schedules={req.schedules ?? []} />
                                     </td>
                                     <td className="px-4 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
+                                            {(() => {
+                                                const zoomChoice = req.choices?.find((c: any) => c.zoom_meeting_link);
+                                                return zoomChoice && (
+                                                    <a 
+                                                        href={zoomChoice.zoom_meeting_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100"
+                                                        title={`Zoom Meeting with ${zoomChoice.babysitter_first_name}`}
+                                                    >
+                                                        <Video size={18} />
+                                                    </a>
+                                                );
+                                            })()}
                                             <button 
                                                 onClick={() => handleEdit(req)}
                                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -1461,18 +1498,11 @@ const ActiveRequestsView = () => {
                         request={editingRequest}
                         onClose={() => setEditingRequest(null)}
                         onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                        showOnlySitters={true}
                     />
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>
-                {isAddModalOpen && (
-                    <AddNewActiveRequestModal
-                        onClose={() => setIsAddModalOpen(false)}
-                        onSuccess={fetchActiveRequests}
-                    />
-                )}
-            </AnimatePresence>
         </div>
     );
 };
