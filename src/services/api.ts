@@ -578,7 +578,7 @@ export const api = {
     return response.data;
   },
   
-  getAllInvoices: async (params?: { month?: number; year?: number }): Promise<{
+  getAllInvoices: async (params?: { month?: number; year?: number; user_id?: number }): Promise<{
     status: boolean;
     month: number;
     year: number;

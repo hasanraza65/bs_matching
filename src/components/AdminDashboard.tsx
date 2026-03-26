@@ -69,6 +69,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [viewingUserId, setViewingUserId] = useState<number | null>(null);
   const [viewingChoiceId, setViewingChoiceId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUserIdForInvoices, setSelectedUserIdForInvoices] = useState<number | null>(null);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -128,7 +129,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActivePage(item.id as AdminPage)}
+                  onClick={() => {
+                    setActivePage(item.id as AdminPage);
+                    if (item.id === 'invoices') setSelectedUserIdForInvoices(null);
+                  }}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${isActive
                     ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
                     : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
@@ -221,13 +225,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             >
               {activePage === 'dashboard' && <DashboardView />}
               {activePage === 'new-requests' && <NewRequestsView />}
-              {activePage === 'completed-requests' && <CompletedRequestsView />}
-              {activePage === 'ongoing-requests' && <OngoingRequestsView />}
+              {activePage === 'completed-requests' && <CompletedRequestsView onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
+              {activePage === 'ongoing-requests' && <OngoingRequestsView onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
               {activePage === 'requests' && <RequestsView />}
               {activePage === 'active-requests' && <ActiveRequestsView />}
               {activePage === 'signed-contracts' && <SignedContractsView />}
               {activePage === 'interviews' && <InterviewsView />}
-              {activePage === 'invoices' && <InvoicesView />}
+              {activePage === 'invoices' && <InvoicesView userId={selectedUserIdForInvoices} onClearUserFilter={() => setSelectedUserIdForInvoices(null)} />}
               {activePage === 'attestations' && <AttestationsView />}
               {viewingChoiceId ? (
 
@@ -460,7 +464,8 @@ const NewRequestsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Price Quote</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -505,19 +510,22 @@ const NewRequestsView = () => {
                                     <td className="px-6 py-4 text-sm text-slate-500">
                                         {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                     </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <button 
+                                            onClick={() => {
+                                                const link = `${window.location.origin}/price/${req.id}`;
+                                                navigator.clipboard.writeText(link);
+                                                toast.success('Price Quote link copied!');
+                                            }}
+                                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 mx-auto bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs shadow-sm shadow-emerald-200/50"
+                                            title="Copy Price Quote Link"
+                                        >
+                                            <LinkIcon size={14} />
+                                            <span>Copy Link</span>
+                                        </button>
+                                    </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button 
-                                                onClick={() => {
-                                                    const link = `${window.location.origin}/price/${req.id}`;
-                                                    navigator.clipboard.writeText(link);
-                                                    toast.success('Price Quote link copied!');
-                                                }}
-                                                className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                                title="Copy Price Quote"
-                                            >
-                                                <LinkIcon size={18} />
-                                            </button>
                                             <button 
                                                 onClick={() => handleEdit(req)}
                                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -565,7 +573,7 @@ const NewRequestsView = () => {
     );
 };
 
-const OngoingRequestsView = () => {
+const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: number) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -760,40 +768,12 @@ const OngoingRequestsView = () => {
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
-                                                    onClick={() => {
-                                                        const link = `https://ponctuel.bloom-buddies.fr/price/${req.id}`;
-                                                        navigator.clipboard.writeText(link);
-                                                        toast.success('Price Quote link copied!');
-                                                    }}
-                                                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                                    title="Copy Price Quote Link"
+                                                    onClick={() => onViewInvoices?.(req.user_id)}
+                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs shadow-sm shadow-slate-200"
+                                                    title="View Invoices"
                                                 >
-                                                    <LinkIcon size={18} />
-                                                </button>
-                                                {hiredSitter?.zoom_meeting_link && (
-                                                    <a 
-                                                        href={hiredSitter.zoom_meeting_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                        title="Join Zoom Meeting"
-                                                    >
-                                                        <Video size={18} />
-                                                    </a>
-                                                )}
-                                                <button 
-                                                    onClick={() => handleEdit(req)}
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="Edit"
-                                                >
-                                                    <Edit2 size={18} />
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDelete(req.id)}
-                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 size={18} />
+                                                    <Receipt size={14} />
+                                                    <span>View Invoices</span>
                                                 </button>
                                             </div>
                                         </td>
@@ -818,7 +798,7 @@ const OngoingRequestsView = () => {
     );
 };
 
-const CompletedRequestsView = () => {
+const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: number) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -1013,40 +993,12 @@ const CompletedRequestsView = () => {
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
-                                                    onClick={() => {
-                                                        const link = `https://ponctuel.bloom-buddies.fr/price/${req.id}`;
-                                                        navigator.clipboard.writeText(link);
-                                                        toast.success('Price Quote link copied!');
-                                                    }}
-                                                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                                    title="Copy Price Quote Link"
+                                                    onClick={() => onViewInvoices?.(req.user_id)}
+                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs shadow-sm shadow-slate-200"
+                                                    title="View Invoices"
                                                 >
-                                                    <LinkIcon size={18} />
-                                                </button>
-                                                {hiredSitter?.zoom_meeting_link && (
-                                                    <a 
-                                                        href={hiredSitter.zoom_meeting_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                        title="Join Zoom Meeting"
-                                                    >
-                                                        <Video size={18} />
-                                                    </a>
-                                                )}
-                                                <button 
-                                                    onClick={() => handleEdit(req)}
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="Edit"
-                                                >
-                                                    <Edit2 size={18} />
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDelete(req.id)}
-                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 size={18} />
+                                                    <Receipt size={14} />
+                                                    <span>View Invoices</span>
                                                 </button>
                                             </div>
                                         </td>
@@ -1214,9 +1166,23 @@ const ActiveRequestChoicesCell: React.FC<{
                         </div>
                     )}
                     {Number(choice.final_choice) === 1 ? (
-                        <div className="mt-1 w-full py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 cursor-default pointer-events-none">
-                            <CheckCircle2 size={12} />
-                            Accepted
+                        <div className="mt-1 flex items-center gap-1 w-full">
+                            <div className="flex-1 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 cursor-default pointer-events-none">
+                                <CheckCircle2 size={12} />
+                                Accepted
+                            </div>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const link = `${window.location.origin}/contract/${requestId}`;
+                                    navigator.clipboard.writeText(link);
+                                    toast.success('Contract link copied!');
+                                }}
+                                className="p-1.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex items-center justify-center shrink-0"
+                                title="Copy Contract Link"
+                            >
+                                <LinkIcon size={14} />
+                            </button>
                         </div>
                     ) : !hasAcceptedChoice ? (
                         <button
@@ -2139,7 +2105,7 @@ const InterviewsView = () => {
   );
 };
 
-const InvoicesView = () => {
+const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, onClearUserFilter?: () => void }) => {
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
@@ -2156,7 +2122,8 @@ const InvoicesView = () => {
         const { api } = await import('../services/api');
         const result = await api.getAllInvoices({
           month: selectedMonth,
-          year: selectedYear
+          year: selectedYear,
+          user_id: userId || undefined
         });
 
         if (!cancelled) {
@@ -2172,7 +2139,7 @@ const InvoicesView = () => {
     };
     fetchInvoices();
     return () => { cancelled = true; };
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, userId]);
 
   const formatBillingMonth = (dateStr: string) => {
     try {
@@ -2211,6 +2178,15 @@ const InvoicesView = () => {
             </option>
           ))}
         </select>
+
+        {userId && (
+          <button
+            onClick={onClearUserFilter}
+            className="ml-auto flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 transition-colors"
+          >
+            Show All Invoices
+          </button>
+        )}
 
       </div>
 
