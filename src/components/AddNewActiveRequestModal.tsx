@@ -7,14 +7,16 @@ import {
   Clock,
   Trash2,
   X,
+  CheckCircle2,
   Calendar,
   User,
   MapPin,
   Mail,
   Phone,
+  Link as LinkIcon
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../services/api';
 
 interface AddNewActiveRequestModalProps {
@@ -48,6 +50,7 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
     first_name: '',
     last_name: '',
     email: '',
+    user_phone: '',
     parent_address: '',
     hourly_rate: '28.50',
     lat: undefined as number | undefined,
@@ -58,24 +61,13 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
         schedule_date: '',
         slots: [{ start_time: '', end_time: '' }]
       }
-    ],
-    choices: [
-      {
-        babysitter_first_name: '',
-        babysitter_last_name: '',
-        babysitter_email: '',
-        babysitter_phone: '',
-        babysitter_address: '',
-        interview_date: '',
-        interview_time: '12:00',
-        choice_order: 1
-      }
     ]
   });
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdRequestId, setCreatedRequestId] = useState<number | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const parentAddressRef = useRef<HTMLInputElement>(null);
-  const babysitterAddressRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Google Places Autocomplete for Parent Address
   useEffect(() => {
@@ -107,32 +99,6 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
     };
   }, [window.google]);
 
-  // Google Places Autocomplete for Babysitter Addresses
-  useEffect(() => {
-    if (!window.google) return;
-
-    const autocompletes = babysitterAddressRefs.current.map((ref, idx) => {
-      if (!ref) return null;
-      const ac = new window.google.maps.places.Autocomplete(ref, {
-        types: ['address'],
-        fields: ['formatted_address', 'geometry']
-      });
-      ac.addListener('place_changed', () => {
-        const place = ac.getPlace();
-        if (place.geometry?.location) {
-          const address = place.formatted_address || '';
-          handleSitterChange(idx, 'babysitter_address', address);
-        }
-      });
-      return ac;
-    });
-
-    return () => {
-      autocompletes.forEach(ac => {
-        if (ac) window.google.maps.event.clearInstanceListeners(ac);
-      });
-    };
-  }, [formData.choices.length, window.google]);
 
   const handleChange = useCallback((field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -229,75 +195,62 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
     });
   }, []);
 
-  const handleAddSitter = useCallback(() => {
-    setFormData(prev => ({
-      ...prev,
-      choices: [
-        ...prev.choices,
-        {
-          babysitter_first_name: '',
-          babysitter_last_name: '',
-          babysitter_email: '',
-          babysitter_phone: '',
-          babysitter_address: '',
-          interview_date: '',
-          interview_time: '12:00',
-          choice_order: prev.choices.length + 1
-        }
-      ]
-    }));
-  }, []);
-
-  const handleRemoveSitter = useCallback((index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      choices: prev.choices.filter((_, i) => i !== index).map((c, i) => ({ ...c, choice_order: i + 1 }))
-    }));
-  }, []);
-
-  const handleSitterChange = useCallback((index: number, field: string, value: any) => {
-    setFormData(prev => {
-      const newChoices = [...prev.choices];
-      if (newChoices[index]) {
-        newChoices[index] = { ...newChoices[index], [field]: value };
-      }
-      return { ...prev, choices: newChoices };
-    });
-  }, []);
 
   const handleSubmit = async () => {
-    if (!formData.first_name || !formData.last_name || !formData.email || !formData.parent_address) {
-      toast.error('Please fill in all required parent details');
+    // Validation
+    const errors: string[] = [];
+    if (!formData.first_name) errors.push('First Name');
+    if (!formData.last_name) errors.push('Last Name');
+    if (!formData.email) errors.push('Email');
+    if (!formData.user_phone) errors.push('Phone Number');
+    if (!formData.parent_address) errors.push('Address');
+    if (!formData.hourly_rate) errors.push('Hourly Rate');
+
+    if (errors.length > 0) {
+      toast.error(`Please fill in required details: ${errors.join(', ')}`);
       return;
+    }
+
+    if (formData.children.length === 0) {
+        toast.error('Please add at least one child');
+        return;
+    }
+    if (formData.children.some(c => !c.child_dob)) {
+        toast.error('Please fill in Date of Birth for all children');
+        return;
+    }
+
+    if (formData.schedules.length === 0) {
+        toast.error('Please add at least one schedule date');
+        return;
+    }
+    if (formData.schedules.some(s => !s.schedule_date || s.slots.some(slot => !slot.start_time || !slot.end_time))) {
+        toast.error('Please fill in all schedule dates and time slots');
+        return;
     }
 
     setIsSubmitting(true);
     try {
-      // Create Parent Request with Choices
       const response = await api.createParentRequest({
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
+        user_phone: formData.user_phone,
         parent_address: formData.parent_address,
         children: formData.children,
         schedules: formData.schedules,
         hourly_rate: formData.hourly_rate,
-        board_status: 'In Matching', // Default status for Active Requests
+        board_status: 'In Matching',
         from_admin: true,
         lat: formData.lat,
         lng: formData.lng,
-        choices: formData.choices.filter(c => 
-          c.babysitter_first_name || 
-          c.babysitter_last_name || 
-          c.babysitter_email || 
-          c.babysitter_address
-        )
+        choices: [] // Manual selection removed
       });
 
       if (response.status) {
-        toast.success('Request and Babysitters added successfully');
+        setCreatedRequestId(response.data?.id || null);
         onSuccess();
-        onClose();
+        setShowSuccess(true);
       } else {
         toast.error(response.message || 'Failed to create request');
       }
@@ -325,14 +278,23 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         className="relative w-full max-w-4xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
-        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <AnimatePresence mode="wait">
+          {!showSuccess ? (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              className="flex flex-col h-full overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white">
               <Plus size={24} />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">Add New Active Request</h2>
-              <p className="text-xs text-slate-400 font-medium">Create a request with manual babysitter selection</p>
+              <p className="text-xs text-slate-400 font-medium">Create a request with automated matching</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-all text-slate-400 hover:text-slate-900">
@@ -375,6 +337,17 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phone Number</label>
+                <PhoneInput
+                    country={'de'}
+                    value={formData.user_phone}
+                    onChange={(phone) => handleChange('user_phone', phone)}
+                    containerClass="!w-full"
+                    inputClass="!w-full !h-[46px] !bg-slate-50 !border-slate-100 !rounded-xl focus:!bg-white focus:!ring-2 focus:!ring-slate-900/10 focus:!border-slate-900 !outline-none !transition-all !text-sm !font-medium"
+                    buttonClass="!bg-slate-50 !border-slate-100 !rounded-l-xl"
                 />
               </div>
               <div className="space-y-1.5 lg:col-span-2">
@@ -526,119 +499,6 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
             </section>
           </div>
 
-          {/* Babysitters Section */}
-          <section className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Baby size={14} /> Babysitter Selection
-              </h3>
-              <button
-                onClick={handleAddSitter}
-                className="px-4 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-sm"
-              >
-                + Add Sitter
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {formData.choices.map((sitter, idx) => (
-                <div key={idx} className="p-6 bg-slate-50 border border-slate-100 rounded-[24px] space-y-4 relative group shadow-sm hover:shadow-md transition-all">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-xs font-bold text-slate-900 shadow-sm">
-                        #{idx + 1}
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-900">Babysitter Profile</h4>
-                    </div>
-                    {formData.choices.length > 1 && (
-                      <button
-                        onClick={() => handleRemoveSitter(idx)}
-                        className="p-1.5 text-slate-300 hover:text-red-500 transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase ml-1">First Name</label>
-                      <input
-                        type="text"
-                        value={sitter.babysitter_first_name}
-                        onChange={(e) => handleSitterChange(idx, 'babysitter_first_name', e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-xs font-medium"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase ml-1">Last Name</label>
-                      <input
-                        type="text"
-                        value={sitter.babysitter_last_name}
-                        onChange={(e) => handleSitterChange(idx, 'babysitter_last_name', e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-xs font-medium"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <Mail size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        value={sitter.babysitter_email}
-                        onChange={(e) => handleSitterChange(idx, 'babysitter_email', e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-xs font-medium"
-                      />
-                    </div>
-                    <div className="relative">
-                      <Phone size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        type="tel"
-                        placeholder="Phone Number"
-                        value={sitter.babysitter_phone}
-                        onChange={(e) => handleSitterChange(idx, 'babysitter_phone', e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-xs font-medium"
-                      />
-                    </div>
-                    <div className="relative">
-                      <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        ref={el => babysitterAddressRefs.current[idx] = el}
-                        type="text"
-                        placeholder="Babysitter Address"
-                        value={sitter.babysitter_address}
-                        onChange={(e) => handleSitterChange(idx, 'babysitter_address', e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-xs font-medium"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-4">
-                    <div className="flex-1 space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase ml-1">Interview Date</label>
-                      <input
-                        type="date"
-                        value={sitter.interview_date}
-                        onChange={(e) => handleSitterChange(idx, 'interview_date', e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-xs font-medium"
-                      />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase ml-1">Time</label>
-                      <input
-                        type="time"
-                        value={sitter.interview_time}
-                        onChange={(e) => handleSitterChange(idx, 'interview_time', e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-xs font-medium"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
         </div>
 
         <div className="p-8 border-t border-slate-100 bg-white flex items-center justify-between">
@@ -667,6 +527,48 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
             </button>
           </div>
         </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center p-16 text-center space-y-8"
+            >
+              <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-[32px] flex items-center justify-center shadow-inner animate-in zoom-in duration-500">
+                <CheckCircle2 size={48} />
+              </div>
+              <div className="space-y-3">
+                <h2 className="text-3xl font-black text-slate-900">Success!</h2>
+                <p className="text-slate-600 font-bold text-lg">Price quote sent successfully</p>
+              </div>
+              <p className="text-slate-400 max-w-xs leading-relaxed font-medium">
+                The request has been created and our automated matching system will now find the perfect babysitter.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
+                <button
+                  onClick={() => {
+                    if (createdRequestId) {
+                      const link = `https://ponctuel.bloom-buddies.fr/price/${createdRequestId}`;
+                      navigator.clipboard.writeText(link);
+                      toast.success('Price Quote link copied!');
+                    }
+                  }}
+                  className="w-full sm:w-auto px-8 py-4 bg-emerald-50 text-emerald-600 text-sm font-black rounded-2xl hover:bg-emerald-100 transition-all border border-emerald-100 flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <LinkIcon size={18} />
+                  Copy Price Quote
+                </button>
+                <button
+                  onClick={onClose}
+                  className="w-full sm:w-auto px-12 py-4 bg-slate-900 text-white text-sm font-black rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

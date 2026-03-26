@@ -310,6 +310,7 @@ export const api = {
     data: {
       first_name: string;
       last_name: string;
+      user_phone?: string;
       parent_address: string;
       children: { id?: number; child_dob: string }[];
       choices?: BabysitterChoicePayload[];
@@ -342,6 +343,7 @@ export const api = {
     first_name: string;
     last_name: string;
     email: string;
+    user_phone: string;
     parent_address: string;
     children: { child_dob: string }[];
     schedules: any[];

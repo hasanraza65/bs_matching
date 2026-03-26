@@ -335,6 +335,63 @@ const NewRequestsView = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     const fetchNewRequests = async () => {
         setIsLoading(true);
@@ -402,7 +459,6 @@ const NewRequestsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -446,21 +502,35 @@ const NewRequestsView = () => {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{req.parent_address || 'No address provided'}</td>
                                     <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.board_status === 'New Leads' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
-                                            {req.board_status}
-                                        </span>
-                                    </td>
                                     <td className="px-6 py-4 text-sm text-slate-500">
                                         {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button 
-                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                title="View Details"
+                                                onClick={() => {
+                                                    const link = `${window.location.origin}/price/${req.id}`;
+                                                    navigator.clipboard.writeText(link);
+                                                    toast.success('Price Quote link copied!');
+                                                }}
+                                                className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                                title="Copy Price Quote"
                                             >
-                                                <Eye size={18} />
+                                                <LinkIcon size={18} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleEdit(req)}
+                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                title="Edit"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(req.id)}
+                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={18} />
                                             </button>
                                         </div>
                                     </td>
@@ -480,6 +550,16 @@ const NewRequestsView = () => {
                 )}
             </AnimatePresence>
 
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
+
         </div>
         
     );
@@ -490,6 +570,63 @@ const OngoingRequestsView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     const fetchOngoingRequests = async () => {
         setIsLoading(true);
@@ -551,7 +688,6 @@ const OngoingRequestsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Sitter</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -618,11 +754,6 @@ const OngoingRequestsView = () => {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-blue-50 text-blue-600">
-                                                Ongoing
-                                            </span>
-                                        </td>
                                         <td className="px-6 py-4 text-sm text-slate-500">
                                             {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                         </td>
@@ -651,10 +782,18 @@ const OngoingRequestsView = () => {
                                                     </a>
                                                 )}
                                                 <button 
+                                                    onClick={() => handleEdit(req)}
                                                     className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="View Details"
+                                                    title="Edit"
                                                 >
-                                                    <Eye size={18} />
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(req.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
                                                 </button>
                                             </div>
                                         </td>
@@ -665,6 +804,16 @@ const OngoingRequestsView = () => {
                     </table>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -674,6 +823,63 @@ const CompletedRequestsView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     const fetchCompletedRequests = async () => {
         setIsLoading(true);
@@ -735,7 +941,6 @@ const CompletedRequestsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Sitter</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Completed At</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -802,11 +1007,6 @@ const CompletedRequestsView = () => {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-emerald-50 text-emerald-600">
-                                                Completed
-                                            </span>
-                                        </td>
                                         <td className="px-6 py-4 text-sm text-slate-500">
                                             {req.updated_at ? new Date(req.updated_at).toLocaleDateString() : '-'}
                                         </td>
@@ -835,10 +1035,18 @@ const CompletedRequestsView = () => {
                                                     </a>
                                                 )}
                                                 <button 
+                                                    onClick={() => handleEdit(req)}
                                                     className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="View Details"
+                                                    title="Edit"
                                                 >
-                                                    <Eye size={18} />
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(req.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
                                                 </button>
                                             </div>
                                         </td>
@@ -849,6 +1057,16 @@ const CompletedRequestsView = () => {
                     </table>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -1149,7 +1367,6 @@ const ActiveRequestsView = () => {
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Sitter Choices</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Schedules</th>
                                 <th className="px-4 py-4 text-right">Actions</th>
                             </tr>
@@ -1200,11 +1417,6 @@ const ActiveRequestsView = () => {
                                     </td>
                                     <td className="px-4 py-4 text-sm text-slate-600 max-w-[180px] truncate">{req.parent_address}</td>
                                     <td className="px-4 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                    <td className="px-4 py-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.board_status === 'In Matching' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
-                                            {req.board_status}
-                                        </span>
-                                    </td>
                                     <td className="px-4 py-4">
                                         <ActiveRequestSchedulesCell schedules={req.schedules ?? []} />
                                     </td>
@@ -1270,6 +1482,63 @@ const SignedContractsView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
+
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
 
     const fetchSignedContracts = async () => {
         setIsLoading(true);
@@ -1323,7 +1592,6 @@ const SignedContractsView = () => {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Babysitter</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Accepted At</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -1377,21 +1645,26 @@ const SignedContractsView = () => {
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${req.contract?.status === 1 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                                                {req.contract?.status === 1 ? (req.contract?.response_date || 'Signed') : 'Pending'}
-                                            </span>
-                                        </td>
                                         <td className="px-6 py-4 text-sm text-slate-500">
                                             {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button 
-                                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                                                title="View Details"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button 
+                                                    onClick={() => handleEdit(req)}
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                    title="Edit"
+                                                >
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(req.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -1400,184 +1673,269 @@ const SignedContractsView = () => {
                     </table>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 const RequestsView = () => {
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
-  const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+    const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
     const fetchRequests = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const { api } = await import('../services/api');
-        const result = await api.getParentRequests();
-        if (!cancelled) {
-          setRequests(result.data);
+        setIsLoading(true);
+        setError(null);
+        try {
+            const { api } = await import('../services/api');
+            const result = await api.getParentRequests();
+            setRequests(result.data);
+        } catch {
+            setError('Failed to load requests. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
-      } catch {
-        if (!cancelled) {
-          setError('Failed to load requests. Please try again.');
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
     };
-    fetchRequests();
-    return () => { cancelled = true; };
-  }, []);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              type="text"
-              placeholder="Filter requests..."
-              className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
-            />
-          </div>
-          <button className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
-            <Filter size={18} />
-          </button>
-        </div>
+    useEffect(() => {
+        fetchRequests();
+    }, []);
 
-        <div className="flex items-center gap-4">
-          {/* View Toggle */}
-          <div className="bg-white p-1 rounded-xl border border-slate-200 flex items-center shadow-sm">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'table' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-                }`}
-            >
-              <TableIcon size={14} />
-              Table View
-            </button>
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-                }`}
-            >
-              <LayoutGrid size={14} />
-              Kanban View
-            </button>
-          </div>
+    const handleEdit = (req: import('../services/api').ParentRequest) => {
+        setEditingRequest(transformToKanbanRequest(req));
+    };
 
-          <button className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
-            Export CSV
-          </button>
-        </div>
-      </div>
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this request?')) {
+            try {
+                const response = await api.removeParentRequest(id);
+                if (response.status) {
+                    toast.success('Request deleted successfully');
+                    setRequests(requests.filter(r => r.id !== id));
+                } else {
+                    toast.error(response.message || 'Failed to delete request');
+                }
+            } catch (err) {
+                toast.error('An error occurred while deleting');
+            }
+        }
+    };
 
-      <AnimatePresence mode="wait">
-        {viewMode === 'table' ? (
-          <motion.div
-            key="table"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-slate-50/50">
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Family Name</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Children</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Dates</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-right"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {isLoading && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center">
-                        <div className="flex items-center justify-center gap-3 text-slate-400">
-                          <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                          </svg>
-                          <span className="text-sm font-medium">Loading requests…</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  {!isLoading && error && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center">
-                        <div className="flex items-center justify-center gap-2 text-red-500">
-                          <AlertCircle size={18} />
-                          <span className="text-sm font-medium">{error}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  {!isLoading && !error && requests.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
-                        No requests found.
-                      </td>
-                    </tr>
-                  )}
-                  {!isLoading && !error && requests.map((req) => (
-                    <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-slate-800">
-                        {req.user.first_name} {req.user.last_name}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {req.children.length}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        <ScheduleDatesCell schedules={req.schedules ?? []} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500">
-                          {req.board_status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
-                          <MoreVertical size={18} />
+    const handleUpdate = async (reqId: number, updatedFields: Partial<KanbanRequest>) => {
+        try {
+            const response = await api.updateParentRequest(reqId, {
+                first_name: updatedFields.user?.first_name || '',
+                last_name: updatedFields.user?.last_name || '',
+                parent_address: updatedFields.parent_address || '',
+                email: updatedFields.email || '',
+                children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
+                choices: (updatedFields.choices || []).map((c: any) => ({
+                    choice_order: c.choice_order,
+                    bb_bs_id: c.user_id,
+                    babysitter_first_name: c.babysitter_first_name,
+                    babysitter_last_name: c.babysitter_last_name,
+                    interview_date: c.interview_date,
+                    interview_time: c.interview_time
+                })),
+                schedules: (updatedFields.schedules || []).map((s: any) => ({
+                    schedule_date: s.schedule_date,
+                    slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
+                })),
+                hourly_rate: updatedFields.hourly_rate,
+                _method: 'put'
+            } as any);
+
+            if (response.status && response.data) {
+                toast.success('Request updated successfully');
+                setRequests(prev => prev.map(r => r.id === reqId ? response.data! : r));
+                setEditingRequest(null);
+            } else {
+                toast.error(response.message || 'Update failed');
+            }
+        } catch (error) {
+            toast.error('Failed to update request');
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Filter requests..."
+                            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                        />
+                    </div>
+                    <button className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
+                        <Filter size={18} />
+                    </button>
+                    <button 
+                        onClick={fetchRequests}
+                        className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                        title="Refresh"
+                    >
+                        <History size={18} />
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    {/* View Toggle */}
+                    <div className="bg-white p-1 rounded-xl border border-slate-200 flex items-center shadow-sm">
+                        <button
+                            onClick={() => setViewMode('table')}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'table' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            <TableIcon size={14} />
+                            Table View
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <button
+                            onClick={() => setViewMode('kanban')}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            <LayoutGrid size={14} />
+                            Kanban View
+                        </button>
+                    </div>
+
+                    <button className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                        Export CSV
+                    </button>
+                </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-xs text-slate-400 font-medium">
-                {isLoading ? 'Loading…' : `Showing ${requests.length} ${requests.length === 1 ? 'entry' : 'entries'}`}
-              </p>
-              <div className="flex items-center gap-2">
-                <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
-                <button className="p-2 border border-slate-200 rounded-lg text-slate-900 hover:bg-slate-50">Next</button>
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="kanban"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            <KanbanBoard initialRequests={requests} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+            <AnimatePresence mode="wait">
+                {viewMode === 'table' ? (
+                    <motion.div
+                        key="table"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+                    >
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="bg-slate-50/50">
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Family Name</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Children</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Dates</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {isLoading && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-12 text-center">
+                                                <div className="flex items-center justify-center gap-3 text-slate-400">
+                                                    <Loader2 className="animate-spin w-5 h-5" />
+                                                    <span className="text-sm font-medium">Loading requests…</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {!isLoading && error && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-12 text-center">
+                                                <div className="flex items-center justify-center gap-2 text-red-500">
+                                                    <AlertCircle size={18} />
+                                                    <span className="text-sm font-medium">{error}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {!isLoading && !error && requests.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                                No requests found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {!isLoading && !error && requests.map((req) => (
+                                        <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
+                                            <td className="px-6 py-4 font-bold text-slate-800">
+                                                {req.user?.first_name} {req.user?.last_name}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600">
+                                                {req.children?.length}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600">
+                                                <ScheduleDatesCell schedules={req.schedules ?? []} />
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => handleEdit(req)}
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit2 size={18} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDelete(req.id)}
+                                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="p-6 border-t border-slate-100 flex items-center justify-between">
+                            <p className="text-xs text-slate-400 font-medium">
+                                {isLoading ? 'Loading…' : `Showing ${requests.length} ${requests.length === 1 ? 'entry' : 'entries'}`}
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
+                                <button className="p-2 border border-slate-200 rounded-lg text-slate-900 hover:bg-slate-50">Next</button>
+                            </div>
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="kanban"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        <KanbanBoard initialRequests={requests} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {editingRequest && (
+                    <RequestDetailsModal
+                        request={editingRequest}
+                        onClose={() => setEditingRequest(null)}
+                        onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+            </AnimatePresence>
+        </div>
+    );
 };
 
 // --- Helper: Schedule Dates Cell ---
