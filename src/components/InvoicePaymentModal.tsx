@@ -67,7 +67,7 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
       const amount = Math.round(parseFloat(invoice.amount));
 
       // 1. Create Payment Intent
-      const intentResponse = await api.createPaymentIntent(amount);
+      const intentResponse = await api.createPaymentIntent(amount, invoice.user_id);
       const clientSecret = intentResponse.client_secret || intentResponse.clientSecret;
 
       if (!clientSecret) {
@@ -119,7 +119,7 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
       const amount = Math.round(parseFloat(invoice.amount));
       
       // 1. Create Payment Intent
-      const intentResponse = await api.createPaymentIntent(amount);
+      const intentResponse = await api.createPaymentIntent(amount, invoice.user_id);
       const clientSecret = intentResponse.client_secret || intentResponse.clientSecret;
       
       if (!clientSecret) {

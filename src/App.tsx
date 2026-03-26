@@ -474,7 +474,7 @@ export default function App() {
           setIsRegistering(true);
           const data = await api.getSingleParentRequest(id);
           if (data) {
-            mapRequestToState(data, 4);
+            mapRequestToState(data, 3);
           }
         } catch (error) {
           console.error('Failed to fetch parent request from URL:', error);

@@ -134,7 +134,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
             const amount = Math.round(getFirstMonthAmount());
 
             // 1. Create Payment Intent
-            const intentResponse = await api.createPaymentIntent(amount);
+            const intentResponse = await api.createPaymentIntent(amount, contractData?.user?.id);
 
             const clientSecret = intentResponse.client_secret || intentResponse.clientSecret;
 

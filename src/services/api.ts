@@ -540,8 +540,10 @@ export const api = {
     return response.data;
   },
 
-  createPaymentIntent: async (amount: number): Promise<any> => {
-    const response = await apiClient.post("/create-payment-intent", { amount });
+  createPaymentIntent: async (amount: number, user_id?: number): Promise<any> => {
+    const payload: any = { amount };
+    if (user_id) payload.user_id = user_id;
+    const response = await apiClient.post("/create-payment-intent", payload);
     return response.data;
   },
 
