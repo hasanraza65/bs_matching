@@ -225,15 +225,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               transition={{ duration: 0.2 }}
             >
               {activePage === 'dashboard' && <DashboardView />}
-              {activePage === 'new-requests' && <NewRequestsView />}
-              {activePage === 'completed-requests' && <CompletedRequestsView onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
-              {activePage === 'ongoing-requests' && <OngoingRequestsView onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
-              {activePage === 'requests' && <RequestsView />}
-              {activePage === 'active-requests' && <ActiveRequestsView />}
-              {activePage === 'signed-contracts' && <SignedContractsView onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
-              {activePage === 'interviews' && <InterviewsView />}
-              {activePage === 'invoices' && <InvoicesView userId={selectedUserIdForInvoices} onClearUserFilter={() => setSelectedUserIdForInvoices(null)} />}
-              {activePage === 'attestations' && <AttestationsView />}
+              {activePage === 'new-requests' && <NewRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+              {activePage === 'completed-requests' && <CompletedRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
+              {activePage === 'ongoing-requests' && <OngoingRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
+               {activePage === 'requests' && <RequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+               {activePage === 'active-requests' && <ActiveRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+               {activePage === 'signed-contracts' && <SignedContractsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
+               {activePage === 'interviews' && <InterviewsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+               {activePage === 'invoices' && <InvoicesView searchQuery={searchQuery} onSearchChange={setSearchQuery} userId={selectedUserIdForInvoices} onClearUserFilter={() => setSelectedUserIdForInvoices(null)} />}
+               {activePage === 'attestations' && <AttestationsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
               {viewingChoiceId ? (
 
                 <ContractDetailView 
@@ -241,18 +241,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   onBack={() => setViewingChoiceId(null)} 
                 />
               ) : activePage === 'contracts' ? (
-                <ContractsView onViewContract={(id) => setViewingChoiceId(id)} />
-              ) : null}
-              {activePage === 'users' && (
-                viewingUserId ? (
-                  <UserDetailsView 
-                    id={viewingUserId} 
-                    onBack={() => setViewingUserId(null)} 
-                  />
-                ) : (
-                  <UsersView onViewUser={(id) => setViewingUserId(id)} />
-                )
-              )}
+                 <ContractsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewContract={(id) => setViewingChoiceId(id)} />
+               ) : null}
+               {activePage === 'users' && (
+                 viewingUserId ? (
+                   <UserDetailsView 
+                     id={viewingUserId} 
+                     onBack={() => setViewingUserId(null)} 
+                   />
+                 ) : (
+                   <UsersView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewUser={(id) => setViewingUserId(id)} />
+                 )
+               )}
             </motion.div>
           </AnimatePresence>
         </main>
@@ -334,11 +334,10 @@ const DashboardView = () => {
   );
 };
 
-const NewRequestsView = () => {
+const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -385,6 +384,7 @@ const NewRequestsView = () => {
                     slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
                 })),
                 hourly_rate: updatedFields.hourly_rate,
+                user_language: updatedFields.user?.user_language,
                 _method: 'put'
             } as any);
 
@@ -443,7 +443,7 @@ const NewRequestsView = () => {
                             placeholder="Filter new requests..."
                             value={searchQuery}
                             onChange={(e) => {
-                                setSearchQuery(e.target.value);
+                                onSearchChange(e.target.value);
                                 setCurrentPage(1);
                             }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -471,17 +471,18 @@ const NewRequestsView = () => {
                 <div className="overflow-x-auto min-h-[500px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Address</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Created At</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Address</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[11%]">Created At</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center w-[12%]">Price Quote</th>
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[9%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200 text-slate-700">
                             {isLoading && (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
@@ -517,6 +518,11 @@ const NewRequestsView = () => {
                                             <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                             <span className="text-xs text-slate-400">{req.user?.email}</span>
                                         </div>
+                                    </td>
+                                    <td className="px-6 py-4 align-top">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${req.user?.user_language === 'fr' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
+                                            {req.user?.user_language || 'en'}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate align-top">{req.parent_address || 'No address provided'}</td>
                                     <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
@@ -593,11 +599,10 @@ const NewRequestsView = () => {
     );
 };
 
-const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: number) => void }) => {
+const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { onViewInvoices?: (userId: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -643,6 +648,7 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                     slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
                 })),
                 hourly_rate: updatedFields.hourly_rate,
+                user_language: updatedFields.user?.user_language,
                 _method: 'put'
             } as any);
 
@@ -704,7 +710,7 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                             placeholder="Search ongoing requests..."
                             value={searchQuery}
                             onChange={(e) => {
-                                setSearchQuery(e.target.value);
+                                onSearchChange(e.target.value);
                                 setCurrentPage(1);
                             }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -723,16 +729,17 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                 <div className="overflow-x-auto min-h-[500px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Hired Sitter</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Hired Sitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Rate</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Created At</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Actions</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
@@ -836,11 +843,10 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
     );
 };
 
-const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: number) => void }) => {
+const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { onViewInvoices?: (userId: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -886,6 +892,7 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
                     slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
                 })),
                 hourly_rate: updatedFields.hourly_rate,
+                user_language: updatedFields.user?.user_language,
                 _method: 'put'
             } as any);
 
@@ -944,10 +951,10 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                         <input
                             type="text"
-                            placeholder="Search completed requests..."
+                            placeholder="Filter completed requests..."
                             value={searchQuery}
                             onChange={(e) => {
-                                setSearchQuery(e.target.value);
+                                onSearchChange(e.target.value);
                                 setCurrentPage(1);
                             }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -966,16 +973,17 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
                 <div className="overflow-x-auto min-h-[500px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Hired Sitter</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Hired Sitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Rate</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Completed At</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Actions</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
@@ -1265,13 +1273,12 @@ const ActiveRequestChoicesCell: React.FC<{
     );
 };
 
-const ActiveRequestsView = () => {
+const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
     const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number } | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -1352,6 +1359,7 @@ const ActiveRequestsView = () => {
                 choices: choicesPayload,
                 schedules: schedulesPayload,
                 hourly_rate: updatedFields.hourly_rate,
+                user_language: updatedFields.user?.user_language,
                 _method: 'put'
             } as any);
 
@@ -1392,7 +1400,7 @@ const ActiveRequestsView = () => {
                             placeholder="Filter active requests..."
                             value={searchQuery}
                             onChange={(e) => {
-                                setSearchQuery(e.target.value);
+                                onSearchChange(e.target.value);
                                 setCurrentPage(1); // Reset to first page on search
                             }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -1412,16 +1420,17 @@ const ActiveRequestsView = () => {
                 <div className="overflow-x-auto min-h-[500px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[6%]">ID</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Parent Details</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Sitter Choices</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center w-[12%]">Contract Link</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Parent Details</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[6%]">Lang</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[26%]">Sitter Choices</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center w-[12%]">Contract</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Schedules</th>
                                 <th className="px-4 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
@@ -1461,6 +1470,11 @@ const ActiveRequestsView = () => {
                                                 <span className="leading-tight">{req.parent_address}</span>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td className="px-4 py-4 align-top">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${req.user?.user_language === 'fr' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
+                                            {req.user?.user_language || 'en'}
+                                        </span>
                                     </td>
                                     <td className="px-4 py-4 align-top">
                                         <ActiveRequestChoicesCell 
@@ -1549,11 +1563,10 @@ const ActiveRequestsView = () => {
     );
 };
 
-const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: number) => void }) => {
+const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { onViewInvoices?: (userId: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -1599,6 +1612,7 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                     slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
                 })),
                 hourly_rate: updatedFields.hourly_rate,
+                user_language: updatedFields.user?.user_language,
                 _method: 'put'
             } as any);
 
@@ -1659,7 +1673,7 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                             placeholder="Search contracts..."
                             value={searchQuery}
                             onChange={(e) => {
-                                setSearchQuery(e.target.value);
+                                onSearchChange(e.target.value);
                                 setCurrentPage(1);
                             }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -1672,15 +1686,16 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                 <div className="overflow-x-auto min-h-[500px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Hired Babysitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Hired Babysitter</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Created At</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[17%]">Actions</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[19%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
@@ -1703,7 +1718,7 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No signed contracts found.
                                     </td>
                                 </tr>
@@ -1718,6 +1733,11 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                                                 <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                                 <span className="text-xs text-slate-400">{req.user?.email}</span>
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-4 align-top">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${req.user?.user_language === 'fr' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
+                                                {req.user?.user_language || 'en'}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 align-top">
                                             {hiredSitter ? (
@@ -1764,6 +1784,7 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                         request={editingRequest}
                         onClose={() => setEditingRequest(null)}
                         onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                        showOnlySitters={true}
                     />
                 )}
             </AnimatePresence>
@@ -1771,13 +1792,12 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
     );
 };
 
-const RequestsView = () => {
+const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -1840,6 +1860,7 @@ const RequestsView = () => {
                     slots: (s.slots || []).map((slot: any) => ({ start_time: slot.start_time, end_time: slot.end_time }))
                 })),
                 hourly_rate: updatedFields.hourly_rate,
+                user_language: updatedFields.user?.user_language,
                 _method: 'put'
             } as any);
 
@@ -1877,7 +1898,7 @@ const RequestsView = () => {
                             placeholder="Filter requests..."
                             value={searchQuery}
                             onChange={(e) => {
-                                setSearchQuery(e.target.value);
+                                onSearchChange(e.target.value);
                                 setCurrentPage(1);
                             }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -1934,15 +1955,16 @@ const RequestsView = () => {
                         <div className="overflow-x-auto min-h-[500px]">
                             <table className="w-full text-left table-fixed min-w-[1000px]">
                                 <thead>
-                                    <tr className="bg-slate-50/50">
+                                    <tr className="bg-slate-50/50 border-b border-slate-200">
                                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[35%]">Family Name</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Family Name</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
                                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Children</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Dates</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[32%]">Dates</th>
                                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right w-[15%]">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-slate-200">
                                     {isLoading && (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-12 text-center">
@@ -1974,7 +1996,12 @@ const RequestsView = () => {
                                         <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-6 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
                                             <td className="px-6 py-4 font-bold text-slate-800 align-top">
-                                                {req.user?.first_name} {req.user?.last_name}
+                                            {req.user?.first_name} {req.user?.last_name}
+                                            </td>
+                                            <td className="px-6 py-4 align-top">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${req.user?.user_language === 'fr' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
+                                                    {req.user?.user_language || 'en'}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 align-top">
                                                 {req.children?.length}
@@ -2163,58 +2190,114 @@ const ScheduleDatesCell: React.FC<ScheduleDatesCellProps> = ({ schedules }) => {
 
 
 
-const InterviewsView = () => {
-  const interviews = [
+const InterviewsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const allInterviews = [
     { id: '1', family: 'Smith Family', sitter: 'Amélie Laurent', date: '15/03/2026', status: 'Scheduled' },
     { id: '2', family: 'Dupont Family', sitter: 'Thomas Dubois', date: '16/03/2026', status: 'Completed' },
     { id: '3', family: 'Miller Family', sitter: 'Chloé Mercier', date: '18/03/2026', status: 'Cancelled' },
+    { id: '4', family: 'Garcia Family', sitter: 'Lucas Martin', date: '20/03/2026', status: 'Scheduled' },
+    { id: '5', family: 'Lefevre Family', sitter: 'Manon Petit', date: '22/03/2026', status: 'Completed' },
+    { id: '6', family: 'Dubois Family', sitter: 'Arthur Bernard', date: '25/03/2026', status: 'Scheduled' },
+    { id: '7', family: 'Moreau Family', sitter: 'Emma Robert', date: '28/03/2026', status: 'Cancelled' },
+    { id: '8', family: 'Fournier Family', sitter: 'Jules Richard', date: '01/04/2026', status: 'Scheduled' },
+    { id: '9', family: 'Roux Family', sitter: 'Alice Durand', date: '03/04/2026', status: 'Completed' },
+    { id: '10', family: 'Lambert Family', sitter: 'Gabriel Leroy', date: '05/04/2026', status: 'Scheduled' },
+    { id: '11', family: 'Petit Family', sitter: 'Louise Morel', date: '07/04/2026', status: 'Scheduled' },
+    { id: '12', family: 'Thomas Family', sitter: 'Hugo Fournier', date: '09/04/2026', status: 'Completed' },
   ];
 
+  const filteredInterviews = allInterviews.filter(item => 
+    item.family.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.sitter.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.status.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const paginatedInterviews = filteredInterviews.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto min-h-[300px]">
-        <table className="w-full text-left table-fixed min-w-[800px]">
-          <thead>
-            <tr className="bg-slate-50/50">
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Family</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Babysitter</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Interview Date</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
-              <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {interviews.map((item) => (
-              <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-4 font-bold text-slate-800 align-top">{item.family}</td>
-                <td className="px-6 py-4 text-slate-600 align-top">{item.sitter}</td>
-                <td className="px-6 py-4 text-slate-600 align-top">{item.date}</td>
-                <td className="px-6 py-4 align-top">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
-                    item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
-                    }`}>
-                    {item.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right align-top">
-                  <button className="text-sm font-bold text-slate-400 hover:text-slate-900 transition-colors">Edit</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h3 className="text-lg font-bold text-slate-900">Interviews List</h3>
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input
+                    type="text"
+                    placeholder="Filter interviews..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                        onSearchChange(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                />
+            </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto min-h-[300px]">
+                <table className="w-full text-left table-fixed min-w-[800px]">
+                    <thead>
+                        <tr className="bg-slate-50/50 border-b border-slate-200">
+                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Family</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Babysitter</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[18%]">Interview Date</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
+                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                        {paginatedInterviews.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    No interviews found.
+                                </td>
+                            </tr>
+                        )}
+                        {paginatedInterviews.map((item) => (
+                            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-6 py-4 font-bold text-slate-800 align-top">{item.family}</td>
+                                <td className="px-6 py-4 text-slate-600 align-top">{item.sitter}</td>
+                                <td className="px-6 py-4 text-slate-600 align-top">{item.date}</td>
+                                <td className="px-6 py-4 align-top">
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
+                                        item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
+                                        }`}>
+                                        {item.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 text-right align-top">
+                                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit">
+                                        <Edit2 size={18} />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <Pagination 
+                totalItems={filteredInterviews.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+            />
+        </div>
     </div>
   );
 };
 
-const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, onClearUserFilter?: () => void }) => {
-    const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }: { userId: number | null; onClearUserFilter: () => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -2305,7 +2388,7 @@ const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, o
                                 placeholder="Search invoices..."
                                 value={searchQuery}
                                 onChange={(e) => {
-                                    setSearchQuery(e.target.value);
+                                    onSearchChange(e.target.value);
                                     setCurrentPage(1);
                                 }}
                                 className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -2326,7 +2409,7 @@ const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, o
                 <div className="overflow-x-auto min-h-[500px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Invoice ID</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Customer</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Due Date</th>
@@ -2336,7 +2419,7 @@ const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, o
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-12 text-center">
@@ -2411,10 +2494,9 @@ const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, o
     );
 };
 
-const ContractsView = ({ onViewContract }: { onViewContract: (id: number) => void }) => {
+const ContractsView = ({ onViewContract, searchQuery, onSearchChange }: { onViewContract: (id: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [contracts, setContracts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -2454,7 +2536,7 @@ const ContractsView = ({ onViewContract }: { onViewContract: (id: number) => voi
                         placeholder="Search contracts..."
                         value={searchQuery}
                         onChange={(e) => {
-                            setSearchQuery(e.target.value);
+                            onSearchChange(e.target.value);
                             setCurrentPage(1);
                         }}
                         className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -2466,7 +2548,7 @@ const ContractsView = ({ onViewContract }: { onViewContract: (id: number) => voi
                 <div className="overflow-x-auto min-h-[500px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Contract ID</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">User Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Contract Date</th>
@@ -2475,7 +2557,7 @@ const ContractsView = ({ onViewContract }: { onViewContract: (id: number) => voi
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200">
                             {loading && (
                                 [1, 2, 3].map((i) => (
                                     <tr key={i} className="animate-pulse">
@@ -2547,10 +2629,9 @@ const ContractsView = ({ onViewContract }: { onViewContract: (id: number) => voi
     );
 };
 
-const AttestationsView = () => {
+const AttestationsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [attestations, setAttestations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -2600,7 +2681,7 @@ const AttestationsView = () => {
                         placeholder="Search attestations..."
                         value={searchQuery}
                         onChange={(e) => {
-                            setSearchQuery(e.target.value);
+                            onSearchChange(e.target.value);
                             setCurrentPage(1);
                         }}
                         className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
@@ -2612,7 +2693,7 @@ const AttestationsView = () => {
                 <div className="overflow-x-auto min-h-[500px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">ID</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[40%]">User Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Year</th>
@@ -2620,7 +2701,7 @@ const AttestationsView = () => {
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200">
                             {loading && (
                                 [1, 2, 3].map((i) => (
                                     <tr key={i} className="animate-pulse">
@@ -2684,8 +2765,7 @@ const AttestationsView = () => {
 };
 
 
-const UsersView = ({ onViewUser }: { onViewUser: (id: number) => void }) => {
-    const [searchQuery, setSearchQuery] = useState('');
+const UsersView = ({ onViewUser, searchQuery, onSearchChange }: { onViewUser: (id: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -2759,7 +2839,7 @@ const UsersView = ({ onViewUser }: { onViewUser: (id: number) => void }) => {
                             placeholder="Search users..."
                             value={searchQuery}
                             onChange={(e) => {
-                                setSearchQuery(e.target.value);
+                                onSearchChange(e.target.value);
                                 setCurrentPage(1);
                             }}
                             className="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm outline-none w-64 focus:bg-white focus:ring-2 focus:ring-slate-900/10 transition-all font-medium"
@@ -2772,7 +2852,7 @@ const UsersView = ({ onViewUser }: { onViewUser: (id: number) => void }) => {
                 <div className="overflow-x-auto min-h-[580px]">
                     <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
-                            <tr className="bg-slate-50/50">
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Name</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Email</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">SMG Num</th>
@@ -2782,7 +2862,7 @@ const UsersView = ({ onViewUser }: { onViewUser: (id: number) => void }) => {
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-200">
                             {loading ? (
                                 [1, 2, 3].map(i => (
                                     <tr key={i} className="animate-pulse">
@@ -2989,7 +3069,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
         <div className="overflow-x-auto min-h-[300px]">
           <table className="w-full text-left table-fixed min-w-[800px]">
             <thead>
-              <tr className="bg-slate-50/50">
+              <tr className="bg-slate-50/50 border-b border-slate-200">
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">ID</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Rate</th>
@@ -2998,7 +3078,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Created</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-200">
               {user?.parent_requests?.map((req: any) => (
                 <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 text-sm font-black text-slate-900 align-top">#{req.id}</td>

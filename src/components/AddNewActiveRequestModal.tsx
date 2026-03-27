@@ -53,6 +53,7 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
     user_phone: '',
     parent_address: '',
     hourly_rate: '28.50',
+    user_language: 'en' as 'en' | 'fr',
     lat: undefined as number | undefined,
     lng: undefined as number | undefined,
     children: [{ child_dob: '' }],
@@ -240,6 +241,7 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
         children: formData.children,
         schedules: formData.schedules,
         hourly_rate: formData.hourly_rate,
+        user_language: formData.user_language,
         board_status: 'In Matching',
         from_admin: true,
         lat: formData.lat,
@@ -373,6 +375,23 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
                   onChange={(e) => handleChange('hourly_rate', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
                 />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Preferred Language</label>
+                <div className="flex items-center gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl">
+                  <button
+                    onClick={() => handleChange('user_language', 'en')}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.user_language === 'en' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => handleChange('user_language', 'fr')}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.user_language === 'fr' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    Français
+                  </button>
+                </div>
               </div>
             </div>
           </section>

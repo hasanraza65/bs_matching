@@ -782,6 +782,7 @@ const NewRequestModal = ({
       }
     ],
     hourly_rate: '28.50',
+    user_language: 'en' as 'en' | 'fr',
     lat: undefined as number | undefined,
     lng: undefined as number | undefined
   });
@@ -983,6 +984,23 @@ const NewRequestModal = ({
                   onChange={(e) => handleChange('hourly_rate', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
                 />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Preferred Language</label>
+                <div className="flex items-center gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl">
+                  <button
+                    onClick={() => handleChange('user_language', 'en')}
+                    className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${formData.user_language === 'en' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => handleChange('user_language', 'fr')}
+                    className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${formData.user_language === 'fr' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    Français
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1538,6 +1556,31 @@ export const RequestDetailsModal = ({
                             onChange={(e) => handleChange('hourly_rate', e.target.value)}
                             className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
                           />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Preferred Language</label>
+                          <div className="flex items-center gap-2 p-1 bg-white border border-slate-200 rounded-xl">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newUser = { ...formData.user, user_language: 'en' as const };
+                                setFormData({ ...formData, user: newUser });
+                              }}
+                              className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${formData.user?.user_language === 'en' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                              English
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newUser = { ...formData.user, user_language: 'fr' as const };
+                                setFormData({ ...formData, user: newUser });
+                              }}
+                              className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${formData.user?.user_language === 'fr' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                              Français
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

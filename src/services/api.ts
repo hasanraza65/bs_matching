@@ -126,6 +126,7 @@ export interface User {
   stripe_customer_id?: string;
   default_payment_method?: string;
   cmg_num?: string;
+  user_language?: 'en' | 'fr';
   children?: Child[];
   parent_requests?: ParentRequest[];
   invoices?: Invoice[];
@@ -315,6 +316,7 @@ export const api = {
       children: { id?: number; child_dob: string }[];
       choices?: BabysitterChoicePayload[];
       hourly_rate?: string | number;
+      user_language?: 'en' | 'fr';
       _method?: string;
       lat?: number;
       lng?: number;
@@ -348,6 +350,7 @@ export const api = {
     children: { child_dob: string }[];
     schedules: any[];
     hourly_rate?: string | number;
+    user_language?: 'en' | 'fr';
     board_status?: string;
     from_admin?: boolean;
     lat?: number;
