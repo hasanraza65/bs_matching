@@ -56,6 +56,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { KanbanBoard, RequestDetailsModal, transformToKanbanRequest, KanbanRequest } from './KanbanBoard';
 import { AddNewActiveRequestModal } from './AddNewActiveRequestModal';
 import { Pagination } from './Pagination';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -343,23 +344,36 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const handleEdit = (req: import('../services/api').ParentRequest) => {
         setEditingRequest(transformToKanbanRequest(req));
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this request?')) {
-            try {
-                const response = await api.removeParentRequest(id);
-                if (response.status) {
-                    toast.success('Request deleted successfully');
-                    setRequests(requests.filter(r => r.id !== id));
-                } else {
-                    toast.error(response.message || 'Failed to delete request');
-                }
-            } catch (err) {
-                toast.error('An error occurred while deleting');
+    const handleDeleteClick = (id: number) => {
+        setRequestToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
             }
+        } catch (err) {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -485,7 +499,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                         <tbody className="divide-y divide-slate-200 text-slate-700">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading new requests...</span>
@@ -495,7 +509,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -505,7 +519,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No new requests found.
                                     </td>
                                 </tr>
@@ -553,7 +567,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                                 <Edit2 size={18} />
                                             </button>
                                             <button 
-                                                onClick={() => handleDelete(req.id)}
+                                                onClick={() => handleDeleteClick(req.id)}
                                                 className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                 title="Delete"
                                             >
@@ -579,6 +593,19 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                     <AddNewActiveRequestModal
                         onClose={() => setIsAddModalOpen(false)}
                         onSuccess={fetchNewRequests}
+                    />
+                )}
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => {
+                            setIsDeleteModalOpen(false);
+                            setRequestToDelete(null);
+                        }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this new request? This action cannot be undone."
                     />
                 )}
             </AnimatePresence>
@@ -607,23 +634,36 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const handleEdit = (req: import('../services/api').ParentRequest) => {
         setEditingRequest(transformToKanbanRequest(req));
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this request?')) {
-            try {
-                const response = await api.removeParentRequest(id);
-                if (response.status) {
-                    toast.success('Request deleted successfully');
-                    setRequests(requests.filter(r => r.id !== id));
-                } else {
-                    toast.error(response.message || 'Failed to delete request');
-                }
-            } catch (err) {
-                toast.error('An error occurred while deleting');
+    const handleDeleteClick = (id: number) => {
+        setRequestToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
             }
+        } catch (err) {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -742,7 +782,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                         <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading ongoing requests...</span>
@@ -752,7 +792,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -762,7 +802,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No ongoing requests found.
                                     </td>
                                 </tr>
@@ -814,6 +854,13 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                                     <Receipt size={14} />
                                                     <span>View Invoices</span>
                                                 </button>
+                                                <button 
+                                                    onClick={() => handleDeleteClick(req.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -838,6 +885,19 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                         onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
                     />
                 )}
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => {
+                            setIsDeleteModalOpen(false);
+                            setRequestToDelete(null);
+                        }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this ongoing request? This action cannot be undone."
+                    />
+                )}
             </AnimatePresence>
         </div>
     );
@@ -851,23 +911,36 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const handleEdit = (req: import('../services/api').ParentRequest) => {
         setEditingRequest(transformToKanbanRequest(req));
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this request?')) {
-            try {
-                const response = await api.removeParentRequest(id);
-                if (response.status) {
-                    toast.success('Request deleted successfully');
-                    setRequests(requests.filter(r => r.id !== id));
-                } else {
-                    toast.error(response.message || 'Failed to delete request');
-                }
-            } catch (err) {
-                toast.error('An error occurred while deleting');
+    const handleDeleteClick = (id: number) => {
+        setRequestToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
             }
+        } catch (err) {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -1082,6 +1155,19 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                         onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
                     />
                 )}
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => {
+                            setIsDeleteModalOpen(false);
+                            setRequestToDelete(null);
+                        }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this completed request? This action cannot be undone."
+                    />
+                )}
             </AnimatePresence>
         </div>
     );
@@ -1281,6 +1367,9 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
     const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchActiveRequests = async () => {
         setIsLoading(true);
@@ -1304,19 +1393,28 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
         setEditingRequest(transformToKanbanRequest(req));
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this request?')) {
-            try {
-                const response = await api.removeParentRequest(id);
-                if (response.status) {
-                    toast.success('Request deleted successfully');
-                    setRequests(requests.filter(r => r.id !== id));
-                } else {
-                    toast.error(response.message || 'Failed to delete request');
-                }
-            } catch (err) {
-                toast.error('An error occurred while deleting');
+    const handleDeleteClick = (id: number) => {
+        setRequestToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
             }
+        } catch (err) {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -1517,7 +1615,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                                 <Edit2 size={18} />
                                             </button>
                                             <button 
-                                                onClick={() => handleDelete(req.id)}
+                                                onClick={() => handleDeleteClick(req.id)}
                                                 className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                 title="Delete"
                                             >
@@ -1557,6 +1655,19 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                         showOnlySitters={true}
                     />
                 )}
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => {
+                            setIsDeleteModalOpen(false);
+                            setRequestToDelete(null);
+                        }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this active request? This action cannot be undone."
+                    />
+                )}
             </AnimatePresence>
 
         </div>
@@ -1571,23 +1682,36 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const handleEdit = (req: import('../services/api').ParentRequest) => {
         setEditingRequest(transformToKanbanRequest(req));
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this request?')) {
-            try {
-                const response = await api.removeParentRequest(id);
-                if (response.status) {
-                    toast.success('Request deleted successfully');
-                    setRequests(requests.filter(r => r.id !== id));
-                } else {
-                    toast.error(response.message || 'Failed to delete request');
-                }
-            } catch (err) {
-                toast.error('An error occurred while deleting');
+    const handleDeleteClick = (id: number) => {
+        setRequestToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
             }
+        } catch (err) {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -1787,6 +1911,19 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                         showOnlySitters={true}
                     />
                 )}
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => {
+                            setIsDeleteModalOpen(false);
+                            setRequestToDelete(null);
+                        }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this content? This action cannot be undone."
+                    />
+                )}
             </AnimatePresence>
         </div>
     );
@@ -1800,6 +1937,10 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchRequests = async () => {
         setIsLoading(true);
@@ -1823,19 +1964,28 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
         setEditingRequest(transformToKanbanRequest(req));
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this request?')) {
-            try {
-                const response = await api.removeParentRequest(id);
-                if (response.status) {
-                    toast.success('Request deleted successfully');
-                    setRequests(requests.filter(r => r.id !== id));
-                } else {
-                    toast.error(response.message || 'Failed to delete request');
-                }
-            } catch (err) {
-                toast.error('An error occurred while deleting');
+    const handleDeleteClick = (id: number) => {
+        setRequestToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
             }
+        } catch (err) {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -2019,7 +2169,7 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                                                         <Edit2 size={18} />
                                                     </button>
                                                     <button 
-                                                        onClick={() => handleDelete(req.id)}
+                                                        onClick={() => handleDeleteClick(req.id)}
                                                         className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                         title="Delete"
                                                     >
@@ -2057,6 +2207,19 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                         request={editingRequest}
                         onClose={() => setEditingRequest(null)}
                         onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                    />
+                )}
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => {
+                            setIsDeleteModalOpen(false);
+                            setRequestToDelete(null);
+                        }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this new request? This action cannot be undone."
                     />
                 )}
             </AnimatePresence>
@@ -2951,10 +3114,12 @@ const UsersView = ({ onViewUser, searchQuery, onSearchChange }: { onViewUser: (i
 
             {isDeleteModalOpen && userToDelete && (
                 <DeleteConfirmationModal
-                    userName={`${userToDelete.first_name || ''} ${userToDelete.last_name || ''}`}
-                    isDeleting={isDeleting === userToDelete.id}
+                    isOpen={isDeleteModalOpen}
                     onClose={() => { setIsDeleteModalOpen(false); setUserToDelete(null); }}
                     onConfirm={confirmDelete}
+                    isLoading={isDeleting === userToDelete.id}
+                    title="Delete User"
+                    message={`Are you sure you want to delete ${userToDelete.first_name || ''} ${userToDelete.last_name || ''}? This action cannot be undone.`}
                 />
             )}
         </div>
@@ -3646,55 +3811,3 @@ const EditUserModal = ({ user, onClose, onUpdate }: { user: User; onClose: () =>
   );
 };
 
-const DeleteConfirmationModal = ({ userName, isDeleting, onClose, onConfirm }: { userName: string; isDeleting: boolean; onClose: () => void; onConfirm: () => void }) => {
-  return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden p-8 text-center"
-      >
-        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
-          <AlertCircle size={40} />
-        </div>
-        
-        <h2 className="text-2xl font-black text-slate-900 mb-2">Delete User?</h2>
-        <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-          Are you sure you want to delete <span className="font-bold text-slate-900">{userName}</span>? 
-          This action is permanent and cannot be undone.
-        </p>
-
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={onConfirm}
-            disabled={isDeleting}
-            className="w-full py-4 bg-red-600 text-white text-sm font-black rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isDeleting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              'Yes, Delete User'
-            )}
-          </button>
-          <button
-            onClick={onClose}
-            disabled={isDeleting}
-            className="w-full py-4 bg-slate-50 text-slate-500 text-sm font-bold rounded-2xl hover:bg-slate-100 transition-all"
-          >
-            No, Cancel
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
