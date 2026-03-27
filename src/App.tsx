@@ -467,7 +467,7 @@ export default function App() {
       const path = window.location.pathname;
       const priceMatch = path.match(/\/price\/(\d+)/);
 
-      if (priceMatch) {
+      if (priceMatch && currentStep < 4) {
         const id = parseInt(priceMatch[1]);
 
         try {
@@ -502,7 +502,7 @@ export default function App() {
       }
     };
     handleUrlRoute();
-  }, [localizedSitters]);
+  }, [localizedSitters, currentStep]);
 
   useEffect(() => {
     if (currentStep === 3 && !selectedMonth && dateSchedule.length > 0) {
@@ -604,8 +604,10 @@ export default function App() {
 
     if (targetStep) {
       setCurrentStep(targetStep);
-    } else if (hasSchedules || hasChoices) {
+    } else if (data.quote_status === 1 || hasChoices) {
       setCurrentStep(4);
+    } else if (hasSchedules) {
+      setCurrentStep(3);
     } else {
       setCurrentStep(2);
     }
