@@ -55,6 +55,7 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { KanbanBoard, RequestDetailsModal, transformToKanbanRequest, KanbanRequest } from './KanbanBoard';
 import { AddNewActiveRequestModal } from './AddNewActiveRequestModal';
+import { Pagination } from './Pagination';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -340,6 +341,8 @@ const NewRequestsView = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const handleEdit = (req: import('../services/api').ParentRequest) => {
         setEditingRequest(transformToKanbanRequest(req));
@@ -403,6 +406,7 @@ const NewRequestsView = () => {
         try {
             const result = await api.getNewRequests();
             setRequests(result);
+            setCurrentPage(1);
         } catch (err: any) {
             setError('Failed to load new requests. Please try again.');
         } finally {
@@ -416,10 +420,16 @@ const NewRequestsView = () => {
 
     const filteredRequests = requests.filter(req => {
         const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
-        return parentName.includes(searchQuery.toLowerCase()) || 
-               req.id.toString().includes(searchQuery) ||
-               req.parent_address?.toLowerCase().includes(searchQuery.toLowerCase());
+        const searchLower = searchQuery.toLowerCase();
+        return parentName.includes(searchLower) || 
+               req.id.toString().includes(searchLower) ||
+               req.parent_address?.toLowerCase().includes(searchLower);
     });
+
+    const paginatedRequests = filteredRequests.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="space-y-6">
@@ -432,7 +442,10 @@ const NewRequestsView = () => {
                             type="text"
                             placeholder="Filter new requests..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
@@ -455,17 +468,17 @@ const NewRequestsView = () => {
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto min-h-[500px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Price Quote</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Address</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Created At</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center w-[12%]">Price Quote</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[9%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -496,21 +509,21 @@ const NewRequestsView = () => {
                                     </td>
                                 </tr>
                             )}
-                            {!isLoading && !error && filteredRequests.map((req) => (
+                            {!isLoading && !error && paginatedRequests.map((req) => (
                                 <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
-                                    <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
+                                    <td className="px-6 py-4 align-top">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                             <span className="text-xs text-slate-400">{req.user?.email}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{req.parent_address || 'No address provided'}</td>
-                                    <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                    <td className="px-6 py-4 text-sm text-slate-500">
+                                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate align-top">{req.parent_address || 'No address provided'}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
+                                    <td className="px-6 py-4 text-sm text-slate-500 align-top">
                                         {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                     </td>
-                                    <td className="px-6 py-4 text-center">
+                                    <td className="px-6 py-4 text-center align-top">
                                         <button 
                                             onClick={() => {
                                                 const link = `${window.location.origin}/price/${req.id}`;
@@ -524,7 +537,7 @@ const NewRequestsView = () => {
                                             <span>Copy Link</span>
                                         </button>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-right align-top">
                                         <div className="flex items-center justify-end gap-2">
                                             <button 
                                                 onClick={() => handleEdit(req)}
@@ -547,6 +560,12 @@ const NewRequestsView = () => {
                         </tbody>
                     </table>
                 </div>
+                <Pagination 
+                    totalItems={filteredRequests.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
               <AnimatePresence>
@@ -564,6 +583,7 @@ const NewRequestsView = () => {
                         request={editingRequest}
                         onClose={() => setEditingRequest(null)}
                         onUpdate={(updatedFields) => handleUpdate(editingRequest.id, updatedFields)}
+                        hideBabysittersTab={true}
                     />
                 )}
             </AnimatePresence>
@@ -579,6 +599,8 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const handleEdit = (req: import('../services/api').ParentRequest) => {
         setEditingRequest(transformToKanbanRequest(req));
@@ -642,6 +664,7 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
         try {
             const result = await api.getOngoingRequests();
             setRequests(result);
+            setCurrentPage(1);
         } catch (err: any) {
             setError('Failed to load ongoing requests. Please try again.');
         } finally {
@@ -657,11 +680,17 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
         const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
         const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
         const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
-        return parentName.includes(searchQuery.toLowerCase()) || 
-               sitterName.includes(searchQuery.toLowerCase()) ||
-               req.id.toString().includes(searchQuery) ||
-               req.parent_address?.toLowerCase().includes(searchQuery.toLowerCase());
+        const searchLower = searchQuery.toLowerCase();
+        return parentName.includes(searchLower) || 
+               sitterName.includes(searchLower) ||
+               req.id.toString().includes(searchLower) ||
+               req.parent_address?.toLowerCase().includes(searchLower);
     });
+
+    const paginatedRequests = filteredRequests.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="space-y-6">
@@ -674,7 +703,10 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                             type="text"
                             placeholder="Search ongoing requests..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
@@ -688,22 +720,22 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto min-h-[500px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Sitter</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Hired Sitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Created At</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading ongoing requests...</span>
@@ -713,7 +745,7 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -723,23 +755,23 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No ongoing requests found.
                                     </td>
                                 </tr>
                             )}
-                            {!isLoading && !error && filteredRequests.map((req) => {
+                            {!isLoading && !error && paginatedRequests.map((req) => {
                                 const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
                                 return (
                                     <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
+                                        <td className="px-6 py-4 align-top">
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                                 <span className="text-xs text-slate-400">{req.user?.email}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-top">
                                             {hiredSitter ? (
                                                 <div className="flex flex-col space-y-1">
                                                     <div className="flex flex-col">
@@ -761,11 +793,11 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500">
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
+                                        <td className="px-6 py-4 text-sm text-slate-500 align-top">
                                             {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
                                                     onClick={() => onViewInvoices?.(req.user_id)}
@@ -783,6 +815,12 @@ const OngoingRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                         </tbody>
                     </table>
                 </div>
+                <Pagination 
+                    totalItems={filteredRequests.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
             <AnimatePresence>
@@ -804,6 +842,8 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const handleEdit = (req: import('../services/api').ParentRequest) => {
         setEditingRequest(transformToKanbanRequest(req));
@@ -867,6 +907,7 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
         try {
             const result = await api.getCompletedRequests();
             setRequests(result);
+            setCurrentPage(1);
         } catch (err: any) {
             setError('Failed to load completed requests. Please try again.');
         } finally {
@@ -882,11 +923,17 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
         const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
         const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
         const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
-        return parentName.includes(searchQuery.toLowerCase()) || 
-               sitterName.includes(searchQuery.toLowerCase()) ||
-               req.id.toString().includes(searchQuery) ||
-               req.parent_address?.toLowerCase().includes(searchQuery.toLowerCase());
+        const searchLower = searchQuery.toLowerCase();
+        return parentName.includes(searchLower) || 
+               sitterName.includes(searchLower) ||
+               req.id.toString().includes(searchLower) ||
+               req.parent_address?.toLowerCase().includes(searchLower);
     });
+
+    const paginatedRequests = filteredRequests.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="space-y-6">
@@ -899,7 +946,10 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
                             type="text"
                             placeholder="Search completed requests..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
@@ -913,22 +963,22 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto min-h-[500px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Sitter</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Completed At</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Hired Sitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Hourly Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Completed At</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading completed requests...</span>
@@ -938,7 +988,7 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -948,23 +998,23 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No completed requests found.
                                     </td>
                                 </tr>
                             )}
-                            {!isLoading && !error && filteredRequests.map((req) => {
+                            {!isLoading && !error && paginatedRequests.map((req) => {
                                 const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
                                 return (
                                     <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
+                                        <td className="px-6 py-4 align-top">
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                                 <span className="text-xs text-slate-400">{req.user?.email}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-top">
                                             {hiredSitter ? (
                                                 <div className="flex flex-col space-y-1">
                                                     <div className="flex flex-col">
@@ -986,11 +1036,11 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500">
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
+                                        <td className="px-6 py-4 text-sm text-slate-500 align-top">
                                             {req.updated_at ? new Date(req.updated_at).toLocaleDateString() : '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
                                                     onClick={() => onViewInvoices?.(req.user_id)}
@@ -1008,6 +1058,12 @@ const CompletedRequestsView = ({ onViewInvoices }: { onViewInvoices?: (userId: n
                         </tbody>
                     </table>
                 </div>
+                <Pagination 
+                    totalItems={filteredRequests.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
             <AnimatePresence>
@@ -1177,26 +1233,15 @@ const ActiveRequestChoicesCell: React.FC<{
                             <span>Interview: {choice.interview_date} {choice.interview_time}</span>
                         </div>
                     )}
-                    {Number(choice.final_choice) === 1 ? (
+                    {Number(choice.final_choice) === 1 && (
                         <div className="mt-1 flex items-center gap-1 w-full">
                             <div className="flex-1 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 cursor-default pointer-events-none">
                                 <CheckCircle2 size={12} />
                                 Accepted
                             </div>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const link = `${window.location.origin}/contract/${choice.id}`;
-                                    navigator.clipboard.writeText(link);
-                                    toast.success('Contract link copied!');
-                                }}
-                                className="p-1.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex items-center justify-center shrink-0"
-                                title="Copy Contract Link"
-                            >
-                                <LinkIcon size={14} />
-                            </button>
                         </div>
-                    ) : !hasAcceptedChoice ? (
+                    )}
+                    {Number(choice.final_choice) !== 1 && !hasAcceptedChoice && (
                         <button
                             onClick={() => handleSelectFinal(choice.id)}
                             className="mt-1 w-full py-1.5 bg-slate-900 text-white text-[10px] font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm flex items-center justify-center gap-1"
@@ -1204,7 +1249,7 @@ const ActiveRequestChoicesCell: React.FC<{
                             <CheckCircle2 size={12} />
                             Make it Final Choice
                         </button>
-                    ) : null}
+                    )}
                 </div>
             ))}
             {hasMore && (
@@ -1226,6 +1271,9 @@ const ActiveRequestsView = () => {
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
     const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number } | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const fetchActiveRequests = async () => {
         setIsLoading(true);
@@ -1233,6 +1281,7 @@ const ActiveRequestsView = () => {
         try {
             const result = await api.getActiveRequests();
             setRequests(result);
+            setCurrentPage(1); // Reset to first page on refresh
         } catch (err: any) {
             setError('Failed to load active requests. Please try again.');
         } finally {
@@ -1318,6 +1367,19 @@ const ActiveRequestsView = () => {
         }
     };
 
+    const filteredRequests = requests.filter(req => {
+        const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
+        return parentName.includes(searchLower) || 
+               req.id.toString().includes(searchLower) ||
+               req.parent_address?.toLowerCase().includes(searchLower);
+    });
+
+    const paginatedRequests = filteredRequests.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1328,6 +1390,11 @@ const ActiveRequestsView = () => {
                         <input
                             type="text"
                             placeholder="Filter active requests..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1); // Reset to first page on search
+                            }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
@@ -1342,23 +1409,22 @@ const ActiveRequestsView = () => {
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto min-h-[500px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Details</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Sitter Choices</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Price Quote</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Schedules</th>
-                                <th className="px-4 py-4 text-right">Actions</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[6%]">ID</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Parent Details</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Sitter Choices</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center w-[12%]">Contract Link</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Schedules</th>
+                                <th className="px-4 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading active requests...</span>
@@ -1368,7 +1434,7 @@ const ActiveRequestsView = () => {
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -1376,17 +1442,17 @@ const ActiveRequestsView = () => {
                                     </td>
                                 </tr>
                             )}
-                            {!isLoading && !error && requests.length === 0 && (
+                            {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No active requests found.
                                     </td>
                                 </tr>
                             )}
-                            {!isLoading && !error && requests.map((req) => (
+                            {!isLoading && !error && paginatedRequests.map((req) => (
                                 <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
-                                    <td className="px-4 py-4 font-bold text-slate-900">#{req.id}</td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
+                                    <td className="px-4 py-4 align-top">
                                         <div className="flex flex-col min-w-[150px]">
                                             <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                             <span className="text-xs text-slate-400">{req.user?.email}</span>
@@ -1396,7 +1462,7 @@ const ActiveRequestsView = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 align-top">
                                         <ActiveRequestChoicesCell 
                                             choices={req.choices ?? []} 
                                             requestId={req.id} 
@@ -1404,24 +1470,30 @@ const ActiveRequestsView = () => {
                                             onRefresh={fetchActiveRequests}
                                         />
                                     </td>
-                                    <td className="px-4 py-4 text-center">
-                                        <button 
-                                            onClick={() => {
-                                                const link = `${window.location.origin}/price/${req.id}`;
-                                                navigator.clipboard.writeText(link);
-                                                toast.success('Price Quote link copied!');
-                                            }}
-                                            className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 shadow-sm mx-auto flex items-center justify-center"
-                                            title="Copy Price Quote"
-                                         >
-                                            <LinkIcon size={18} />
-                                         </button>
+                                    <td className="px-4 py-4 text-center align-top">
+                                        {(() => {
+                                            const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
+                                            if (!hiredSitter) return <span className="text-slate-400 text-[10px] italic mt-2 block">No sitter accepted</span>;
+                                            
+                                            return (
+                                                <button 
+                                                    onClick={() => {
+                                                        const link = `${window.location.origin}/contract/${hiredSitter.id}`;
+                                                        navigator.clipboard.writeText(link);
+                                                        toast.success('Contract link copied!');
+                                                    }}
+                                                    className="p-2.5 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm mx-auto flex items-center justify-center mt-1"
+                                                    title="Copy Contract Link"
+                                                 >
+                                                    <LinkIcon size={18} />
+                                                 </button>
+                                            );
+                                        })()}
                                     </td>
-                                    <td className="px-4 py-4 font-bold text-slate-900">€{req.hourly_rate}</td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 align-top">
                                         <ActiveRequestSchedulesCell schedules={req.schedules ?? []} />
                                     </td>
-                                    <td className="px-4 py-4 text-right">
+                                    <td className="px-4 py-4 text-right align-top">
                                         <div className="flex items-center justify-end gap-2">
                                             <button 
                                                 onClick={() => handleEdit(req)}
@@ -1444,6 +1516,12 @@ const ActiveRequestsView = () => {
                         </tbody>
                     </table>
                 </div>
+                <Pagination 
+                    totalItems={filteredRequests.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
             <AnimatePresence>
@@ -1477,6 +1555,8 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const handleEdit = (req: import('../services/api').ParentRequest) => {
         setEditingRequest(transformToKanbanRequest(req));
@@ -1540,6 +1620,7 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
         try {
             const result = await api.getSignedContractRequests();
             setRequests(result);
+            setCurrentPage(1);
         } catch (err: any) {
             setError('Failed to load signed contracts. Please try again.');
         } finally {
@@ -1555,10 +1636,16 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
         const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
         const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
         const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
-        return parentName.includes(searchQuery.toLowerCase()) || 
-               sitterName.includes(searchQuery.toLowerCase()) ||
-               req.id.toString().includes(searchQuery);
+        const searchLower = searchQuery.toLowerCase();
+        return parentName.includes(searchLower) || 
+               sitterName.includes(searchLower) ||
+               req.id.toString().includes(searchLower);
     });
+
+    const paginatedRequests = filteredRequests.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="space-y-6">
@@ -1571,7 +1658,10 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                             type="text"
                             placeholder="Search contracts..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
@@ -1579,15 +1669,15 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto min-h-[500px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hired Babysitter</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created At</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Hired Babysitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Created At</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[17%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -1613,23 +1703,23 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No signed contracts found.
                                     </td>
                                 </tr>
                             )}
-                            {!isLoading && !error && filteredRequests.map((req) => {
+                            {!isLoading && !error && paginatedRequests.map((req) => {
                                 const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
                                 return (
                                     <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
+                                        <td className="px-6 py-4 align-top">
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                                 <span className="text-xs text-slate-400">{req.user?.email}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-top">
                                             {hiredSitter ? (
                                                 <div className="flex flex-col">
                                                     <span className="font-bold text-slate-800">{hiredSitter.babysitter_first_name} {hiredSitter.babysitter_last_name}</span>
@@ -1639,10 +1729,10 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-slate-500">
+                                        <td className="px-6 py-4 text-sm text-slate-500 align-top">
                                             {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
                                                     onClick={() => onViewInvoices?.(req.user_id)}
@@ -1660,6 +1750,12 @@ const SignedContractsView = ({ onViewInvoices }: { onViewInvoices?: (userId: num
                         </tbody>
                     </table>
                 </div>
+                <Pagination 
+                    totalItems={filteredRequests.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
             <AnimatePresence>
@@ -1681,14 +1777,17 @@ const RequestsView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const fetchRequests = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const { api } = await import('../services/api');
             const result = await api.getParentRequests();
             setRequests(result.data);
+            setCurrentPage(1);
         } catch {
             setError('Failed to load requests. Please try again.');
         } finally {
@@ -1756,6 +1855,17 @@ const RequestsView = () => {
         }
     };
 
+    const filteredRequests = requests.filter(req => {
+        const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
+        return parentName.includes(searchLower) || req.id.toString().includes(searchLower);
+    });
+
+    const paginatedRequests = filteredRequests.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1765,6 +1875,11 @@ const RequestsView = () => {
                         <input
                             type="text"
                             placeholder="Filter requests..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
@@ -1816,15 +1931,15 @@ const RequestsView = () => {
                         exit={{ opacity: 0, y: -10 }}
                         className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
                     >
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                        <div className="overflow-x-auto min-h-[500px]">
+                            <table className="w-full text-left table-fixed min-w-[1000px]">
                                 <thead>
                                     <tr className="bg-slate-50/50">
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Family Name</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Children</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Dates</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[35%]">Family Name</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Children</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Dates</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right w-[15%]">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -1848,26 +1963,26 @@ const RequestsView = () => {
                                             </td>
                                         </tr>
                                     )}
-                                    {!isLoading && !error && requests.length === 0 && (
+                                    {!isLoading && !error && filteredRequests.length === 0 && (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                                 No requests found.
                                             </td>
                                         </tr>
                                     )}
-                                    {!isLoading && !error && requests.map((req) => (
+                                    {!isLoading && !error && paginatedRequests.map((req) => (
                                         <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4 font-bold text-slate-900">#{req.id}</td>
-                                            <td className="px-6 py-4 font-bold text-slate-800">
+                                            <td className="px-6 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
+                                            <td className="px-6 py-4 font-bold text-slate-800 align-top">
                                                 {req.user?.first_name} {req.user?.last_name}
                                             </td>
-                                            <td className="px-6 py-4 text-slate-600">
+                                            <td className="px-6 py-4 text-slate-600 align-top">
                                                 {req.children?.length}
                                             </td>
-                                            <td className="px-6 py-4 text-slate-600">
+                                            <td className="px-6 py-4 text-slate-600 align-top">
                                                 <ScheduleDatesCell schedules={req.schedules ?? []} />
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-6 py-4 text-right align-top">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button 
                                                         onClick={() => handleEdit(req)}
@@ -1890,16 +2005,12 @@ const RequestsView = () => {
                                 </tbody>
                             </table>
                         </div>
-
-                        <div className="p-6 border-t border-slate-100 flex items-center justify-between">
-                            <p className="text-xs text-slate-400 font-medium">
-                                {isLoading ? 'Loading…' : `Showing ${requests.length} ${requests.length === 1 ? 'entry' : 'entries'}`}
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
-                                <button className="p-2 border border-slate-200 rounded-lg text-slate-900 hover:bg-slate-50">Next</button>
-                            </div>
-                        </div>
+                        <Pagination 
+                            totalItems={filteredRequests.length}
+                            itemsPerPage={itemsPerPage}
+                            currentPage={currentPage}
+                            onPageChange={setCurrentPage}
+                        />
                     </motion.div>
                 ) : (
                     <motion.div
@@ -2061,31 +2172,31 @@ const InterviewsView = () => {
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
+      <div className="overflow-x-auto min-h-[300px]">
+        <table className="w-full text-left table-fixed min-w-[800px]">
           <thead>
             <tr className="bg-slate-50/50">
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Family</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Babysitter</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Interview Date</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-              <th className="px-6 py-4 text-right"></th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Family</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Babysitter</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Interview Date</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
+              <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {interviews.map((item) => (
               <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-4 font-bold text-slate-800">{item.family}</td>
-                <td className="px-6 py-4 text-slate-600">{item.sitter}</td>
-                <td className="px-6 py-4 text-slate-600">{item.date}</td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 font-bold text-slate-800 align-top">{item.family}</td>
+                <td className="px-6 py-4 text-slate-600 align-top">{item.sitter}</td>
+                <td className="px-6 py-4 text-slate-600 align-top">{item.date}</td>
+                <td className="px-6 py-4 align-top">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
                     item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
                     }`}>
                     {item.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-right">
+                <td className="px-6 py-4 text-right align-top">
                   <button className="text-sm font-bold text-slate-400 hover:text-slate-900 transition-colors">Edit</button>
                 </td>
               </tr>
@@ -2098,553 +2209,676 @@ const InterviewsView = () => {
 };
 
 const InvoicesView = ({ userId, onClearUserFilter }: { userId?: number | null, onClearUserFilter?: () => void }) => {
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+    const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-  React.useEffect(() => {
-    let cancelled = false;
-    const fetchInvoices = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
+    React.useEffect(() => {
+        let cancelled = false;
+        const fetchInvoices = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const { api } = await import('../services/api');
+                const result = await api.getAllInvoices({
+                    month: selectedMonth,
+                    year: selectedYear,
+                    user_id: userId || undefined
+                });
 
-        const { api } = await import('../services/api');
-        const result = await api.getAllInvoices({
-          month: selectedMonth,
-          year: selectedYear,
-          user_id: userId || undefined
-        });
+                if (!cancelled) {
+                    setInvoices(result.data);
+                    setCurrentPage(1);
+                }
+            } catch {
+                if (!cancelled) {
+                    setError('Failed to load invoices. Please try again.');
+                }
+            } finally {
+                if (!cancelled) setIsLoading(false);
+            }
+        };
+        fetchInvoices();
+        return () => { cancelled = true; };
+    }, [selectedMonth, selectedYear, userId]);
 
-        if (!cancelled) {
-          setInvoices(result.data);
+    const formatBillingMonth = (dateStr: string) => {
+        try {
+            const date = new Date(dateStr);
+            return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date);
+        } catch {
+            return dateStr;
         }
-      } catch {
-        if (!cancelled) {
-          setError('Failed to load invoices. Please try again.');
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
     };
-    fetchInvoices();
-    return () => { cancelled = true; };
-  }, [selectedMonth, selectedYear, userId]);
 
-  const formatBillingMonth = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date);
-    } catch {
-      return dateStr;
-    }
-  };
+    const filteredInvoices = invoices.filter(inv => {
+        const customerName = inv.user ? `${inv.user.first_name || ''} ${inv.user.last_name || ''}`.toLowerCase() : '';
+        const searchLower = searchQuery.toLowerCase();
+        return customerName.includes(searchLower) ||
+            inv.invoice_num.toLowerCase().includes(searchLower) ||
+            inv.parent_request_id.toString().includes(searchLower);
+    });
 
-  return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    const paginatedInvoices = filteredInvoices.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
-      <div className="flex items-center gap-4 p-4 border-b border-slate-100">
+    return (
+        <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border-b border-slate-100">
+                    <div className="flex items-center gap-4">
+                        <select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                        >
+                            {Array.from({ length: 12 }).map((_, i) => (
+                                <option key={i + 1} value={i + 1}>
+                                    {new Date(0, i).toLocaleString('en-US', { month: 'long' })}
+                                </option>
+                            ))}
+                        </select>
 
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(Number(e.target.value))}
-          className="border rounded-lg px-3 py-2 text-sm"
-        >
-          {Array.from({ length: 12 }).map((_, i) => (
-            <option key={i + 1} value={i + 1}>
-              {new Date(0, i).toLocaleString('en-US', { month: 'long' })}
-            </option>
-          ))}
-        </select>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                        >
+                            {[2023, 2024, 2025, 2026, 2027, 2028].map((year) => (
+                                <option key={year} value={year}>
+                                    {year}
+                                </option>
+                            ))}
+                        </select>
 
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="border rounded-lg px-3 py-2 text-sm"
-        >
-          {[2023, 2024, 2025, 2026, 2027, 2028].map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <input
+                                type="text"
+                                placeholder="Search invoices..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                            />
+                        </div>
+                    </div>
 
-        {userId && (
-          <button
-            onClick={onClearUserFilter}
-            className="ml-auto flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 transition-colors"
-          >
-            Show All Invoices
-          </button>
-        )}
+                    {userId && (
+                        <button
+                            onClick={onClearUserFilter}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-colors"
+                        >
+                            Show All Invoices
+                        </button>
+                    )}
+                </div>
 
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-slate-50/50">
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice ID</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Customer</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Due Date</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Billing Month</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-              <th className="px-6 py-4 text-right"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {isLoading && (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center">
-                  <div className="flex items-center justify-center gap-3 text-slate-400">
-                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    <span className="text-sm font-medium">Loading invoices…</span>
-                  </div>
-                </td>
-              </tr>
-            )}
-            {!isLoading && error && (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-red-500 text-sm font-medium">
-                  {error}
-                </td>
-              </tr>
-            )}
-            {!isLoading && !error && invoices.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
-                  No invoices found.
-                </td>
-              </tr>
-            )}
-            {!isLoading && !error && invoices.map((item) => (
-              <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-4 font-bold text-slate-800">{item.invoice_num}</td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-900">
-                      {item.user ? `${item.user.first_name || ''} ${item.user.last_name || ''}`.trim() || `User #${item.user_id}` : `User #${item.user_id}`}
-                    </span>
-                    <span className="text-[10px] text-slate-400">Request #{item.parent_request_id}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-slate-600">{item.due_date}</td>
-                <td className="px-6 py-4 text-slate-600 capitalize">{formatBillingMonth(item.due_date)}</td>
-                <td className="px-6 py-4 font-bold text-slate-900">€{parseFloat(item.amount).toFixed(2)}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.payment_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
-                    item.payment_status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
-                    }`}>
-                    {item.payment_status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button
-                    onClick={async () => {
-                      const { generateInvoicePdf } = await import('../utils/invoicePdfGenerator');
-                      const pdfUser = item.user || { first_name: 'Customer', last_name: `(#${item.user_id})`, email: '-', user_address: '-' } as any;
-                      generateInvoicePdf(item, pdfUser, 'fr', {} as any);
-                    }}
-                    className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold"
-                  >
-                    <Download size={14} />
-                    <span className="hidden xl:inline">Download PDF</span>
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+                <div className="overflow-x-auto min-h-[500px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Invoice ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Customer</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Due Date</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Billing Month</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Amount</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[13%]">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {isLoading && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center">
+                                        <div className="flex items-center justify-center gap-3 text-slate-400">
+                                            <Loader2 className="animate-spin w-5 h-5" />
+                                            <span className="text-sm font-medium">Loading invoices…</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && error && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500 text-sm font-medium">
+                                        {error}
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && filteredInvoices.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                        No invoices found.
+                                    </td>
+                                </tr>
+                            )}
+                            {!isLoading && !error && paginatedInvoices.map((item) => (
+                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-6 py-4 font-bold text-slate-800 align-top">{item.invoice_num}</td>
+                                    <td className="px-6 py-4 align-top">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-slate-900">
+                                                {item.user ? `${item.user.first_name || ''} ${item.user.last_name || ''}`.trim() || `User #${item.user_id}` : `User #${item.user_id}`}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400">Request #{item.parent_request_id}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-600 align-top">{item.due_date}</td>
+                                    <td className="px-6 py-4 text-slate-600 capitalize align-top">{formatBillingMonth(item.due_date)}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">€{parseFloat(item.amount).toFixed(2)}</td>
+                                    <td className="px-6 py-4 align-top">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.payment_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
+                                            item.payment_status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
+                                            }`}>
+                                            {item.payment_status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-right align-top">
+                                        <button
+                                            onClick={async () => {
+                                                const { generateInvoicePdf } = await import('../utils/invoicePdfGenerator');
+                                                const pdfUser = item.user || { first_name: 'Customer', last_name: `(#${item.user_id})`, email: '-', user_address: '-' } as any;
+                                                generateInvoicePdf(item, pdfUser, 'fr', {} as any);
+                                            }}
+                                            className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold"
+                                        >
+                                            <Download size={14} />
+                                            <span className="hidden xl:inline">Download PDF</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <Pagination
+                    totalItems={filteredInvoices.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
+        </div>
+    );
 };
 
 const ContractsView = ({ onViewContract }: { onViewContract: (id: number) => void }) => {
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+    const [contracts, setContracts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchContracts = async () => {
-      try {
-        const data = await api.getContracts();
-        setContracts(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Error fetching contracts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchContracts();
-  }, []);
+    useEffect(() => {
+        const fetchContracts = async () => {
+            try {
+                const data = await api.getContracts();
+                setContracts(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Error fetching contracts:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchContracts();
+    }, []);
 
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Contract ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">User Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Contract Date</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly Rate</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                [1, 2, 3].map((i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
-                    <td className="px-6 py-4"><div className="h-6 bg-slate-100 rounded-full w-16" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-12" /></td>
-                    <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
-                  </tr>
-                ))
-              ) : contracts.length > 0 ? (
-                contracts.map((contract) => (
-                  <tr key={contract.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 text-sm font-black text-slate-900">#{contract.id}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                          <UserIcon size={14} />
-                        </div>
-                        <span className="font-bold text-slate-800">
-                          {contract.user?.first_name} {contract.user?.last_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">
-                      {new Date(contract.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-                        contract.status === 1 
-                          ? 'bg-emerald-50 text-emerald-600' 
-                          : 'bg-amber-50 text-amber-600'
-                      }`}>
-                        {contract.status === 1 ? 'Signed' : 'Pending'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-700">
-                      {contract.hourly_rate ? `${contract.hourly_rate}€/hr` : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => onViewContract(contract.choice_id)}
-                        className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all" 
-                        title="View Contract"
-                      >
-                        <Eye size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium italic">
-                    No contracts found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+    const filteredContracts = contracts.filter(contract => {
+        const userName = `${contract.user?.first_name || ''} ${contract.user?.last_name || ''}`.toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
+        return userName.includes(searchLower) ||
+            contract.id.toString().includes(searchLower);
+    });
+
+    const paginatedContracts = filteredContracts.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Search contracts..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                    />
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto min-h-[500px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Contract ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">User Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Contract Date</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[18%]">Hourly Rate</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {loading && (
+                                [1, 2, 3].map((i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                                        <td className="px-6 py-4"><div className="h-6 bg-slate-100 rounded-full w-16" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-12" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
+                                    </tr>
+                                ))
+                            )}
+                            {!loading && filteredContracts.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                                        No contracts found.
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && paginatedContracts.map((contract) => (
+                                <tr key={contract.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="px-6 py-4 text-sm font-black text-slate-900 align-top">#{contract.id}</td>
+                                    <td className="px-6 py-4 align-top">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                                <UserIcon size={14} />
+                                            </div>
+                                            <span className="font-bold text-slate-800">
+                                                {contract.user?.first_name} {contract.user?.last_name}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
+                                        {new Date(contract.created_at).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4 align-top">
+                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${contract.status === 1
+                                            ? 'bg-emerald-50 text-emerald-600'
+                                            : 'bg-amber-50 text-amber-600'
+                                            }`}>
+                                            {contract.status === 1 ? 'Signed' : 'Pending'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">
+                                        {contract.hourly_rate ? `${contract.hourly_rate}€/hr` : 'N/A'}
+                                    </td>
+                                    <td className="px-6 py-4 text-right align-top">
+                                        <button
+                                            onClick={() => onViewContract(contract.choice_id)}
+                                            className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all"
+                                            title="View Contract"
+                                        >
+                                            <Eye size={18} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <Pagination
+                    totalItems={filteredContracts.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 const AttestationsView = () => {
-  const [attestations, setAttestations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+    const [attestations, setAttestations] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchAttestations = async () => {
-      try {
-        const result = await api.getAttestations();
-        setAttestations(result.data || []);
-      } catch (error) {
-        console.error("Error fetching attestations:", error);
-      } finally {
-        setLoading(false);
-      }
+    useEffect(() => {
+        const fetchAttestations = async () => {
+            try {
+                const result = await api.getAttestations();
+                setAttestations(result.data || []);
+            } catch (error) {
+                console.error("Error fetching attestations:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAttestations();
+    }, []);
+
+    const handleDownload = (fileName: string) => {
+        const link = document.createElement('a');
+        link.href = `/certificates/${fileName}`;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
     };
-    fetchAttestations();
-  }, []);
 
-  const handleDownload = (fileName: string) => {
-    const link = document.createElement('a');
-    link.href = `/certificates/${fileName}`;
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    link.parentNode?.removeChild(link);
-  };
+    const filteredAttestations = attestations.filter(a => {
+        const userName = `${a.user?.first_name || ''} ${a.user?.last_name || ''}`.toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
+        return userName.includes(searchLower) ||
+            a.id.toString().includes(searchLower) ||
+            a.year.toString().includes(searchLower);
+    });
 
+    const paginatedAttestations = filteredAttestations.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">User Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Year</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                [1, 2, 3].map((i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-8" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
-                    <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
-                  </tr>
-                ))
-              ) : attestations.length > 0 ? (
-                attestations.map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 text-sm font-black text-slate-900">#{a.id}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                          <UserIcon size={14} />
-                        </div>
-                        <span className="font-bold text-slate-800">
-                          {a.user?.first_name} {a.user?.last_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">
-                      {a.year}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">
-                      {new Date(a.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => handleDownload(a.file)}
-                        className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all" 
-                        title="Download Attestation"
-                      >
-                        <Download size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-medium italic">
-                    No attestations found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Search attestations..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                    />
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto min-h-[500px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[40%]">User Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Year</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Date</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {loading && (
+                                [1, 2, 3].map((i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-8" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
+                                    </tr>
+                                ))
+                            )}
+                            {!loading && filteredAttestations.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                                        No attestations found.
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && paginatedAttestations.map((a) => (
+                                <tr key={a.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="px-6 py-4 text-sm font-black text-slate-900 align-top">#{a.id}</td>
+                                    <td className="px-6 py-4 align-top">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                                <UserIcon size={14} />
+                                            </div>
+                                            <span className="font-bold text-slate-800">
+                                                {a.user?.first_name} {a.user?.last_name}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
+                                        {a.year}
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
+                                        {new Date(a.created_at).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4 text-right align-top">
+                                        <button
+                                            onClick={() => handleDownload(a.file)}
+                                            className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all"
+                                            title="Download Attestation"
+                                        >
+                                            <Download size={18} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <Pagination
+                    totalItems={filteredAttestations.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 
 const UsersView = ({ onViewUser }: { onViewUser: (id: number) => void }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [isDeleting, setIsDeleting] = useState<number | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+    useEffect(() => {
+        fetchUsers();
+    }, []);
 
-  const fetchUsers = async () => {
-    try {
-      const data = await api.getAllUsers();
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchUsers = async () => {
+        try {
+            const data = await api.getAllUsers();
+            setUsers(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Error fetching users:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleDeleteUser = (user: User) => {
-    setUserToDelete(user);
-    setIsDeleteModalOpen(true);
-  };
+    const handleDeleteUser = (user: User) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
 
-  const confirmDelete = async () => {
-    if (!userToDelete) return;
-    const id = userToDelete.id;
-    setIsDeleting(id);
-    try {
-      const response = await api.deleteUser(id);
-      if (response.status) {
-        setUsers(users.filter(u => u.id !== id));
-        toast.success(response.message || 'User deleted successfully');
-        setIsDeleteModalOpen(false);
-        setUserToDelete(null);
-      } else {
-        toast.error(response.message || 'Failed to delete user');
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error('An error occurred while deleting the user');
-    } finally {
-      setIsDeleting(null);
-    }
-  };
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
+        const id = userToDelete.id;
+        setIsDeleting(id);
+        try {
+            const response = await api.deleteUser(id);
+            if (response.status) {
+                setUsers(users.filter(u => u.id !== id));
+                toast.success(response.message || 'User deleted successfully');
+                setIsDeleteModalOpen(false);
+                setUserToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete user');
+            }
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            toast.error('An error occurred while deleting the user');
+        } finally {
+            setIsDeleting(null);
+        }
+    };
 
-  const filteredUsers = users.filter(user => 
-    `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+    const filteredUsers = users.filter(user =>
+        `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
-  return (
-    <div className="space-y-8">
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm outline-none w-64 focus:bg-white focus:ring-2 focus:ring-slate-900/10 transition-all font-medium"
-            />
-          </div>
-          <div className="text-sm text-slate-400 font-medium">
-            {filteredUsers.length} Users Total
-          </div>
+    const paginatedUsers = filteredUsers.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    return (
+        <div className="space-y-8">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm outline-none w-64 focus:bg-white focus:ring-2 focus:ring-slate-900/10 transition-all font-medium"
+                        />
+                    </div>
+                    <div className="text-sm text-slate-400 font-medium">
+                        {filteredUsers.length} Users Total
+                    </div>
+                </div>
+                <div className="overflow-x-auto min-h-[580px]">
+                    <table className="w-full text-left table-fixed min-w-[1000px]">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Email</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">SMG Num</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Requests</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[13%]">Phone</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Address</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {loading ? (
+                                [1, 2, 3].map(i => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-48" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-12" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-48" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
+                                    </tr>
+                                ))
+                            ) : filteredUsers.length > 0 ? (
+                                paginatedUsers.map((user) => (
+                                    <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-6 py-4 align-top">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                                    <UserIcon size={14} />
+                                                </div>
+                                                <span className="font-bold text-slate-800">{user.first_name || ''} {user.last_name || ''}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">{user.email || 'N/A'}</td>
+                                        <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">{user.cmg_num || 'N/A'}</td>
+                                        <td className="px-6 py-4 align-top">
+                                            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">
+                                                {user.parent_requests_count || 0}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">{user.user_phone || 'N/A'}</td>
+                                        <td className="px-6 py-4 text-slate-500 text-xs max-w-xs truncate align-top">{user.user_address || 'N/A'}</td>
+                                        <td className="px-6 py-4 text-right align-top">
+                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                <button
+                                                    onClick={() => onViewUser(user.id)}
+                                                    className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all"
+                                                    title="View Details"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => { setSelectedUser(user); setIsEditModalOpen(true); }}
+                                                    className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all"
+                                                    title="Edit User"
+                                                >
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteUser(user)}
+                                                    disabled={isDeleting === user.id}
+                                                    className={`p-2 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-all ${isDeleting === user.id ? 'animate-pulse' : ''}`}
+                                                    title="Delete User"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                                        No users found matching your search.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                <Pagination
+                    totalItems={filteredUsers.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
+
+            {isEditModalOpen && selectedUser && (
+                <EditUserModal
+                    user={selectedUser}
+                    onClose={() => { setIsEditModalOpen(false); setSelectedUser(null); }}
+                    onUpdate={() => { fetchUsers(); setIsEditModalOpen(false); setSelectedUser(null); }}
+                />
+            )}
+
+            {isDeleteModalOpen && userToDelete && (
+                <DeleteConfirmationModal
+                    userName={`${userToDelete.first_name || ''} ${userToDelete.last_name || ''}`}
+                    isDeleting={isDeleting === userToDelete.id}
+                    onClose={() => { setIsDeleteModalOpen(false); setUserToDelete(null); }}
+                    onConfirm={confirmDelete}
+                />
+            )}
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Email</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">SMG Num</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Requests</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Phone</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                [1, 2, 3].map(i => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-48" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-12" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-48" /></td>
-                    <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-xl w-24 ml-auto" /></td>
-                  </tr>
-                ))
-              ) : filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                          <UserIcon size={14} />
-                        </div>
-                        <span className="font-bold text-slate-800">{user.first_name} {user.last_name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">{user.email || 'N/A'}</td>
-                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">{user.cmg_num || 'N/A'}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">
-                        {user.parent_requests_count || 0}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium text-sm">{user.user_phone || 'N/A'}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs max-w-xs truncate">{user.user_address || 'N/A'}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                        <button
-                          onClick={() => onViewUser(user.id)}
-                          className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all"
-                          title="View Details"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => { setSelectedUser(user); setIsEditModalOpen(true); }}
-                          className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all"
-                          title="Edit User"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user)}
-                          disabled={isDeleting === user.id}
-                          className={`p-2 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-all ${isDeleting === user.id ? 'animate-pulse' : ''}`}
-                          title="Delete User"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 font-medium italic">
-                    No users found matching your search.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {isEditModalOpen && selectedUser && (
-        <EditUserModal
-          user={selectedUser}
-          onClose={() => { setIsEditModalOpen(false); setSelectedUser(null); }}
-          onUpdate={() => { fetchUsers(); setIsEditModalOpen(false); setSelectedUser(null); }}
-        />
-      )}
-
-      {isDeleteModalOpen && userToDelete && (
-        <DeleteConfirmationModal
-          userName={`${userToDelete.first_name} ${userToDelete.last_name}`}
-          isDeleting={isDeleting === userToDelete.id}
-          onClose={() => { setIsDeleteModalOpen(false); setUserToDelete(null); }}
-          onConfirm={confirmDelete}
-        />
-      )}
-    </div>
-  );
+    );
 };
 
 const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => {
@@ -2752,36 +2986,36 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
             <ClipboardList size={20} className="text-slate-400" /> Parent Requests
           </h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto min-h-[300px]">
+          <table className="w-full text-left table-fixed min-w-[800px]">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Rate</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Address</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Children</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Created</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">ID</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Rate</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Address</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Children</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {user?.parent_requests?.map((req: any) => (
                 <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-black text-slate-900">#{req.id}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-sm font-black text-slate-900 align-top">#{req.id}</td>
+                  <td className="px-6 py-4 align-top">
                     <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
                       {req.board_status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-700">{req.hourly_rate}€/hr</td>
-                  <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate">{req.parent_address}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">{req.hourly_rate}€/hr</td>
+                  <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate align-top">{req.parent_address}</td>
+                  <td className="px-6 py-4 align-top">
                     <div className="flex items-center gap-1.5">
                       <Baby size={14} className="text-slate-400" />
                       <span className="text-sm font-bold text-slate-700">{req.children?.length || 0}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-xs text-slate-400 font-medium">
+                  <td className="px-6 py-4 text-xs text-slate-400 font-medium align-top">
                     {new Date(req.created_at).toLocaleDateString()}
                   </td>
                 </tr>

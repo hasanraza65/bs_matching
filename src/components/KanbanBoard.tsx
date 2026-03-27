@@ -1136,12 +1136,14 @@ export const RequestDetailsModal = ({
   request,
   onClose,
   onUpdate,
-  showOnlySitters = false
+  showOnlySitters = false,
+  hideBabysittersTab = false
 }: {
   request: KanbanRequest;
   onClose: () => void;
   onUpdate: (updatedFields: Partial<KanbanRequest>) => void;
   showOnlySitters?: boolean;
+  hideBabysittersTab?: boolean;
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters'>(showOnlySitters ? 'sitters' : 'overview');
@@ -1399,7 +1401,7 @@ export const RequestDetailsModal = ({
             {[
               { id: 'overview', label: 'Overview', icon: Info },
               { id: 'schedule', label: 'Schedule', icon: Calendar },
-              { id: 'sitters', label: 'Babysitters', icon: Baby },
+              ...(hideBabysittersTab ? [] : [{ id: 'sitters', label: 'Babysitters', icon: Baby }]),
             ].map((tab) => (
               <button
                 key={tab.id}
