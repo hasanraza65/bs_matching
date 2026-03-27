@@ -650,6 +650,12 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                     <p className="font-display font-bold text-brand-blue text-sm italic underline underline-offset-8 decoration-brand-blue/20">
                                         {t.electronicSignature}
                                     </p>
+                                    {/* Show signer's name in a handwritten/cursive style when contract is accepted */}
+                                    {contractData?.status === 1 && (
+                                        <p className="mt-3 text-lg text-slate-800 font-display font-semibold" style={{ fontFamily: "'French Script MT', 'Great Vibes', 'Pacifico', cursive" }}>
+                                            {contractData.user.first_name} {contractData.user.last_name}
+                                        </p>
+                                    )}
                                     <div className="w-32 h-0.5 bg-brand-blue/10 mt-2 rounded-full" />
                                 </div>
                             </div>

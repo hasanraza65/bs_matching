@@ -209,6 +209,9 @@ const buildContractHtml = (
 <html lang="${language}">
 <head>
     <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Great+Vibes&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -430,6 +433,9 @@ const buildContractHtml = (
         <p style="font-size: 13px; font-weight: 700; color: #1e40af; font-style: italic; text-decoration: underline; text-underline-offset: 6px;">
             ${t.electronicSignature}
         </p>
+        ${data.user && (data.user.first_name || data.user.last_name) ? `
+            <p style="font-size:18px; font-weight:700; color:#0f172a; font-family: 'French Script MT', 'Great Vibes', 'Pacifico', cursive; margin-top:6px;">${data.user.first_name} ${data.user.last_name}</p>
+        ` : ''}
     </div>
 </body>
 </html>`;

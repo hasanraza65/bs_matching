@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { en } from '../translations/en';
 import { fr } from '../translations/fr';
+import { it } from '../translations/it';
 
-type Language = 'en' | 'fr';
+type Language = 'en' | 'fr' | 'it';
 type Translations = typeof en;
 
 interface LanguageContextType {
@@ -18,10 +19,10 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('fr'); // Default to French as requested expert
 
-  const t = language === 'en' ? en : fr;
+  const t = language === 'en' ? en : (language === 'fr' ? fr : it);
 
   const formatCurrency = (amount: number) => {
-    if (language === 'fr') {
+    if (language === 'fr' || language === 'it') {
       return amount.toFixed(2).replace('.', ',') + ' €';
     }
     return '€' + amount.toFixed(2);
