@@ -1257,7 +1257,7 @@ export default function App() {
       }
 
       if (idToUse) {
-        await api.createBabysitterChoices({
+       const res = await api.createBabysitterChoices({
           parent_request_id: idToUse,
           choices: selectedCandidates.map((c, index) => {
             const sitter = localizedSitters.find(s => s.id === c.sitterId);
@@ -1285,6 +1285,12 @@ export default function App() {
             };
           })
         });
+        if (res.status) {
+          
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 1000);
+        }
       }
 
       setIsConfirmModalProcessing(false);
