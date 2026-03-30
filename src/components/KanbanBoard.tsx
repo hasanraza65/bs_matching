@@ -601,7 +601,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
       // Clean choices payload - map back to BabysitterChoicePayload structure
       const choicesPayload = (updatedFields.choices || []).map((c: any) => ({
         choice_order: c.choice_order,
-        bb_bs_id: c.user_id,
+        bb_bs_id: c.bb_bs_id,
         babysitter_first_name: c.babysitter_first_name,
         babysitter_last_name: c.babysitter_last_name,
         babysitter_email: c.babysitter_email,
@@ -626,6 +626,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         choices: choicesPayload,
         schedules: schedulesPayload, 
         hourly_rate: updatedFields.hourly_rate,
+        bb_bs_id: updatedFields.bb_bs_id,
         _method: 'put'
       } as any);
 
@@ -656,6 +657,7 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         hourly_rate: newReq.hourly_rate,
         board_status: isAddingToColumn || 'New Leads',
         from_admin: true,
+        bb_bs_id: newReq.bb_bs_id,
       });
 
       if (response.status && response.data) {
@@ -784,7 +786,8 @@ const NewRequestModal = ({
     hourly_rate: '28.50',
     user_language: 'en' as 'en' | 'fr',
     lat: undefined as number | undefined,
-    lng: undefined as number | undefined
+    lng: undefined as number | undefined,
+    bb_bs_id: ''
   });
 
   const parentAddressRef = useRef<HTMLInputElement>(null);
@@ -982,6 +985,16 @@ const NewRequestModal = ({
                   placeholder="28.50"
                   value={formData.hourly_rate}
                   onChange={(e) => handleChange('hourly_rate', e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
+                />
+              </div>
+              <div className="space-y-1.5 focus-within:z-10">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Bloom Buddies Babysitter ID</label>
+                <input
+                  type="text"
+                  placeholder="Paste BB Babysitter ID here"
+                  value={formData.bb_bs_id}
+                  onChange={(e) => handleChange('bb_bs_id', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
                 />
               </div>
@@ -1557,6 +1570,16 @@ export const RequestDetailsModal = ({
                             className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
                           />
                         </div>
+                        <div className="space-y-1.5 focus-within:z-10">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Bloom Buddies Babysitter ID</label>
+                          <input
+                            type="text"
+                            placeholder="BB Babysitter ID"
+                            value={formData.bb_bs_id || ''}
+                            onChange={(e) => handleChange('bb_bs_id', e.target.value)}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                          />
+                        </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Preferred Language</label>
                           <div className="flex items-center gap-2 p-1 bg-white border border-slate-200 rounded-xl">
@@ -1782,6 +1805,7 @@ export const RequestDetailsModal = ({
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
                               />
                             </div>
+
                             <div className="flex gap-4">
                               <div className="flex-1 space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase">Interview Time</label>
@@ -1802,6 +1826,18 @@ export const RequestDetailsModal = ({
                                 />
                               </div>
                             </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">BB Babysitter ID</label>
+                              <input
+                                type="text"
+                                placeholder="Paste BB Babysitter ID here"
+                                value={choice.bb_bs_id || ''}
+                                onChange={(e) => handleSitterChange(idx, 'bb_bs_id', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold"
+                              />
+                            </div>
+
                             <div className="md:col-span-2 pt-2 border-t border-slate-50">
                               {choice.zoom_meeting_link ? (
                                 <a

@@ -83,6 +83,7 @@ export interface ParentRequest {
   contract?: Contract;
   created_at?: string;
   updated_at?: string;
+  bb_bs_id?: string | number;
 }
 
 export interface Invoice {
@@ -320,6 +321,7 @@ export const api = {
       _method?: string;
       lat?: number;
       lng?: number;
+      bb_bs_id?: string | number;
     },
   ): Promise<ParentRequestResponse> => {
     const response = await apiClient.post(`/parent-requests/${id}`, {
@@ -356,6 +358,7 @@ export const api = {
     lat?: number;
     lng?: number;
     choices?: BabysitterChoicePayload[];
+    bb_bs_id?: string | number;
   }): Promise<ParentRequestResponse> => {
     const response = await apiClient.post("/parent-requests", data);
     return {

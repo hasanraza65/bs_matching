@@ -56,6 +56,7 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
     user_language: 'en' as 'en' | 'fr',
     lat: undefined as number | undefined,
     lng: undefined as number | undefined,
+    bb_bs_id: '',
     children: [{ child_dob: '' }],
     schedules: [
       {
@@ -246,6 +247,7 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
         from_admin: true,
         lat: formData.lat,
         lng: formData.lng,
+        bb_bs_id: formData.bb_bs_id,
         choices: [] // Manual selection removed
       });
 
@@ -392,6 +394,16 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
                     Français
                   </button>
                 </div>
+              </div>
+              <div className="space-y-1.5 focus-within:z-10">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Bloom Buddies Babysitter ID</label>
+                <input
+                  type="text"
+                  placeholder="Paste BB Babysitter ID here"
+                  value={formData.bb_bs_id}
+                  onChange={(e) => handleChange('bb_bs_id', e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
+                />
               </div>
             </div>
           </section>
