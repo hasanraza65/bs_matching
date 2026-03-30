@@ -282,8 +282,8 @@ const DashboardView = () => {
   const stats = [
     { label: 'Total Requests', value: '1,284', trend: '+12.5%', icon: ClipboardList, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Active Interviews', value: '42', trend: '+5.2%', icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Pending Payments', value: 'â‚¬3,450', trend: '-2.4%', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Total Revenue', value: 'â‚¬48,290', trend: '+18.7%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Pending Payments', value: '€3,450', trend: '-2.4%', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Total Revenue', value: '€48,290', trend: '+18.7%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
   return (
@@ -553,7 +553,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate align-top">{req.parent_address || 'No address provided'}</td>
-                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">â‚¬{req.hourly_rate}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
                                     <td className="px-6 py-4 text-sm text-slate-500 align-top">
                                         {formatDate(req.created_at)}
                                     </td>
@@ -854,7 +854,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">â‚¬{req.hourly_rate}</td>
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
                                         <td className="px-6 py-4 text-sm text-slate-500 align-top">
                                             {formatDate(req.created_at)}
                                         </td>
@@ -1131,7 +1131,7 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">â‚¬{req.hourly_rate}</td>
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
                                         <td className="px-6 py-4 text-sm text-slate-500 align-top">
                                             {formatDate(req.updated_at)}
                                         </td>
@@ -2693,7 +2693,7 @@ const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 align-top">{item.due_date}</td>
                                     <td className="px-6 py-4 text-slate-600 capitalize align-top">{formatBillingMonth(item.due_date)}</td>
-                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">â‚¬{parseFloat(item.amount).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">€{parseFloat(item.amount).toFixed(2)}</td>
                                     <td className="px-6 py-4 align-top">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.payment_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
                                             item.payment_status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
@@ -2838,7 +2838,7 @@ const ContractsView = ({ onViewContract, searchQuery, onSearchChange }: { onView
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">
-                                        {contract.hourly_rate ? `${contract.hourly_rate}â‚¬/hr` : 'N/A'}
+                                        {contract.hourly_rate ? `${contract.hourly_rate}€/hr` : 'N/A'}
                                     </td>
                                     <td className="px-6 py-4 text-right align-top">
                                         <button
@@ -3323,7 +3323,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
                                     <td className="px-6 py-4 align-top">
                                         <StatusBadge status={req.request_current_status || req.board_status} />
                                     </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">{req.hourly_rate}â‚¬/hr</td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">{req.hourly_rate}€/hr</td>
                   <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate align-top">{req.parent_address}</td>
                   <td className="px-6 py-4 align-top">
                     <div className="flex items-center gap-1.5">
@@ -3559,7 +3559,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                       <tr key={month}>
                         <td className="px-6 py-4 font-bold text-slate-700 capitalize">{formatMonthString(month)}</td>
                         <td className="px-6 py-4 text-slate-500">{getMonthlyHours(contractData.format1[month]).toFixed(2)}h</td>
-                        <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} â‚¬</td>
+                        <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} €</td>
                       </tr>
                     ))}
                   </tbody>
@@ -3567,7 +3567,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                     <tr>
                       <td className="px-6 py-4 font-bold">{t.article4.hourlyRate}</td>
                       <td colSpan={2} className="px-6 py-4 text-right font-bold text-lg">
-                        {contractData?.hourly_rate} â‚¬/h
+                        {contractData?.hourly_rate} €/h
                       </td>
                     </tr>
                   </tfoot>
