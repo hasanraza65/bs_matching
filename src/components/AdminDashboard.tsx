@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api, User } from '../services/api';
 import PhoneInput from 'react-phone-input-2';
@@ -337,6 +337,7 @@ const DashboardView = () => {
 };
 
 const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatDate } = useLanguage();
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -628,6 +629,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
 };
 
 const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { onViewInvoices?: (userId: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatDate } = useLanguage();
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -905,6 +907,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
 };
 
 const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { onViewInvoices?: (userId: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatDate } = useLanguage();
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -1419,6 +1422,7 @@ const ActiveRequestChoicesCell: React.FC<{
 };
 
 const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatDate } = useLanguage();
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -1735,6 +1739,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
 };
 
 const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { onViewInvoices?: (userId: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatDate } = useLanguage();
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -2718,6 +2723,7 @@ const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }
 };
 
 const ContractsView = ({ onViewContract, searchQuery, onSearchChange }: { onViewContract: (id: number) => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatDate } = useLanguage();
     const [contracts, setContracts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -2814,7 +2820,7 @@ const ContractsView = ({ onViewContract, searchQuery, onSearchChange }: { onView
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
-                                        {formatDate(\)}
+                                        {formatDate(contract.created_at)}
                                     </td>
                                     <td className="px-6 py-4 align-top">
                                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${contract.status === 1
@@ -2853,6 +2859,7 @@ const ContractsView = ({ onViewContract, searchQuery, onSearchChange }: { onView
 };
 
 const AttestationsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatDate } = useLanguage();
     const [attestations, setAttestations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -2960,7 +2967,7 @@ const AttestationsView = ({ searchQuery, onSearchChange }: { searchQuery: string
                                         {a.year}
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
-                                        {formatDate(\)}
+                                        {formatDate(a.date)}
                                     </td>
                                     <td className="px-6 py-4 text-right align-top">
                                         <button
@@ -3187,7 +3194,8 @@ const UsersView = ({ onViewUser, searchQuery, onSearchChange }: { onViewUser: (i
 };
 
 const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => {
-  const [user, setUser] = useState<User & { parent_requests: any[] } | null>(null);
+    const { formatDate } = useLanguage();
+    const [user, setUser] = useState<User & { parent_requests: any[] } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -3318,9 +3326,9 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
                       <span className="text-sm font-bold text-slate-700">{req.children?.length || 0}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-xs text-slate-400 font-medium align-top">
-                    {formatDate(\)}
-                  </td>
+                                    <td className="px-6 py-4 text-xs text-slate-400 font-medium align-top">
+                                        {formatDate(req.created_at)}
+                                    </td>
                 </tr>
               ))}
               {(!user?.parent_requests || user.parent_requests.length === 0) && (
@@ -3339,7 +3347,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
 };
 
 const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: () => void }) => {
-  const { t: trans, language } = useLanguage();
+  const { t: trans, language, formatDate } = useLanguage();
   const t = trans.contract;
   const [contractData, setContractData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
