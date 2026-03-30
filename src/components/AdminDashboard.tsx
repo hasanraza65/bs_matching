@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api, User } from '../services/api';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -53,6 +53,17 @@ import {
   Video
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
+
+// Generic date formatter used by many subviews in this file when a locale-aware
+// formatter from context is not available.
+const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return '';
+    try {
+        return new Date(dateStr).toLocaleString();
+    } catch {
+        return String(dateStr);
+    }
+};
 import { KanbanBoard, RequestDetailsModal, transformToKanbanRequest, KanbanRequest } from './KanbanBoard';
 import { AddNewActiveRequestModal } from './AddNewActiveRequestModal';
 import { Pagination } from './Pagination';
@@ -89,6 +100,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   ];
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
@@ -2814,7 +2827,7 @@ const ContractsView = ({ onViewContract, searchQuery, onSearchChange }: { onView
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
-                                        {formatDate(\)}
+                                        {formatDate(contract.created_at ?? contract.date ?? '')}
                                     </td>
                                     <td className="px-6 py-4 align-top">
                                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${contract.status === 1
@@ -2960,7 +2973,7 @@ const AttestationsView = ({ searchQuery, onSearchChange }: { searchQuery: string
                                         {a.year}
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
-                                        {formatDate(\)}
+                                        {formatDate(a.created_at ?? a.date ?? '')}
                                     </td>
                                     <td className="px-6 py-4 text-right align-top">
                                         <button
@@ -3319,7 +3332,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
                     </div>
                   </td>
                   <td className="px-6 py-4 text-xs text-slate-400 font-medium align-top">
-                    {formatDate(\)}
+                    {formatDate(req.created_at ?? req.createdAt ?? '')}
                   </td>
                 </tr>
               ))}
