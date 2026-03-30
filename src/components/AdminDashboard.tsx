@@ -1611,8 +1611,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[6%]">ID</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Parent Details</th>
-                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[6%]">Lang</th>
+                                <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[26%]">Parent Details</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[26%]">Sitter Choices</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center w-[12%]">Contract</th>
                                 <th className="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Schedules</th>
@@ -1622,7 +1621,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                         <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading active requests...</span>
@@ -1632,7 +1631,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -1642,7 +1641,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No active requests found.
                                     </td>
                                 </tr>
@@ -1660,11 +1659,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4 align-top">
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${req.user?.user_language === 'fr' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
-                                            {req.user?.user_language || 'en'}
-                                        </span>
-                                    </td>
+
                                     <td className="px-4 py-4 align-top">
                                         <ActiveRequestChoicesCell 
                                             choices={req.choices ?? []} 
