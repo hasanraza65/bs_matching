@@ -95,10 +95,10 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
     // Payment translations using the same structure as App.tsx
     // (We cast to `any` because `t.payment` might not be in the LanguageContext type yet)
     const paymentT = (trans as any).payment || {
-        cardNumber: "NumÃ©ro de carte",
+        cardNumber: "Numéro de carte",
         expiry: "Expiration",
         cvc: "CVC",
-        securityNote: "Vos donnÃ©es de paiement sont cryptÃ©es et sÃ©curisÃ©es",
+        securityNote: "Vos données de paiement sont cryptées et sécurisées",
         processing: "Traitement en cours...",
         payButton: "Payer {amount}",
         checkout: "Payer et Accepter"
@@ -170,7 +170,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                     throw new Error(language === 'fr' ? "Erreur lors de la confirmation du contrat" : "Contract confirmation error");
                 }
             } else {
-                throw new Error(language === 'fr' ? "Le paiement n'a pas Ã©tÃ© finalisÃ©" : "Payment was not finalized");
+                throw new Error(language === 'fr' ? "Le paiement n'a pas été finalisé" : "Payment was not finalized");
             }
         } catch (err: any) {
             setIsPaymentProcessing(false);
@@ -187,10 +187,10 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                 if (data.status == 0 || data.status == 1 || data.status == 2) {
                     setContractData(data);
                 } else {
-                    setError(language === 'fr' ? "Impossible de charger les dÃ©tails du contrat" : "Could not load contract specifics");
+                    setError(language === 'fr' ? "Impossible de charger les détails du contrat" : "Could not load contract specifics");
                 }
             } catch (err) {
-                setError(language === 'fr' ? "Erreur lors de la rÃ©cupÃ©ration des donnÃ©es" : "Failed to fetch contract data");
+                setError(language === 'fr' ? "Erreur lors de la récupération des données" : "Failed to fetch contract data");
             } finally {
                 setLoading(false);
             }
@@ -446,7 +446,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                                                 <td className="px-6 py-4 text-slate-500">
                                                                     {getMonthlyHours(contractData.format1[month]).toFixed(2)}h
                                                                 </td>
-                                                                <td className="px-6 py-4 font-bold text-brand-blue">{total.toFixed(2)} â‚¬</td>
+                                                                <td className="px-6 py-4 font-bold text-brand-blue">{total.toFixed(2)} €</td>
                                                             </tr>
                                                         ))
                                                     ) : (
@@ -461,7 +461,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                                     <tr>
                                                         <td className="px-6 py-4 font-bold text-slate-900">{t.article4.hourlyRate}</td>
                                                         <td colSpan={2} className="px-6 py-4 text-right font-display font-black text-brand-blue text-lg italic">
-                                                            {contractData?.hourly_rate ? `${contractData.hourly_rate} â‚¬/h` : '-- â‚¬/h'}
+                                                            {contractData?.hourly_rate ? `${contractData.hourly_rate} €/h` : '-- €/h'}
                                                         </td>
                                                     </tr>
                                                 </tfoot>
@@ -669,7 +669,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                         <>
                             <div className="flex-1 py-4 bg-green-50 text-green-600 font-bold rounded-2xl border border-green-100 flex items-center justify-center gap-2">
                                 <CheckCircle2 size={20} />
-                                {language === 'fr' ? 'AcceptÃ©' : 'Accepted'}
+                                {language === 'fr' ? 'Accepté' : 'Accepted'}
                             </div>
                             <button
                                 onClick={handleDownloadPDF}
@@ -682,8 +682,8 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                     <Download size={20} />
                                 )}
                                 {isDownloading
-                                    ? (language === 'fr' ? 'GÃ©nÃ©ration...' : 'Generating...')
-                                    : (language === 'fr' ? 'TÃ©lÃ©charger' : 'Download')
+                                    ? (language === 'fr' ? 'Génération...' : 'Generating...')
+                                    : (language === 'fr' ? 'Télécharger' : 'Download')
                                 }
                             </button>
                         </>
@@ -691,7 +691,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                         <>
                             <div className="flex-1 py-4 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 flex items-center justify-center gap-2">
                                 <AlertCircle size={20} />
-                                {language === 'fr' ? 'RefusÃ©' : 'Rejected'}
+                                {language === 'fr' ? 'Refusé' : 'Rejected'}
                             </div>
                         </>
                     ) : (
@@ -748,7 +748,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                         </h3>
                                         <p className="text-slate-500 text-xs leading-relaxed px-4">
                                             {(t.actions as any).signingSubtitle || (language === 'fr'
-                                                ? "En glissant, votre contrat sera signÃ© et votre paiement reÃ§u."
+                                                ? "En glissant, votre contrat sera signé et votre paiement reçu."
                                                 : "By sliding, your contract will be signed and your payment received"
                                             )}
                                         </p>
@@ -762,7 +762,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                                 <p className="text-sm font-bold text-slate-800 capitalize">{Object.keys(contractData.format2)[0]}</p>
                                             </div>
                                             <div className="text-xl font-display font-bold text-brand-blue">
-                                                {getFirstMonthAmount().toFixed(2)} â‚¬
+                                                {getFirstMonthAmount().toFixed(2)} €
                                             </div>
                                         </div>
                                     )}
@@ -837,8 +837,8 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                     </h3>
                                     <p className="text-slate-500 mb-10 font-medium text-sm leading-relaxed px-4">
                                         {language === 'fr'
-                                            ? "Votre contrat a Ã©tÃ© signÃ© Ã©lectroniquement avec succÃ¨s et le paiement a Ã©tÃ© traitÃ©."
-                                            : "Your contract has been successfully signed electrically and payment processed."
+                                            ? "Votre contrat a été signé électroniquement avec succès et le paiement a été traité."
+                                            : "Your contract has been successfully signed electronically and payment processed."
                                         }
                                     </p>
                                     <button
@@ -880,11 +880,11 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                             </div>
 
                             <h3 className="text-xl font-display font-bold text-slate-900 mb-2 uppercase tracking-tight">
-                                {language === 'fr' ? 'PrÃ©paration du PDF...' : 'Preparing PDF...'}
+                                {language === 'fr' ? 'Préparation du PDF...' : 'Preparing PDF...'}
                             </h3>
                             <p className="text-slate-500 text-xs leading-relaxed px-4">
                                 {language === 'fr'
-                                    ? "Nous prÃ©parons votre contrat pour le tÃ©lÃ©chargement. Cela ne prendra que quelques instants."
+                                    ? "Nous préparons votre contrat pour le téléchargement. Cela ne prendra que quelques instants."
                                     : "We are preparing your contract for download. This will only take a moment."
                                 }
                             </p>
@@ -916,11 +916,11 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                         <Check size={28} className="text-green-600" />
                                     </div>
                                     <h3 className="text-lg font-display font-bold text-slate-900 mb-2">
-                                        {language === 'fr' ? 'Contrat refusÃ©' : 'Contract rejected'}
+                                        {language === 'fr' ? 'Contrat refusé' : 'Contract rejected'}
                                     </h3>
                                     <p className="text-sm text-slate-500 mb-6">
                                         {language === 'fr'
-                                            ? "Le contrat a Ã©tÃ© refusÃ© avec succÃ¨s."
+                                            ? "Le contrat a été refusé avec succès."
                                             : 'The contract was rejected successfully.'}
                                     </p>
                                 </>

@@ -2386,7 +2386,7 @@ export default function App() {
                               <div className="flex justify-between items-start">
                                 <div className="flex flex-col">
                                   <span className="text-sm font-bold text-slate-700">{t.step2.childcarePackage}</span>
-                                  <span className="text-[11px] text-slate-400">({formatNumber(totalHours)}h Ã— {formatCurrency(hourlyRate)})</span>
+                                  <span className="text-[11px] text-slate-400">({formatNumber(totalHours)}h × {formatCurrency(hourlyRate)})</span>
                                 </div>
                                 <span className="font-bold text-slate-700">{formatCurrency(baseSubtotal)}</span>
                               </div>
@@ -2731,7 +2731,7 @@ export default function App() {
                                   <div className="flex-1 flex items-start justify-between">
                                     <div>
                                       <h3 className="font-display font-bold text-slate-800">{sitter.name} {sitter.lastName}</h3>
-                                      <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} â€¢ {formatExperienceShortFromMonths((sitter as any).experienceMonths || 0)}</p>
+                                      <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} • {formatExperienceShortFromMonths((sitter as any).experienceMonths || 0)}</p>
                                      {/* 
                                       <div className="flex items-center gap-1 mt-1">
                                         <Star size={12} className="text-amber-400 fill-amber-400" />

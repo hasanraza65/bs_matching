@@ -36,7 +36,7 @@ export const fr = {
     yearsOld: "ans",
     filters: "Filtres",
     byLanguages: "Par Langues",
-    byAgeGroup: "Par Groupe d'Âge",
+    byAgeGroup: "Par groupe d'âge",
     byExperience: "Par Expérience",
     infants: "Nourrissons",
     toddlers: "Tout-petits",

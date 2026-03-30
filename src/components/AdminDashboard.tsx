@@ -2193,7 +2193,7 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                                             <td colSpan={5} className="px-6 py-12 text-center">
                                                 <div className="flex items-center justify-center gap-3 text-slate-400">
                                                     <Loader2 className="animate-spin w-5 h-5" />
-                                                    <span className="text-sm font-medium">Loading requestsâ€¦</span>
+                                                    <span className="text-sm font-medium">Loading requests…</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -2431,9 +2431,9 @@ const InterviewsView = ({ searchQuery, onSearchChange }: { searchQuery: string; 
   const itemsPerPage = 10;
 
   const allInterviews = [
-    { id: '1', family: 'Smith Family', sitter: 'AmÃ©lie Laurent', date: '15/03/2026', status: 'Scheduled' },
+    { id: '1', family: 'Smith Family', sitter: 'Amélie Laurent', date: '15/03/2026', status: 'Scheduled' },
     { id: '2', family: 'Dupont Family', sitter: 'Thomas Dubois', date: '16/03/2026', status: 'Completed' },
-    { id: '3', family: 'Miller Family', sitter: 'ChloÃ© Mercier', date: '18/03/2026', status: 'Cancelled' },
+    { id: '3', family: 'Miller Family', sitter: 'Chloé Mercier', date: '18/03/2026', status: 'Cancelled' },
     { id: '4', family: 'Garcia Family', sitter: 'Lucas Martin', date: '20/03/2026', status: 'Scheduled' },
     { id: '5', family: 'Lefevre Family', sitter: 'Manon Petit', date: '22/03/2026', status: 'Completed' },
     { id: '6', family: 'Dubois Family', sitter: 'Arthur Bernard', date: '25/03/2026', status: 'Scheduled' },
@@ -2661,7 +2661,7 @@ const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }
                                     <td colSpan={7} className="px-6 py-12 text-center">
                                         <div className="flex items-center justify-center gap-3 text-slate-400">
                                             <Loader2 className="animate-spin w-5 h-5" />
-                                            <span className="text-sm font-medium">Loading invoicesâ€¦</span>
+                                            <span className="text-sm font-medium">Loading invoices…</span>
                                         </div>
                                     </td>
                                 </tr>
