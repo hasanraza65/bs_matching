@@ -1177,8 +1177,28 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
 const SitterChoicesModal: React.FC<{ 
     choices: any[], 
     requestId: number, 
-    onClose: () => void 
-}> = ({ choices, requestId, onClose }) => {
+    onClose: () => void,
+    onRefresh?: () => void 
+}> = ({ choices, requestId, onClose, onRefresh }) => {
+    const { formatDate } = useLanguage();
+    const handleSelectFinal = async (choiceId: number) => {
+
+        try {
+            const response = await api.selectFinalChoice(choiceId);
+            if (response.status) {
+                toast.success(response.message || 'Choice finalized successfully');
+                if (onRefresh) onRefresh();
+                onClose(); // Close modal to show updated status in table
+            } else {
+                toast.error(response.message || 'Failed to finalize choice');
+            }
+        } catch (error) {
+            toast.error('An error occurred while finalizing choice');
+        }
+    };
+
+    const hasAcceptedChoice = choices.some(c => Number(c.final_choice) === 1);
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
             <motion.div 
@@ -1199,74 +1219,109 @@ const SitterChoicesModal: React.FC<{
                         <X size={20} />
                     </button>
                 </div>
-                
                 <div className="p-6 max-h-[70vh] overflow-y-auto">
-                    <div className="flex flex-col border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm">
-                        <div className="grid grid-cols-[1.5fr,1fr,1fr,120px] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-left">
-                            <span>Babysitter Info</span>
-                            <span>Contact</span>
-                            <span>Interview</span>
-                            <span className="text-right">Actions</span>
-                        </div>
-                        <div className="divide-y divide-slate-50">
-                            {choices.map((choice) => (
-                                <div key={choice.id} className="grid grid-cols-[1.5fr,1fr,1fr,120px] gap-4 px-6 py-5 hover:bg-slate-50/50 transition-colors items-center group/modal-row">
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-bold text-slate-800 truncate">
-                                            {choice.babysitter_first_name} {choice.babysitter_last_name}
-                                        </p>
-                                        <p className="text-xs text-slate-400 truncate">{choice.babysitter_email}</p>
+                    <div className="flex flex-col gap-4">
+                        {choices.map((choice) => (
+                            <div key={choice.id} className="group relative bg-white border border-slate-100 rounded-3xl p-6 transition-all hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-0.5 overflow-hidden">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-slate-200">
+                                            <UserIcon size={24} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h4 className="text-lg font-bold text-slate-900 truncate">
+                                                {choice.babysitter_first_name} {choice.babysitter_last_name}
+                                            </h4>
+                                            <p className="text-sm text-slate-500 font-medium truncate flex items-center gap-1.5 mt-0.5">
+                                                <Mail size={14} className="text-slate-400" />
+                                                {choice.babysitter_email}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="text-xs text-slate-600 font-medium">
-                                        {choice.babysitter_phone || 'N/A'}
-                                    </div>
-                                    <div>
-                                        {choice.interview_date ? (
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                                                    <Calendar size={12} className="text-brand-accent/70" />
-                                                    <span>{choice.interview_date}</span>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-8 md:flex md:items-center">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Contact Info</span>
+                                            <div className="flex items-center gap-2 text-sm text-slate-600 font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                                                <Phone size={14} className="text-slate-400" />
+                                                {choice.babysitter_phone || 'N/A'}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col gap-1 md:ml-6">
+                                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Interview Details</span>
+                                            {choice.interview_date ? (
+                                                <div className="flex items-center gap-3 bg-blue-50/50 px-3 py-1.5 rounded-xl border border-blue-100 text-sm">
+                                                    <div className="flex items-center gap-1.5 text-blue-600 font-bold">
+                                                        <Calendar size={14} />
+                                                        <span>{formatDate(choice.interview_date)}</span>
+                                                    </div>
+                                                    <div className="w-px h-4 bg-blue-200" />
+                                                    <div className="flex items-center gap-1.5 text-blue-500 font-bold">
+                                                        <Clock size={14} />
+                                                        <span>{choice.interview_time?.substring(0, 5)}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                                                    <Clock size={12} className="text-slate-300" />
-                                                    <span>{choice.interview_time?.substring(0, 5)}</span>
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-sm text-slate-400 font-medium px-3 py-1.5 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                                                    <Clock size={14} className="text-slate-300" />
+                                                    <span className="italic">Not scheduled yet</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-end gap-3 pt-4 md:pt-0 border-t border-slate-50 md:border-none">
+                                        {Number(choice.final_choice) === 1 ? (
+                                            <div className="flex items-center gap-2">
+                                                <button 
+                                                    onClick={() => {
+                                                        const link = `${window.location.origin}/contract/${choice.id}`;
+                                                        navigator.clipboard.writeText(link);
+                                                        toast.success('Contract link copied!');
+                                                    }}
+                                                    className="px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-sm font-bold text-xs flex items-center gap-2"
+                                                    title="Copy Contract Link"
+                                                >
+                                                    <FileText size={16} />
+                                                    <span>Contract</span>
+                                                </button>
+                                                <div className="px-4 py-2.5 bg-emerald-500 text-white text-xs font-black rounded-2xl shadow-lg shadow-emerald-100 flex items-center gap-2">
+                                                    <CheckCircle2 size={16} />
+                                                    Accepted
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <span className="text-xs text-slate-300 italic">Not scheduled</span>
+                                        ) : !hasAcceptedChoice && (
+                                            <button 
+                                                onClick={() => handleSelectFinal(choice.id)}
+                                                className="px-6 py-3 bg-slate-900 text-white text-sm font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-2 active:scale-95"
+                                            >
+                                                <CheckCircle2 size={18} />
+                                                Final Choice
+                                            </button>
                                         )}
-                                    </div>
-                                    <div className="flex items-center justify-end gap-2">
-                                        <button 
-                                            onClick={() => {
-                                                const link = `https://ponctuel.bloom-buddies.fr/babysitting-matching/${requestId}`;
-                                                navigator.clipboard.writeText(link);
-                                                toast.success('Price quote link copied!');
-                                            }}
-                                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all border border-transparent hover:border-emerald-100"
-                                            title="Copy Price Quote Link"
-                                        >
-                                            <LinkIcon size={16} />
-                                        </button>
+
                                         {choice.zoom_meeting_link && (
                                             <a 
                                                 href={choice.zoom_meeting_link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100"
+                                                className="w-12 h-12 flex items-center justify-center bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95"
                                                 title="Join Zoom Meeting"
                                             >
-                                                <Video size={16} />
+                                                <Video size={20} />
                                             </a>
                                         )}
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </motion.div>
         </div>
+
+
     );
 };
 
@@ -1643,6 +1698,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                         requestId={viewingSitterChoices.reqId}
                         choices={viewingSitterChoices.choices}
                         onClose={() => setViewingSitterChoices(null)}
+                        onRefresh={fetchActiveRequests}
                     />
                 )}
             </AnimatePresence>
