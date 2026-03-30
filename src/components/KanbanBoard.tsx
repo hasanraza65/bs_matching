@@ -627,7 +627,6 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         choices: choicesPayload,
         schedules: schedulesPayload, 
         hourly_rate: updatedFields.hourly_rate,
-        bb_bs_id: updatedFields.bb_bs_id,
         _method: 'put'
       } as any);
 
@@ -658,7 +657,6 @@ export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ in
         hourly_rate: newReq.hourly_rate,
         board_status: isAddingToColumn || 'New Leads',
         from_admin: true,
-        bb_bs_id: newReq.bb_bs_id,
       });
 
       if (response.status && response.data) {
@@ -788,7 +786,6 @@ const NewRequestModal = ({
     user_language: 'en' as 'en' | 'fr',
     lat: undefined as number | undefined,
     lng: undefined as number | undefined,
-    bb_bs_id: ''
   });
 
   const parentAddressRef = useRef<HTMLInputElement>(null);
@@ -990,14 +987,7 @@ const NewRequestModal = ({
                 />
               </div>
               <div className="space-y-1.5 focus-within:z-10">
-                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Bloom Buddies Babysitter ID</label>
-                <input
-                  type="text"
-                  placeholder="Paste BB Babysitter ID here"
-                  value={formData.bb_bs_id}
-                  onChange={(e) => handleChange('bb_bs_id', e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"
-                />
+                {/* Bloom Buddies Babysitter ID field removed */}
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Preferred Language</label>
@@ -1572,14 +1562,7 @@ export const RequestDetailsModal = ({
                           />
                         </div>
                         <div className="space-y-1.5 focus-within:z-10">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Bloom Buddies Babysitter ID</label>
-                          <input
-                            type="text"
-                            placeholder="BB Babysitter ID"
-                            value={formData.bb_bs_id || ''}
-                            onChange={(e) => handleChange('bb_bs_id', e.target.value)}
-                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
-                          />
+                          {/* Bloom Buddies Babysitter ID field removed */}
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Preferred Language</label>

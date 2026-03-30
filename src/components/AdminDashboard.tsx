@@ -416,7 +416,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                 children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
                 choices: (updatedFields.choices || []).map((c: any) => ({
                     choice_order: c.choice_order,
-                    bb_bs_id: c.user_id,
+                    bb_bs_id: c.bb_bs_id,
                     babysitter_first_name: c.babysitter_first_name,
                     babysitter_last_name: c.babysitter_last_name,
                     interview_date: c.interview_date,
@@ -700,7 +700,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                 children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
                 choices: (updatedFields.choices || []).map((c: any) => ({
                     choice_order: c.choice_order,
-                    bb_bs_id: c.user_id,
+                    bb_bs_id: c.bb_bs_id,
                     babysitter_first_name: c.babysitter_first_name,
                     babysitter_last_name: c.babysitter_last_name,
                     interview_date: c.interview_date,
@@ -979,7 +979,7 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                 children: (updatedFields.children || []).map((c: any) => ({ id: c.id, child_dob: c.child_dob })),
                 choices: (updatedFields.choices || []).map((c: any) => ({
                     choice_order: c.choice_order,
-                    bb_bs_id: c.user_id,
+                    bb_bs_id: c.bb_bs_id,
                     babysitter_first_name: c.babysitter_first_name,
                     babysitter_last_name: c.babysitter_last_name,
                     interview_date: c.interview_date,
@@ -1546,7 +1546,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
             // Clean choices payload
             const choicesPayload = (updatedFields.choices || []).map((c: any) => ({
                 choice_order: c.choice_order,
-                bb_bs_id: c.user_id,
+                bb_bs_id: c.bb_bs_id,
                 babysitter_first_name: c.babysitter_first_name,
                 babysitter_last_name: c.babysitter_last_name,
                 babysitter_email: c.babysitter_email,
