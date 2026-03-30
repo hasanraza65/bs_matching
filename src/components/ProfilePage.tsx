@@ -352,22 +352,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t.profilePage.createRequest}</span>
               </button>
             </div>
-            <h1 className="text-5xl md:text-6xl font-display font-bold text-slate-900 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-slate-900 tracking-tight">
               {t.profilePage.title.split(' ')[0]}
               <span className="text-brand-accent">.</span>
-              <span className="block text-2xl md:text-3xl text-slate-400 font-medium mt-1">{t.profilePage.subtitle}</span>
+              <span className="block text-xl md:text-3xl text-slate-400 font-medium mt-1 leading-tight">{t.profilePage.subtitle}</span>
             </h1>
           </div>
 
-          <div className="flex items-center gap-4 bg-white/50 backdrop-blur-sm p-2 pr-6 rounded-[32px] border border-white shadow-xl shadow-slate-200/50">
-            <div className="w-16 h-16 bg-brand-accent rounded-[24px] flex items-center justify-center text-white shadow-lg shadow-brand-accent/30">
-              <UserIcon size={32} />
+          <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-2 pr-4 sm:pr-6 rounded-[24px] sm:rounded-[32px] border border-white shadow-xl shadow-slate-200/50">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-brand-accent rounded-[18px] sm:rounded-[24px] flex items-center justify-center text-white shadow-lg shadow-brand-accent/30 shrink-0">
+              <UserIcon size={24} className="sm:w-8 sm:h-8" />
             </div>
-            <div>
-              <p className="text-[11px] font-bold text-brand-accent tracking-wide mb-0.5">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-[11px] font-bold text-brand-accent tracking-wide mb-0.5 truncate">
                 {language === 'fr' ? 'Famille Bloom' : 'Bloom Family'}
               </p>
-              <p className="text-xl font-display font-bold text-slate-800">{user?.first_name} {user?.last_name}</p>
+              <p className="text-lg sm:text-xl font-display font-bold text-slate-800 truncate">{user?.first_name} {user?.last_name}</p>
               {user?.children && user.children.length > 0 && (
                 <p className="text-[10px] text-slate-400 font-medium">
                   {user.children.length} {user.children.length > 1 ? t.common.children : t.common.child}
@@ -443,17 +443,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <div className="space-y-6">
                 {user?.parent_requests && user.parent_requests.length > 0 ? (
                   user.parent_requests.map((req) => (
-                    <div key={req.id} className="group bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative">
+                    <div key={req.id} className="group bg-white rounded-[32px] sm:rounded-[40px] p-5 sm:p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative">
                       <div className="space-y-10">
                         {/* Compact Header */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-slate-50 rounded-[20px] flex items-center justify-center text-slate-400 group-hover:bg-brand-accent group-hover:text-white transition-all duration-500 shadow-sm">
-                              <Baby size={28} />
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-50 rounded-[16px] sm:rounded-[20px] flex items-center justify-center text-slate-400 group-hover:bg-brand-accent group-hover:text-white transition-all duration-500 shadow-sm">
+                              <Baby size={24} className="sm:w-7 sm:h-7" />
                             </div>
                             <div>
-                              <div className="flex items-center gap-3 mb-1">
-                                <span className="text-xl font-display font-bold text-slate-900 tracking-tight">REQ-{req.id}</span>
+                              <div className="flex items-center gap-2 sm:gap-3 mb-1">
+                                <span className="text-lg sm:text-xl font-display font-bold text-slate-900 tracking-tight">REQ-{req.id}</span>
                                 {(() => {
                                   const hasSchedules = req.schedules && req.schedules.length > 0;
                                   const hasSlots = hasSchedules && req.schedules.every((s: any) => s.slots && s.slots.length > 0);
@@ -461,61 +461,61 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                   const isActive = hasSchedules && hasSlots && hasChoices;
 
                                   return (
-                                    <div className="flex items-center gap-2 px-3 py-1 bg-brand-accent/5 rounded-full border border-brand-accent/10">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
-                                      <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 bg-brand-accent/5 rounded-full border border-brand-accent/10">
+                                      <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-brand-accent animate-pulse" />
+                                      <span className="text-[9px] sm:text-[10px] font-bold text-brand-accent uppercase tracking-widest">
                                         {isActive ? t.profilePage.requests.active : t.profilePage.requests.pending}
                                       </span>
                                     </div>
                                   );
                                 })()}
                               </div>
-                              <p className="text-xs text-slate-400 font-medium">Created on {req.created_at?.split('T')[0] || '--'}</p>
+                              <p className="text-[10px] sm:text-xs text-slate-400 font-medium">Created on {req.created_at?.split('T')[0] || '--'}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             <button
                               onClick={() => onModifyRequest(req)}
-                              className="px-6 py-3 bg-slate-900 text-white text-xs font-bold rounded-2xl hover:bg-brand-accent transition-all shadow-lg shadow-slate-900/10 hover:shadow-brand-accent/20 flex items-center gap-2"
+                              className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-slate-900 text-white text-[10px] sm:text-xs font-bold rounded-xl sm:rounded-2xl hover:bg-brand-accent transition-all shadow-lg shadow-slate-900/10 hover:shadow-brand-accent/20 flex items-center justify-center gap-2"
                             >
-                              {t.common.modify} <ChevronRight size={16} />
+                              {t.common.modify} <ChevronRight size={14} className="sm:w-4 sm:h-4" />
                             </button>
                             <button
                               onClick={() => handleRemoveRequest(req.id.toString())}
-                              className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
+                              className="p-2.5 bg-slate-50 sm:bg-transparent text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl sm:rounded-2xl transition-all"
                               title="Remove Request"
                             >
-                              <Trash2 size={20} />
+                              <Trash2 size={18} className="sm:w-5 sm:h-5" />
                             </button>
                           </div>
                         </div>
 
                         {/* Main Stats Grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 p-8 bg-slate-50/50 rounded-[32px] border border-slate-100/50">
-                          <div className="space-y-2">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.children}</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 p-5 sm:p-8 bg-slate-50/50 rounded-[28px] sm:rounded-[32px] border border-slate-100/50">
+                          <div className="space-y-1 sm:space-y-2">
+                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.children}</p>
                             <div className="flex items-baseline gap-1">
-                              <p className="text-3xl font-display font-bold text-slate-900">{req.children?.length || 0}</p>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">Kids</span>
+                              <p className="text-2xl sm:text-3xl font-display font-bold text-slate-900">{req.children?.length || 0}</p>
+                              <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase">Kids</span>
                             </div>
                           </div>
-                          <div className="space-y-2">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.hours}</p>
+                          <div className="space-y-1 sm:space-y-2">
+                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.hours}</p>
                             <div className="flex items-baseline gap-1">
-                              <p className="text-3xl font-display font-bold text-slate-900">{calculateTotalHours(req.schedules)}</p>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">Hrs</span>
+                              <p className="text-2xl sm:text-3xl font-display font-bold text-slate-900">{calculateTotalHours(req.schedules)}</p>
+                              <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase">Hrs</span>
                             </div>
                           </div>
-                          <div className="space-y-2">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.amount}</p>
-                            <p className="text-3xl font-display font-bold text-brand-accent">€{(calculateTotalHours(req.schedules) * 28.50).toFixed(2)}</p>
+                          <div className="space-y-1 sm:space-y-2">
+                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.amount}</p>
+                            <p className="text-xl sm:text-3xl font-display font-bold text-brand-accent truncate">€{(calculateTotalHours(req.schedules) * 28.50).toFixed(2)}</p>
                           </div>
-                          <div className="space-y-2">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Schedules</p>
+                          <div className="space-y-1 sm:space-y-2">
+                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Schedules</p>
                             <div className="flex items-baseline gap-1">
-                              <p className="text-3xl font-display font-bold text-slate-900">{req.schedules?.length || 0}</p>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">Days</span>
+                              <p className="text-2xl sm:text-3xl font-display font-bold text-slate-900">{req.schedules?.length || 0}</p>
+                              <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase">Days</span>
                             </div>
                           </div>
                         </div>
@@ -527,15 +527,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                               <CalendarDays size={16} className="text-brand-accent" />
                               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t.profilePage.requests.calendar || 'Booking Calendar'}</span>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                               {req.schedules.map((s: any) => (
-                                <div key={s.id} className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-brand-accent/20 transition-colors">
-                                  <span className="text-xs font-bold text-slate-900">{s.schedule_date}</span>
+                                <div key={s.id} className="p-3 sm:p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-brand-accent/20 transition-colors">
+                                  <span className="text-[10px] sm:text-xs font-bold text-slate-900">{s.schedule_date}</span>
                                   <div className="flex flex-col gap-1">
                                     {s.slots?.map((slot: any) => (
-                                      <div key={slot.id} className="flex items-center gap-2">
+                                      <div key={slot.id} className="flex items-center gap-1.5 sm:gap-2">
                                         <Clock size={10} className="text-slate-300" />
-                                        <span className="text-[10px] text-slate-500 font-medium tracking-tight">
+                                        <span className="text-[9px] sm:text-[10px] text-slate-500 font-medium tracking-tight">
                                           {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
                                         </span>
                                       </div>
@@ -550,12 +550,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                         {/* Babysitter Interviews Section */}
                         {req.choices && req.choices.length > 0 && (
                           <div className="pt-10 border-t border-slate-100">
-                            <div className="flex items-center justify-between mb-8">
-                              <div className="space-y-1">
+                            <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
+                              <div className="space-y-1 min-w-0">
                                 <h3 className="text-lg font-display font-bold text-slate-800">{t.profilePage.interviews.sectionTitle}</h3>
-                                <p className="text-sm text-slate-500">{t.profilePage.interviews.sectionSubtitle}</p>
+                                <p className="text-sm text-slate-500 leading-tight">{t.profilePage.interviews.sectionSubtitle}</p>
                               </div>
-                              <div className="px-3 py-1 bg-brand-blue/10 rounded-full">
+                              <div className="px-3 py-1.5 bg-brand-blue/10 rounded-full shrink-0 whitespace-nowrap self-start sm:self-center">
                                 <span className="text-[9px] font-bold text-brand-blue uppercase tracking-wider">{req.choices.length} Candidates</span>
                               </div>
                             </div>
@@ -564,33 +564,35 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                 <div key={choice.id} className="bg-white rounded-[28px] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group/choice relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                                   <div className="absolute top-0 right-0 w-24 h-24 bg-brand-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover/choice:bg-brand-accent/10 transition-colors" />
 
-                                  <div className="relative flex items-center gap-5 flex-1 min-w-0">
-                                    <div className="w-16 min-w-[64px] h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-accent group-hover/choice:bg-brand-accent group-hover/choice:text-white transition-all duration-500 shadow-inner">
-                                      <UserIcon size={28} />
+                                  <div className="relative flex items-center sm:items-center gap-4 sm:gap-5 flex-1 min-w-0">
+                                    <div className="w-14 min-w-[56px] h-14 sm:w-16 sm:min-w-[64px] sm:h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-accent group-hover/choice:bg-brand-accent group-hover/choice:text-white transition-all duration-500 shadow-inner shrink-0">
+                                      <UserIcon size={24} className="sm:w-7 sm:h-7" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-lg font-display font-bold text-slate-900 truncate mb-1">
+                                      <p className="text-base sm:text-lg font-display font-bold text-slate-900 truncate mb-1">
                                         {choice.babysitter_first_name} {choice.babysitter_last_name}
                                       </p>
-                                      <div className="flex flex-wrap items-center gap-4">
-                                        <div className="px-2.5 py-1 bg-brand-blue/5 rounded-lg flex items-center gap-1.5">
-                                          <Calendar size={12} className="text-brand-blue" />
-                                          <span className="text-[10px] font-bold text-brand-blue uppercase tracking-wider">
+                                      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-4">
+                                        <div className="w-fit px-2 py-0.5 sm:px-2.5 sm:py-1 bg-brand-blue/5 rounded-lg flex items-center gap-1.5 self-start">
+                                          <Calendar size={10} className="text-brand-blue sm:w-3 sm:h-3" />
+                                          <span className="text-[9px] sm:text-[10px] font-bold text-brand-blue uppercase tracking-wider">
                                             {choice.interview_date} @ {choice.interview_time?.substring(0, 5)}
                                           </span>
                                         </div>
-                                        {choice.babysitter_phone && (
-                                          <div className="flex items-center gap-2 text-slate-400">
-                                            <Phone size={14} className="text-slate-300" />
-                                            <span className="text-xs font-medium">{choice.babysitter_phone}</span>
-                                          </div>
-                                        )}
-                                        {choice.babysitter_email && (
-                                          <div className="flex items-center gap-2 text-slate-400">
-                                            <Mail size={14} className="text-slate-300" />
-                                            <span className="text-xs font-medium truncate">{choice.babysitter_email}</span>
-                                          </div>
-                                        )}
+                                        <div className="flex flex-wrap items-center gap-3">
+                                          {choice.babysitter_phone && (
+                                            <div className="flex items-center gap-1.5 text-slate-400">
+                                              <Phone size={12} className="text-slate-300 sm:w-3.5 sm:h-3.5" />
+                                              <span className="text-[10px] sm:text-xs font-medium">{choice.babysitter_phone}</span>
+                                            </div>
+                                          )}
+                                          {choice.babysitter_email && (
+                                            <div className="flex items-center gap-1.5 text-slate-400 min-w-0">
+                                              <Mail size={12} className="text-slate-300 sm:w-3.5 sm:h-3.5" />
+                                              <span className="text-[10px] sm:text-xs font-medium truncate">{choice.babysitter_email}</span>
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -599,9 +601,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                     {Number(choice.final_choice) === 1 ? (
                                       <button
                                         onClick={() => onViewContract?.(choice.id)}
-                                        className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                        className="flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-xl sm:rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-[10px] sm:text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                       >
-                                        <FileText size={16} />
+                                        <FileText size={14} className="sm:w-4 sm:h-4" />
                                         {t.profilePage.interviews.viewContract}
                                       </button>
                                     ) : req.choices?.some((c: any) => Number(c.final_choice) === 1) ? null : (
@@ -613,32 +615,32 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                                 href={choice.zoom_meeting_link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                                className="flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-xl sm:rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-[10px] sm:text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                               >
-                                                <Video size={16} />
+                                                <Video size={14} className="sm:w-4 sm:h-4" />
                                                 {t.profilePage.interviews.joinMeeting}
                                               </a>
                                             ) : (
                                               <button
                                                 disabled
-                                                className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-100 text-slate-400 font-bold rounded-2xl cursor-not-allowed opacity-60 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                                className="flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-3.5 bg-slate-100 text-slate-400 font-bold rounded-xl sm:rounded-2xl cursor-not-allowed opacity-60 text-[10px] sm:text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                               >
-                                                <Video size={16} />
+                                                <Video size={14} className="sm:w-4 sm:h-4" />
                                                 {t.profilePage.interviews.joinMeeting}
                                               </button>
                                             )}
                                             <button
                                               onClick={() => handleFinalChoice(choice.id, `${choice.babysitter_first_name} ${choice.babysitter_last_name}`)}
-                                              className="flex-1 sm:flex-none px-6 py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                              className="flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-3.5 bg-brand-accent/10 text-brand-accent font-bold rounded-xl sm:rounded-2xl hover:bg-brand-accent hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-brand-accent/20 text-[10px] sm:text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                             >
-                                              <CheckCircle2 size={16} />
+                                              <CheckCircle2 size={14} className="sm:w-4 sm:h-4" />
                                               {t.profilePage.interviews.finalChoice || 'Hire'}
                                             </button>
                                           </>
                                         )}
                                         {Number(choice.final_choice) === 2 ? (
-                                          <div className="flex-1 sm:flex-none px-6 py-3.5 bg-red-50 text-red-500 font-bold rounded-2xl border border-red-100 text-xs whitespace-nowrap flex items-center justify-center gap-2 cursor-not-allowed">
-                                            <X size={16} />
+                                          <div className="flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-3.5 bg-red-50 text-red-500 font-bold rounded-xl sm:rounded-2xl border border-red-100 text-[10px] sm:text-xs whitespace-nowrap flex items-center justify-center gap-2 cursor-not-allowed">
+                                            <X size={14} className="sm:w-4 sm:h-4" />
                                             {language === 'fr' ? 'Refusé' : 'Rejected'}
                                           </div>
                                         ) : (
@@ -678,7 +680,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                               });
                                             }}
                                             disabled={rejectingChoice === choice.id}
-                                            className="flex-1 sm:flex-none px-6 py-3.5 bg-red-500/10 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-red-500/10 text-xs whitespace-nowrap flex items-center justify-center gap-2"
+                                            className="flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-3.5 bg-red-500/10 text-red-500 font-bold rounded-xl sm:rounded-2xl hover:bg-red-500 hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm hover:shadow-red-500/10 text-[10px] sm:text-xs whitespace-nowrap flex items-center justify-center gap-2"
                                           >
                                             {rejectingChoice === choice.id ? (
                                               <div className="flex items-center gap-2">
@@ -743,7 +745,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
                 {invoiceSubTab === 'invoices' ? (
                   <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
-                    <table className="w-full text-left">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left min-w-[700px]">
                       <thead>
                         <tr className="bg-slate-50 border-bottom border-slate-100">
                           <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.number}</th>
@@ -811,6 +814,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       </tbody>
                     </table>
                   </div>
+                </div>
                 ) : (
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">

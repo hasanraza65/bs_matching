@@ -54,7 +54,7 @@ export const fr = {
   },
   steps: {
     familyInfo: "Informations Famille",
-    scheduleQuote: "Planning",
+    scheduleQuote: "Sessions de babysitting",
     matching: "Sélection Babysitters",
   },
   step1: {
@@ -77,7 +77,7 @@ export const fr = {
     },
   },
   step2: {
-    title: "Planning ",
+    title: "Sessions de babysitting",
     subtitle:
       "Sélectionnez vos dates et visualisez votre devis personnalisé instantanément.",
     calendarTitle: "Sélectionner les dates",
@@ -168,7 +168,8 @@ export const fr = {
       preferredDate: "Date préférée",
       preferredTime: "Heure préférée",
       timezone: "Fuseau horaire : Europe/Paris (CET)",
-      confirm: "Choisir san entretien",
+      confirm: "Confirmer l'entretien",
+      skipBtn: "Choisir sans entretien",
     },
     profile: {
       aboutMe: "À propos de moi",
@@ -551,7 +552,7 @@ export const fr = {
       slide: "Signer",
       signingSubtitle: "En glissant, votre contrat sera signé et votre paiement reçu.",
       signingSlider: "Glisser pour signer",
-      back: "Retour au profil",
+      back: "Retour au compte",
       success: "Contrat accepté avec succès !",
       loading: "Chargement des détails du contrat...",
       congrats: {

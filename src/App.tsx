@@ -1317,10 +1317,12 @@ export default function App() {
     }
   };
 
-  const confirmCandidateSelection = () => {
+  const confirmCandidateSelection = (isSkipped?: boolean) => {
     if (!schedulingSitter) return;
 
-    if (!modalInterviewConfig.skipped) {
+    const finalSkipped = isSkipped !== undefined ? isSkipped : modalInterviewConfig.skipped;
+    
+    if (!finalSkipped) {
       if (!modalInterviewConfig.date || !modalInterviewConfig.time) {
         setModalError(t.common.pleaseselectdate);
         return;
@@ -1343,14 +1345,14 @@ export default function App() {
         const next = [...prev];
         next[existingIndex] = {
           ...next[existingIndex],
-          interview: { ...modalInterviewConfig }
+          interview: { ...modalInterviewConfig, skipped: finalSkipped }
         };
         return next;
       } else {
         // Add new
         return [...prev, {
           sitterId: schedulingSitter.id,
-          interview: { ...modalInterviewConfig }
+          interview: { ...modalInterviewConfig, skipped: finalSkipped }
         }];
       }
     });
@@ -1598,7 +1600,7 @@ export default function App() {
   }, [totalPrice, animatedPrice]);
 
   return (
-    <div className={`min-h-screen flex flex-col items-center ${view === 'admin-dashboard' ? 'bg-slate-50' : 'bg-brand-beige'}`}>
+    <div className={`min-h-screen flex flex-col items-center overflow-x-hidden ${view === 'admin-dashboard' ? 'bg-slate-50' : 'bg-brand-beige'}`}>
       {/* Header / Navigation */}
       {view !== 'admin-dashboard' && (
         <header className="w-full bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
@@ -2179,7 +2181,7 @@ export default function App() {
                                               </button>
                                             )}
                                           </div>
-                                          <div className="grid grid-cols-2 gap-4">
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                             <div className="space-y-1">
                                               <label className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
                                                 <Clock size={10} /> {t.step2.startTime}
@@ -2258,7 +2260,7 @@ export default function App() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="w-full max-w-4xl bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 p-6 md:p-10 relative overflow-hidden"
+                    className="w-full max-w-4xl bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 p-5 md:p-10 relative overflow-hidden"
                   >
                     {/* Decorative background elements */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-brand-pink/20 rounded-full -mr-32 -mt-32 blur-3xl" />
@@ -2288,7 +2290,7 @@ export default function App() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-6">
-                          <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
+                          <div className="bg-slate-50 rounded-3xl p-4 md:p-6 border border-slate-100 space-y-4">
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                               <UserIcon size={16} className="text-brand-accent" />
                               {t.common.UserInformation}
@@ -2322,7 +2324,7 @@ export default function App() {
                             </div>
                           </div>
 
-                          <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
+                          <div className="bg-slate-50 rounded-3xl p-4 md:p-6 border border-slate-100 space-y-4">
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                               <Calendar size={16} className="text-brand-accent" />
                               {t.common.ScheduleSummary} {selectedMonth && `(${selectedMonth})`}
@@ -2339,7 +2341,7 @@ export default function App() {
                                   return monthStr === selectedMonth;
                                 })
                                 .map(item => (
-                                  <div key={item.id} className="flex justify-between items-center py-2 border-b border-slate-200 last:border-0">
+                                  <div key={item.id} className="flex justify-between items-center py-3 border-b border-slate-200 last:border-0">
                                     <span className="text-xs font-medium text-slate-600">
                                       {item.date.toLocaleDateString(
                                         language === 'fr' ? 'fr-FR' : 'en-US',
@@ -2361,7 +2363,7 @@ export default function App() {
                         </div>
 
                         <div className="space-y-6">
-                          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm flex flex-col space-y-8">
+                          <div className="bg-white rounded-[32px] p-5 md:p-8 border border-slate-100 shadow-sm flex flex-col space-y-6 md:space-y-8">
                             <div className="flex items-center justify-between">
                               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <Receipt size={16} className="text-brand-accent" />
@@ -2380,27 +2382,27 @@ export default function App() {
                               )}
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-4 md:space-y-6">
                               <div className="flex justify-between items-start">
                                 <div className="flex flex-col">
                                   <span className="text-sm font-bold text-slate-700">{t.step2.childcarePackage}</span>
-                                  <span className="text-[10px] text-slate-400">({formatNumber(totalHours)}h × {formatCurrency(hourlyRate)})</span>
+                                  <span className="text-[11px] text-slate-400">({formatNumber(totalHours)}h × {formatCurrency(hourlyRate)})</span>
                                 </div>
                                 <span className="font-bold text-slate-700">{formatCurrency(baseSubtotal)}</span>
                               </div>
 
-                              <div className="flex justify-between items-start pt-6 border-t border-slate-50">
+                              <div className="flex justify-between items-start pt-4 md:pt-6 border-t border-slate-50">
                                 <div className="flex flex-col">
                                   <span className="text-sm font-bold text-slate-700">{t.step2.cafAssistance}</span>
-                                  <span className="text-[10px] font-mono text-slate-400">{cmgDisplayFormat}</span>
+                                  <span className="text-[11px] font-mono text-slate-400">{cmgDisplayFormat}</span>
                                 </div>
                                 <span className="font-bold text-brand-accent">{formatCurrency(estimatedCMG)}</span>
                               </div>
 
-                              <div className="flex justify-between items-start pt-6 border-t border-slate-50">
+                              <div className="flex justify-between items-start pt-4 md:pt-6 border-t border-slate-50">
                                 <div className="flex flex-col">
                                   <span className="text-sm font-bold text-slate-700">{t.step2.taxCredit}</span>
-                                  <span className="text-[10px] font-mono text-slate-400">{taxCreditDisplayFormat}</span>
+                                  <span className="text-[11px] font-mono text-slate-400">{taxCreditDisplayFormat}</span>
                                 </div>
                                 <span className="font-bold text-emerald-500">{formatCurrency(estimatedTaxCredit)}</span>
                               </div>
@@ -2409,7 +2411,7 @@ export default function App() {
                                 <div>
                                   <span className="text-sm font-bold text-slate-800 uppercase tracking-wider">{t.step2.finalCost}</span>
                                 </div>
-                                <span className="text-4xl font-display font-bold text-brand-accent">{formatCurrency(finalCostAfterAid)}</span>
+                                <span className="text-3xl md:text-4xl font-display font-bold text-brand-accent">{formatCurrency(finalCostAfterAid)}</span>
                               </div>
                             </div>
                           </div>
@@ -2444,7 +2446,7 @@ export default function App() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="w-full max-w-5xl bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 p-6 md:p-10 relative"
+                    className="w-full max-w-5xl bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 p-5 md:p-10 relative overflow-hidden"
                   >
                     {/* Decorative background elements */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-brand-pink/20 rounded-full -mr-32 -mt-32 blur-3xl" />
@@ -2459,7 +2461,7 @@ export default function App() {
                           </div>
                         </div>
                       )}
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
                         <div className="flex items-center gap-4">
                           <button
                             onClick={handleBackStep}
@@ -2481,9 +2483,9 @@ export default function App() {
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="mb-12"
+                            className="mb-8"
                           >
-                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                               <Award size={16} className="text-brand-accent" />
                               {t.step4.selectedTitle}
                             </h3>
@@ -2563,7 +2565,7 @@ export default function App() {
                       </AnimatePresence>
 
                       {/* Filters Section */}
-                      <div className="p-6 bg-gradient-to-br from-slate-50 to-white rounded-[32px] border border-slate-100 mb-10 shadow-sm relative overflow-hidden">
+                      <div className="p-4 md:p-6 bg-gradient-to-br from-slate-50 to-white rounded-[32px] border border-slate-100 mb-6 shadow-sm relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full -mr-16 -mt-16 blur-2xl" />
 
                         {/* Header */}
@@ -2693,7 +2695,7 @@ export default function App() {
                       </div>
 
                       {/* Babysitter Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                         {localizedSitters.map((sitter) => {
                           const isSelected = selectedCandidates.some(c => c.sitterId === sitter.id);
                           const isMaxReached = selectedCandidates.length >= 4;
@@ -3096,7 +3098,7 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden"
             >
-              <div className="p-8">
+              <div className="p-6 sm:p-8">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-display font-bold text-slate-800">{t.modals.interview.title}</h3>
                   <button
@@ -3119,44 +3121,18 @@ export default function App() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-brand-blue/10 rounded-2xl border border-brand-blue/20">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-brand-accent shadow-sm">
-                        <Video size={18} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">{t.modals.interview.skip}</p>
-                        <p className="text-[10px] text-slate-500">{t.modals.interview.skipSubtitle}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setModalInterviewConfig(prev => ({ ...prev, skipped: !prev.skipped }))}
-                      className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${modalInterviewConfig.skipped ? 'bg-brand-accent' : 'bg-slate-300'
-                        }`}
-                    >
-                      <motion.div
-                        animate={{ x: modalInterviewConfig.skipped ? 24 : 4 }}
-                        className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm"
-                      />
-                    </button>
-                  </div>
-
-                  <AnimatePresence>
-                    {!modalInterviewConfig.skipped && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="space-y-4 overflow-hidden"
-                      >
-                        <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <label className="text-[10px] uppercase font-bold text-slate-400">{t.modals.interview.preferredDate}</label>
+                            <label className="text-[10px] uppercase font-bold text-slate-400">
+                              {t.modals.interview.preferredDate} <span className="text-red-500">*</span>
+                            </label>
                             <div className="relative">
                               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-accent" size={18} />
                               <input
                                 type="date"
                                 value={modalInterviewConfig.date}
+                                required
                                 onChange={(e) => {
                                   setModalInterviewConfig(prev => ({ ...prev, date: e.target.value }));
                                   setModalError('');
@@ -3168,25 +3144,29 @@ export default function App() {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-[10px] uppercase font-bold text-slate-400">{t.modals.interview.preferredTime}</label>
+                            <label className="text-[10px] uppercase font-bold text-slate-400">
+                              {t.modals.interview.preferredTime} <span className="text-red-500">*</span>
+                            </label>
                             <div className="relative">
                               <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-accent" size={18} />
                               <input
                                 type="time"
                                 value={modalInterviewConfig.time}
-                                onChange={(e) => setModalInterviewConfig(prev => ({ ...prev, time: e.target.value }))}
+                                required
+                                onChange={(e) => {
+                                  setModalInterviewConfig(prev => ({ ...prev, time: e.target.value }));
+                                  setModalError('');
+                                }}
                                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-accent/20 outline-none transition-all"
                                 placeholder="HH:MM"
                               />
                             </div>
                           </div>
-                        </div>
-                        <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-2">
-                          <Info size={10} /> {t.modals.interview.timezone}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                    </div>
+                    <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-2">
+                      <Info size={10} /> {t.modals.interview.timezone}
+                    </p>
+                  </div>
 
                   {modalError && (
                     <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-red-600 text-xs font-medium">
@@ -3195,22 +3175,30 @@ export default function App() {
                     </div>
                   )}
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex flex-col gap-3 pt-4">
                     <button
-                      onClick={() => {
-                        setSchedulingSitter(null);
-                        setModalError('');
-                      }}
-                      className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-500 font-bold text-sm hover:bg-slate-50 transition-colors"
-                    >
-                      {t.common.back}
-                    </button>
-                    <button
-                      onClick={confirmCandidateSelection}
-                      className="flex-[2] py-3 px-4 bg-brand-accent hover:bg-[#66B2AC] text-white font-bold text-sm rounded-xl shadow-lg shadow-brand-accent/20 transition-all"
+                      onClick={() => confirmCandidateSelection(false)}
+                      className="w-full py-4 px-4 bg-brand-accent hover:bg-[#66B2AC] text-white font-bold text-sm rounded-xl shadow-lg shadow-brand-accent/20 transition-all"
                     >
                       {t.modals.interview.confirm}
                     </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setSchedulingSitter(null);
+                          setModalError('');
+                        }}
+                        className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-500 font-bold text-sm hover:bg-slate-50 transition-colors"
+                      >
+                        {t.common.back}
+                      </button>
+                      <button
+                        onClick={() => confirmCandidateSelection(true)}
+                        className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-all"
+                      >
+                        {t.modals.interview.skipBtn}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3233,7 +3221,7 @@ export default function App() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white rounded-[40px] max-w-2xl w-full overflow-hidden shadow-2xl relative"
+              className="bg-white rounded-[32px] md:rounded-[40px] max-w-2xl w-full overflow-hidden shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -3257,7 +3245,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="md:w-3/5 p-8 md:p-10 max-h-[80vh] overflow-y-auto">
+                <div className="md:w-3/5 p-6 md:p-10 max-h-[80vh] overflow-y-auto">
                   <div className="hidden md:block mb-6">
                     <h2 className="text-3xl font-display font-bold text-slate-800 mb-1">{viewingBabysitter.name}</h2>
                     <div className="flex items-center gap-3">

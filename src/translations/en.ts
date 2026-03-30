@@ -55,7 +55,7 @@ export const en = {
   },
   steps: {
     familyInfo: "Family Information",
-    scheduleQuote: "Schedule & Quote",
+    scheduleQuote: "Babysitting Sessions",
     matching: "Babysitter Matching",
   },
   step1: {
@@ -77,7 +77,7 @@ export const en = {
     },
   },
   step2: {
-    title: "Schedule",
+    title: "Babysitting Sessions",
     subtitle:
       "Select your dates and see your personalized price quote instantly.",
     calendarTitle: "Select Dates",
@@ -166,7 +166,8 @@ export const en = {
       preferredDate: "Preferred Date",
       preferredTime: "Preferred Time",
       timezone: "Timezone: Europe/Paris (CET)",
-      confirm: "Choose Without Maintenance",
+      confirm: "Schedule Interview",
+      skipBtn: "Skip Interview",
     },
     profile: {
       aboutMe: "About Me",
@@ -550,7 +551,7 @@ export const en = {
       slide: "Sign",
       signingSubtitle: "By sliding, your contract will be signed and your payment received",
       signingSlider: "Slide to sign",
-      back: "Back to profile",
+      back: "Back to account",
       success: "Contract accepted successfully!",
       loading: "Loading contract details...",
       congrats: {
