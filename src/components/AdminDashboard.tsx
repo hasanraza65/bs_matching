@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, User } from '../services/api';
 import PhoneInput from 'react-phone-input-2';
@@ -60,6 +60,20 @@ const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return '';
     try {
         return new Date(dateStr).toLocaleString();
+    } catch {
+        return String(dateStr);
+    }
+};
+
+const formatDateDMY = (dateStr?: string | null) => {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return String(dateStr);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
     } catch {
         return String(dateStr);
     }
@@ -555,7 +569,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                     <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate align-top">{req.parent_address || 'No address provided'}</td>
                                     <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
                                     <td className="px-6 py-4 text-sm text-slate-500 align-top">
-                                        {formatDate(req.created_at)}
+                                        {formatDateDMY(req.created_at)}
                                     </td>
                                     <td className="px-6 py-4 text-center align-top">
                                         <button 
@@ -785,18 +799,17 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Hired Sitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[28%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[26%]">Hired Sitter</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Rate</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Created At</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[16%]">Created At</th>
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading ongoing requests...</span>
@@ -806,7 +819,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -816,7 +829,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No ongoing requests found.
                                     </td>
                                 </tr>
@@ -846,7 +859,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                                     {hiredSitter.interview_date && (
                                                         <div className="flex items-center gap-2 text-[10px] text-blue-600 font-medium">
                                                             <Calendar size={10} />
-                                                            <span>Interview: {hiredSitter.interview_date} {hiredSitter.interview_time}</span>
+                                                            <span>Interview: {formatDateDMY(hiredSitter.interview_date)} {hiredSitter.interview_time}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -855,22 +868,25 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                             )}
                                         </td>
                                         <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500 align-top">
-                                            {formatDate(req.created_at)}
+                                        <td className="px-6 py-4 text-sm text-slate-500 align-top whitespace-nowrap w-[16%]">
+                                            {formatDateDMY(req.created_at)}
                                         </td>
-                                        <td className="px-6 py-4 text-right align-top">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button 
+                                        <td className="px-6 py-4 text-right align-top w-[10%] min-w-0">
+                                            <div className="flex flex-col sm:flex-row items-center justify-end gap-2">
+                                                <button
                                                     onClick={() => onViewInvoices?.(req.user_id)}
-                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs shadow-sm shadow-slate-200"
+                                                    className="group/btn relative flex items-center justify-center p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm shadow-slate-200"
                                                     title="View Invoices"
                                                 >
-                                                    <Receipt size={14} />
-                                                    <span>View Invoices</span>
+                                                    <Receipt size={18} />
+                                                    <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] py-1.5 px-3 rounded-lg shadow-xl opacity-0 hover:invisible group-hover/btn:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+                                                        View Invoices
+                                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                                                    </span>
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteClick(req.id)}
-                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    className="w-full sm:w-auto max-w-[48px] p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all flex items-center justify-center"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={18} />
@@ -1123,7 +1139,7 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                                                     {hiredSitter.interview_date && (
                                                         <div className="flex items-center gap-2 text-[10px] text-blue-600 font-medium">
                                                             <Calendar size={10} />
-                                                            <span>Interview: {hiredSitter.interview_date} {hiredSitter.interview_time}</span>
+                                                            <span>Interview: {formatDateDMY(hiredSitter.interview_date)} {hiredSitter.interview_time}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1133,17 +1149,20 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                                         </td>
                                         <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
                                         <td className="px-6 py-4 text-sm text-slate-500 align-top">
-                                            {formatDate(req.updated_at)}
+                                            {formatDateDMY(req.updated_at)}
                                         </td>
                                         <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
                                                     onClick={() => onViewInvoices?.(req.user_id)}
-                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs shadow-sm shadow-slate-200"
+                                                    className="group/btn relative flex items-center justify-center p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm shadow-slate-200"
                                                     title="View Invoices"
                                                 >
-                                                    <Receipt size={14} />
-                                                    <span>View Invoices</span>
+                                                    <Receipt size={18} />
+                                                    <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] py-1.5 px-3 rounded-lg shadow-xl opacity-0 hover:invisible group-hover/btn:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+                                                        View Invoices
+                                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                                                    </span>
                                                 </button>
                                             </div>
                                         </td>
@@ -1396,7 +1415,7 @@ const ActiveRequestChoicesCell: React.FC<{
                     {choice.interview_date && (
                         <div className="flex items-center gap-2 text-[10px] text-blue-600 font-bold bg-blue-50/50 p-1.5 rounded-lg border border-blue-100/50">
                             <Calendar size={10} />
-                            <span>Interview: {choice.interview_date} {choice.interview_time}</span>
+                            <span>Interview: {formatDateDMY(choice.interview_date)} {choice.interview_time}</span>
                         </div>
                     )}
                     {Number(choice.final_choice) === 1 && (
@@ -1947,17 +1966,20 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-500 align-top">
-                                            {formatDate(req.created_at)}
+                                            {formatDateDMY(req.created_at)}
                                         </td>
                                         <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button 
                                                     onClick={() => onViewInvoices?.(req.user_id)}
-                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs shadow-sm shadow-slate-200 ml-2"
+                                                    className="group/btn relative flex items-center justify-center p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm shadow-slate-200 ml-2"
                                                     title="View Invoices"
                                                 >
-                                                    <Receipt size={14} />
-                                                    <span>View Invoices</span>
+                                                    <Receipt size={18} />
+                                                    <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] py-1.5 px-3 rounded-lg shadow-xl opacity-0 hover:invisible group-hover/btn:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+                                                        View Invoices
+                                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                                                    </span>
                                                 </button>
                                             </div>
                                         </td>
@@ -2499,7 +2521,7 @@ const InterviewsView = ({ searchQuery, onSearchChange }: { searchQuery: string; 
                             <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                                 <td className="px-6 py-4 font-bold text-slate-800 align-top">{item.family}</td>
                                 <td className="px-6 py-4 text-slate-600 align-top">{item.sitter}</td>
-                                <td className="px-6 py-4 text-slate-600 align-top">{item.date}</td>
+                                <td className="px-6 py-4 text-slate-600 align-top">{formatDateDMY(item.date)}</td>
                                 <td className="px-6 py-4 align-top">
                                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
                                         item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
