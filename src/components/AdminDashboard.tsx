@@ -57,6 +57,7 @@ import { KanbanBoard, RequestDetailsModal, transformToKanbanRequest, KanbanReque
 import { AddNewActiveRequestModal } from './AddNewActiveRequestModal';
 import { Pagination } from './Pagination';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { StatusBadge } from './StatusBadge';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -3247,11 +3248,9 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
               {user?.parent_requests?.map((req: any) => (
                 <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 text-sm font-black text-slate-900 align-top">#{req.id}</td>
-                  <td className="px-6 py-4 align-top">
-                    <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                      {req.board_status}
-                    </span>
-                  </td>
+                                    <td className="px-6 py-4 align-top">
+                                        <StatusBadge status={req.request_current_status || req.board_status} />
+                                    </td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">{req.hourly_rate}â‚¬/hr</td>
                   <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate align-top">{req.parent_address}</td>
                   <td className="px-6 py-4 align-top">

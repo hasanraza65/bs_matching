@@ -34,6 +34,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { api, User, Invoice, Attestation } from '../services/api';
 import { InvoicePaymentModal } from './InvoicePaymentModal';
 import { AddCardModal } from './AddCardModal';
+import { StatusBadge } from './StatusBadge';
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -460,14 +461,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                   const hasChoices = req.choices && req.choices.length > 0;
                                   const isActive = hasSchedules && hasSlots && hasChoices;
 
-                                  return (
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 bg-brand-accent/5 rounded-full border border-brand-accent/10">
-                                      <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-brand-accent animate-pulse" />
-                                      <span className="text-[9px] sm:text-[10px] font-bold text-brand-accent uppercase tracking-widest">
-                                        {isActive ? t.profilePage.requests.active : t.profilePage.requests.pending}
-                                      </span>
-                                    </div>
-                                  );
+                                  const status = req.request_current_status || (isActive ? 'active' : 'new');
+                                  return <StatusBadge status={status} />;
                                 })()}
                               </div>
                               <p className="text-[10px] sm:text-xs text-slate-400 font-medium">Created on {req.created_at?.split('T')[0] || '--'}</p>
