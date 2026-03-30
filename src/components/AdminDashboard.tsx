@@ -50,7 +50,8 @@ import {
   Briefcase,
   Plus,
   Link as LinkIcon,
-  Video
+  Video,
+  ExternalLink
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -1336,6 +1337,18 @@ const SitterChoicesModal: React.FC<{
                                                 </button>
                                             )}
 
+                                            {choice.bb_bs_id && (
+                                                <a 
+                                                    href={`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="w-10 h-10 flex items-center justify-center bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 active:scale-95"
+                                                    title="View Public Profile"
+                                                >
+                                                    <ExternalLink size={16} />
+                                                </a>
+                                            )}
+
                                             {choice.zoom_meeting_link && (
                                                 <a 
                                                     href={choice.zoom_meeting_link}
@@ -1395,18 +1408,38 @@ const ActiveRequestChoicesCell: React.FC<{
                             <span className="font-bold text-slate-800 text-sm truncate">{choice.babysitter_first_name} {choice.babysitter_last_name}</span>
                             <span className="text-[10px] text-slate-400 truncate max-w-[150px]">{choice.babysitter_email}</span>
                         </div>
-                        {choice.zoom_meeting_link && (
-                            <a 
-                                href={choice.zoom_meeting_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 text-blue-500 bg-blue-50 rounded-lg hover:bg-blue-500 hover:text-white transition-colors shrink-0"
-                                title="Join Zoom Meeting"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <Video size={14} />
-                            </a>
-                        )}
+                        <div className="flex items-center gap-1 shrink-0">
+                            {choice.bb_bs_id && (
+                                <a 
+                                    href={`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1.5 text-emerald-500 bg-emerald-50 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors"
+                                    title="View Public Profile"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`, '_blank');
+                                    }}
+                                >
+                                    <ExternalLink size={14} />
+                                </a>
+                            )}
+                            {choice.zoom_meeting_link && (
+                                <a 
+                                    href={choice.zoom_meeting_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1.5 text-blue-500 bg-blue-50 rounded-lg hover:bg-blue-500 hover:text-white transition-colors"
+                                    title="Join Zoom Meeting"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(choice.zoom_meeting_link!, '_blank');
+                                    }}
+                                >
+                                    <Video size={14} />
+                                </a>
+                            )}
+                        </div>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-500">
                         <Phone size={10} />
@@ -2199,9 +2232,8 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                                     <tr className="bg-slate-50/50 border-b border-slate-200">
                                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
                                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Family Name</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Children</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[32%]">Dates</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Children</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[37%]">Dates</th>
                                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right w-[15%]">Actions</th>
                                     </tr>
                                 </thead>
@@ -2238,11 +2270,6 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                                             <td className="px-6 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
                                             <td className="px-6 py-4 font-bold text-slate-800 align-top">
                                             {req.user?.first_name} {req.user?.last_name}
-                                            </td>
-                                            <td className="px-6 py-4 align-top">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${req.user?.user_language === 'fr' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
-                                                    {req.user?.user_language || 'en'}
-                                                </span>
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 align-top">
                                                 {req.children?.length}

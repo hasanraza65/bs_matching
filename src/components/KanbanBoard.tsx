@@ -41,7 +41,8 @@ import {
   Info,
   Video,
   Link as LinkIcon,
-  Copy
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
@@ -1840,23 +1841,49 @@ export const RequestDetailsModal = ({
 
                             <div className="md:col-span-2 pt-2 border-t border-slate-50">
                               {choice.zoom_meeting_link ? (
-                                <a
-                                  href={choice.zoom_meeting_link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-blue/10 text-brand-blue font-bold rounded-xl hover:bg-brand-blue hover:text-white transition-all text-xs"
-                                >
-                                  <Video size={14} />
-                                  Join Meeting
-                                </a>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <a
+                                    href={choice.zoom_meeting_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-blue/10 text-brand-blue font-bold rounded-xl hover:bg-brand-blue hover:text-white transition-all text-xs"
+                                  >
+                                    <Video size={14} />
+                                    Join Meeting
+                                  </a>
+                                  {choice.bb_bs_id && (
+                                    <a
+                                      href={`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-50 text-emerald-600 font-bold rounded-xl hover:bg-emerald-600 hover:text-white transition-all text-xs border border-emerald-100"
+                                    >
+                                      <ExternalLink size={14} />
+                                      View Profile
+                                    </a>
+                                  )}
+                                </div>
                               ) : (
-                                <button
-                                  disabled
-                                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-50 text-slate-300 font-bold rounded-xl cursor-not-allowed text-xs"
-                                >
-                                  <Video size={14} />
-                                  Join Meeting
-                                </button>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <button
+                                    disabled
+                                    className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-50 text-slate-300 font-bold rounded-xl cursor-not-allowed text-xs"
+                                  >
+                                    <Video size={14} />
+                                    Join Meeting
+                                  </button>
+                                  {choice.bb_bs_id && (
+                                    <a
+                                      href={`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-50 text-emerald-600 font-bold rounded-xl hover:bg-emerald-600 hover:text-white transition-all text-xs border border-emerald-100"
+                                    >
+                                      <ExternalLink size={14} />
+                                      View Profile
+                                    </a>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
