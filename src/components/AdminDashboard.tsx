@@ -516,9 +516,8 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[20%]">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Address</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[23%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[27%]">Address</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Rate</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[11%]">Created At</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center w-[12%]">Price Quote</th>
@@ -528,7 +527,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                         <tbody className="divide-y divide-slate-200 text-slate-700">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading new requests...</span>
@@ -538,7 +537,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -548,7 +547,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No new requests found.
                                     </td>
                                 </tr>
@@ -561,11 +560,6 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                             <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                             <span className="text-xs text-slate-400">{req.user?.email}</span>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4 align-top">
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${req.user?.user_language === 'fr' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
-                                            {req.user?.user_language || 'en'}
-                                        </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate align-top">{req.parent_address || 'No address provided'}</td>
                                     <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
@@ -1079,9 +1073,8 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Hired Sitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[29%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[29%]">Hired Sitter</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Rate</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[12%]">Completed At</th>
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">Actions</th>
@@ -1932,9 +1925,8 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Parent Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">Lang</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[25%]">Hired Babysitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[29%]">Parent Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[29%]">Hired Babysitter</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Created At</th>
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[19%]">Actions</th>
                             </tr>
@@ -1942,7 +1934,7 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                         <tbody className="divide-y divide-slate-200">
                             {isLoading && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
                                         <div className="flex items-center justify-center gap-3">
                                             <Loader2 className="animate-spin" size={20} />
                                             <span className="text-sm font-medium">Loading signed contracts...</span>
@@ -1952,7 +1944,7 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                             )}
                             {!isLoading && error && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-red-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <AlertCircle size={18} />
                                             <span className="text-sm font-medium">{error}</span>
@@ -1962,7 +1954,7 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                             )}
                             {!isLoading && !error && filteredRequests.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
                                         No signed contracts found.
                                     </td>
                                 </tr>
@@ -1977,11 +1969,6 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                                 <span className="font-bold text-slate-800">{req.user?.first_name} {req.user?.last_name}</span>
                                                 <span className="text-xs text-slate-400">{req.user?.email}</span>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 align-top">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${req.user?.user_language === 'fr' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
-                                                {req.user?.user_language || 'en'}
-                                            </span>
                                         </td>
                                         <td className="px-6 py-4 align-top">
                                             {hiredSitter ? (
