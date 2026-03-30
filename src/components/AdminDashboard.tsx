@@ -1224,54 +1224,59 @@ const SitterChoicesModal: React.FC<{
                         {choices.map((choice) => (
                             <div key={choice.id} className="group relative bg-white border border-slate-100 rounded-3xl p-6 transition-all hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-0.5 overflow-hidden">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                                    <div className="flex items-start gap-4">
+                                    {/* Sitter Identity */}
+                                    <div className="flex items-start gap-4 min-w-[200px] shrink-0">
                                         <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-slate-200">
                                             <UserIcon size={24} />
                                         </div>
                                         <div className="min-w-0">
-                                            <h4 className="text-lg font-bold text-slate-900 truncate">
+                                            <h4 className="text-base font-bold text-slate-900 truncate">
                                                 {choice.babysitter_first_name} {choice.babysitter_last_name}
                                             </h4>
-                                            <p className="text-sm text-slate-500 font-medium truncate flex items-center gap-1.5 mt-0.5">
-                                                <Mail size={14} className="text-slate-400" />
+                                            <p className="text-xs text-slate-500 font-medium truncate flex items-center gap-1.5 mt-1">
+                                                <Mail size={12} className="text-slate-400" />
                                                 {choice.babysitter_email}
                                             </p>
                                         </div>
                                     </div>
                                     
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-8 md:flex md:items-center">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Contact Info</span>
-                                            <div className="flex items-center gap-2 text-sm text-slate-600 font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
-                                                <Phone size={14} className="text-slate-400" />
+                                    {/* Center Details Section */}
+                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                                        <div className="flex flex-col gap-1.5 min-w-[140px]">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Contact</span>
+                                            <div className="flex items-center gap-2.5 text-xs text-slate-700 font-bold px-1">
+                                                <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+                                                    <Phone size={14} />
+                                                </div>
                                                 {choice.babysitter_phone || 'N/A'}
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col gap-1 md:ml-6">
-                                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Interview Details</span>
+                                        <div className="flex flex-col gap-1.5 min-w-[180px]">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Interview</span>
                                             {choice.interview_date ? (
-                                                <div className="flex items-center gap-3 bg-blue-50/50 px-3 py-1.5 rounded-xl border border-blue-100 text-sm">
-                                                    <div className="flex items-center gap-1.5 text-blue-600 font-bold">
-                                                        <Calendar size={14} />
+                                                <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5 rounded-xl border border-blue-100/50 text-xs">
+                                                    <div className="flex items-center gap-1.5 text-blue-600 font-bold whitespace-nowrap">
+                                                        <Calendar size={13} />
                                                         <span>{formatDate(choice.interview_date)}</span>
                                                     </div>
-                                                    <div className="w-px h-4 bg-blue-200" />
-                                                    <div className="flex items-center gap-1.5 text-blue-500 font-bold">
-                                                        <Clock size={14} />
+                                                    <div className="w-px h-3 bg-blue-200/50" />
+                                                    <div className="flex items-center gap-1.5 text-blue-500 font-bold whitespace-nowrap">
+                                                        <Clock size={13} />
                                                         <span>{choice.interview_time?.substring(0, 5)}</span>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center gap-2 text-sm text-slate-400 font-medium px-3 py-1.5 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                                                    <Clock size={14} className="text-slate-300" />
-                                                    <span className="italic">Not scheduled yet</span>
+                                                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium px-3 py-1.5 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 italic whitespace-nowrap">
+                                                    <Clock size={13} className="text-slate-300" />
+                                                    Not scheduled
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-end gap-3 pt-4 md:pt-0 border-t border-slate-50 md:border-none">
+                                    {/* Actions Section */}
+                                    <div className="flex items-center gap-2 shrink-0 pt-4 md:pt-0 border-t md:border-t-0 border-slate-100 md:pl-4">
                                         {Number(choice.final_choice) === 1 ? (
                                             <div className="flex items-center gap-2">
                                                 <button 
@@ -1280,23 +1285,23 @@ const SitterChoicesModal: React.FC<{
                                                         navigator.clipboard.writeText(link);
                                                         toast.success('Contract link copied!');
                                                     }}
-                                                    className="px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-sm font-bold text-xs flex items-center gap-2"
+                                                    className="px-3 py-2 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm font-bold text-[11px] flex items-center gap-1.5 whitespace-nowrap"
                                                     title="Copy Contract Link"
                                                 >
-                                                    <FileText size={16} />
+                                                    <FileText size={14} />
                                                     <span>Contract</span>
                                                 </button>
-                                                <div className="px-4 py-2.5 bg-emerald-500 text-white text-xs font-black rounded-2xl shadow-lg shadow-emerald-100 flex items-center gap-2">
-                                                    <CheckCircle2 size={16} />
+                                                <div className="px-3 py-2 bg-emerald-500 text-white text-[11px] font-black rounded-xl shadow-lg shadow-emerald-100 flex items-center gap-1.5 uppercase tracking-wide whitespace-nowrap">
+                                                    <CheckCircle2 size={14} />
                                                     Accepted
                                                 </div>
                                             </div>
-                                        ) : !hasAcceptedChoice && (
+                                        ) : (
                                             <button 
                                                 onClick={() => handleSelectFinal(choice.id)}
-                                                className="px-6 py-3 bg-slate-900 text-white text-sm font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-2 active:scale-95"
+                                                className="px-4 py-2.5 bg-slate-900 text-white text-[11px] font-extrabold rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-1.5 active:scale-95 whitespace-nowrap"
                                             >
-                                                <CheckCircle2 size={18} />
+                                                <CheckCircle2 size={16} />
                                                 Final Choice
                                             </button>
                                         )}
@@ -1306,13 +1311,16 @@ const SitterChoicesModal: React.FC<{
                                                 href={choice.zoom_meeting_link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="w-12 h-12 flex items-center justify-center bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95"
+                                                className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95 shrink-0"
                                                 title="Join Zoom Meeting"
                                             >
-                                                <Video size={20} />
+                                                <Video size={16} />
                                             </a>
                                         )}
                                     </div>
+
+
+
                                 </div>
                             </div>
                         ))}
