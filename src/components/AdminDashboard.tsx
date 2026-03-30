@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api, User } from '../services/api';
 import PhoneInput from 'react-phone-input-2';
@@ -268,8 +268,8 @@ const DashboardView = () => {
   const stats = [
     { label: 'Total Requests', value: '1,284', trend: '+12.5%', icon: ClipboardList, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Active Interviews', value: '42', trend: '+5.2%', icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Pending Payments', value: '€3,450', trend: '-2.4%', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Total Revenue', value: '€48,290', trend: '+18.7%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Pending Payments', value: 'â‚¬3,450', trend: '-2.4%', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Total Revenue', value: 'â‚¬48,290', trend: '+18.7%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
   return (
@@ -539,9 +539,9 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate align-top">{req.parent_address || 'No address provided'}</td>
-                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">â‚¬{req.hourly_rate}</td>
                                     <td className="px-6 py-4 text-sm text-slate-500 align-top">
-                                        {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
+                                        {formatDate(req.created_at)}
                                     </td>
                                     <td className="px-6 py-4 text-center align-top">
                                         <button 
@@ -840,9 +840,9 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">â‚¬{req.hourly_rate}</td>
                                         <td className="px-6 py-4 text-sm text-slate-500 align-top">
-                                            {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
+                                            {formatDate(req.created_at)}
                                         </td>
                                         <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
@@ -1117,9 +1117,9 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                                                 <span className="text-slate-400 italic text-sm">Not assigned</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">€{req.hourly_rate}</td>
+                                        <td className="px-6 py-4 font-bold text-slate-900 align-top">â‚¬{req.hourly_rate}</td>
                                         <td className="px-6 py-4 text-sm text-slate-500 align-top">
-                                            {req.updated_at ? new Date(req.updated_at).toLocaleDateString() : '-'}
+                                            {formatDate(req.updated_at)}
                                         </td>
                                         <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
@@ -1874,7 +1874,7 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-500 align-top">
-                                            {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
+                                            {formatDate(req.created_at)}
                                         </td>
                                         <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
@@ -2120,7 +2120,7 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                                             <td colSpan={5} className="px-6 py-12 text-center">
                                                 <div className="flex items-center justify-center gap-3 text-slate-400">
                                                     <Loader2 className="animate-spin w-5 h-5" />
-                                                    <span className="text-sm font-medium">Loading requests…</span>
+                                                    <span className="text-sm font-medium">Loading requestsâ€¦</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -2358,9 +2358,9 @@ const InterviewsView = ({ searchQuery, onSearchChange }: { searchQuery: string; 
   const itemsPerPage = 10;
 
   const allInterviews = [
-    { id: '1', family: 'Smith Family', sitter: 'Amélie Laurent', date: '15/03/2026', status: 'Scheduled' },
+    { id: '1', family: 'Smith Family', sitter: 'AmÃ©lie Laurent', date: '15/03/2026', status: 'Scheduled' },
     { id: '2', family: 'Dupont Family', sitter: 'Thomas Dubois', date: '16/03/2026', status: 'Completed' },
-    { id: '3', family: 'Miller Family', sitter: 'Chloé Mercier', date: '18/03/2026', status: 'Cancelled' },
+    { id: '3', family: 'Miller Family', sitter: 'ChloÃ© Mercier', date: '18/03/2026', status: 'Cancelled' },
     { id: '4', family: 'Garcia Family', sitter: 'Lucas Martin', date: '20/03/2026', status: 'Scheduled' },
     { id: '5', family: 'Lefevre Family', sitter: 'Manon Petit', date: '22/03/2026', status: 'Completed' },
     { id: '6', family: 'Dubois Family', sitter: 'Arthur Bernard', date: '25/03/2026', status: 'Scheduled' },
@@ -2588,7 +2588,7 @@ const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }
                                     <td colSpan={7} className="px-6 py-12 text-center">
                                         <div className="flex items-center justify-center gap-3 text-slate-400">
                                             <Loader2 className="animate-spin w-5 h-5" />
-                                            <span className="text-sm font-medium">Loading invoices…</span>
+                                            <span className="text-sm font-medium">Loading invoicesâ€¦</span>
                                         </div>
                                     </td>
                                 </tr>
@@ -2620,7 +2620,7 @@ const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 align-top">{item.due_date}</td>
                                     <td className="px-6 py-4 text-slate-600 capitalize align-top">{formatBillingMonth(item.due_date)}</td>
-                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">€{parseFloat(item.amount).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">â‚¬{parseFloat(item.amount).toFixed(2)}</td>
                                     <td className="px-6 py-4 align-top">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.payment_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
                                             item.payment_status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
@@ -2754,7 +2754,7 @@ const ContractsView = ({ onViewContract, searchQuery, onSearchChange }: { onView
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
-                                        {new Date(contract.created_at).toLocaleDateString()}
+                                        {formatDate(\)}
                                     </td>
                                     <td className="px-6 py-4 align-top">
                                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${contract.status === 1
@@ -2765,7 +2765,7 @@ const ContractsView = ({ onViewContract, searchQuery, onSearchChange }: { onView
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">
-                                        {contract.hourly_rate ? `${contract.hourly_rate}€/hr` : 'N/A'}
+                                        {contract.hourly_rate ? `${contract.hourly_rate}â‚¬/hr` : 'N/A'}
                                     </td>
                                     <td className="px-6 py-4 text-right align-top">
                                         <button
@@ -2900,7 +2900,7 @@ const AttestationsView = ({ searchQuery, onSearchChange }: { searchQuery: string
                                         {a.year}
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">
-                                        {new Date(a.created_at).toLocaleDateString()}
+                                        {formatDate(\)}
                                     </td>
                                     <td className="px-6 py-4 text-right align-top">
                                         <button
@@ -3252,7 +3252,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
                       {req.board_status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">{req.hourly_rate}€/hr</td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">{req.hourly_rate}â‚¬/hr</td>
                   <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate align-top">{req.parent_address}</td>
                   <td className="px-6 py-4 align-top">
                     <div className="flex items-center gap-1.5">
@@ -3261,7 +3261,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
                     </div>
                   </td>
                   <td className="px-6 py-4 text-xs text-slate-400 font-medium align-top">
-                    {new Date(req.created_at).toLocaleDateString()}
+                    {formatDate(\)}
                   </td>
                 </tr>
               ))}
@@ -3488,7 +3488,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                       <tr key={month}>
                         <td className="px-6 py-4 font-bold text-slate-700 capitalize">{formatMonthString(month)}</td>
                         <td className="px-6 py-4 text-slate-500">{getMonthlyHours(contractData.format1[month]).toFixed(2)}h</td>
-                        <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} €</td>
+                        <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} â‚¬</td>
                       </tr>
                     ))}
                   </tbody>
@@ -3496,7 +3496,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                     <tr>
                       <td className="px-6 py-4 font-bold">{t.article4.hourlyRate}</td>
                       <td colSpan={2} className="px-6 py-4 text-right font-bold text-lg">
-                        {contractData?.hourly_rate} €/h
+                        {contractData?.hourly_rate} â‚¬/h
                       </td>
                     </tr>
                   </tfoot>

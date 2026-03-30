@@ -12,6 +12,7 @@ interface LanguageContextType {
   t: Translations;
   formatCurrency: (amount: number) => string;
   formatNumber: (num: number, decimals?: number) => string;
+  formatDate: (date: Date | string | number) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -36,8 +37,17 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     return formatted;
   };
 
+  const formatDate = (date?: Date | string | number) => {
+    const d = date ? new Date(date) : new Date();
+    if (isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, formatCurrency, formatNumber }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, formatCurrency, formatNumber, formatDate }}>
       {children}
     </LanguageContext.Provider>
   );

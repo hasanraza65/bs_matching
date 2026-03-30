@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Baby,
@@ -56,7 +56,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onUserLoaded,
   initialTab = 'requests'
 }) => {
-  const { t, language } = useLanguage();
+  const { t, language, formatDate } = useLanguage();
   const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>(initialTab);
   const [user, setUser] = useState<User | null>(null);
   const [attestations, setAttestations] = useState<Attestation[]>([]);
@@ -146,7 +146,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     setConfirmModal({
       isOpen: true,
       title: language === 'fr' ? 'Supprimer la demande' : 'Remove Request',
-      message: language === 'fr' ? 'Êtes-vous sûr de vouloir supprimer cette demande ?' : 'Are you sure you want to remove this request?',
+      message: language === 'fr' ? 'ÃŠtes-vous sÃ»r de vouloir supprimer cette demande ?' : 'Are you sure you want to remove this request?',
       confirmColor: 'bg-red-500',
       iconType: 'warning',
       confirmText: t.modals.confirmSelection.confirm,
@@ -157,7 +157,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         const res = await api.removeParentRequest(Number(id));
 
         if (res.status) {
-          // ✅ update UI only if API success
+          // âœ… update UI only if API success
           setUser({
             ...user,
             parent_requests: user.parent_requests?.filter(
@@ -165,7 +165,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             ),
           });
         } else {
-          // ❌ handle error (you can improve this)
+          // âŒ handle error (you can improve this)
           alert(res.message || 'Failed to delete request');
         }
       },
@@ -246,7 +246,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     setConfirmModal({
       isOpen: true,
       title: language === 'fr' ? 'Supprimer la carte' : 'Delete Card',
-      message: language === 'fr' ? 'Êtes-vous sûr de vouloir supprimer cette carte ?' : 'Are you sure you want to delete this card?',
+      message: language === 'fr' ? 'ÃŠtes-vous sÃ»r de vouloir supprimer cette carte ?' : 'Are you sure you want to delete this card?',
       confirmColor: 'bg-red-500',
       iconType: 'warning',
       confirmText: t.modals.confirmSelection.confirm,
@@ -509,7 +509,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           </div>
                           <div className="space-y-1 sm:space-y-2">
                             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.amount}</p>
-                            <p className="text-xl sm:text-3xl font-display font-bold text-brand-accent truncate">€{(calculateTotalHours(req.schedules) * 28.50).toFixed(2)}</p>
+                            <p className="text-xl sm:text-3xl font-display font-bold text-brand-accent truncate">â‚¬{(calculateTotalHours(req.schedules) * 28.50).toFixed(2)}</p>
                           </div>
                           <div className="space-y-1 sm:space-y-2">
                             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Schedules</p>
@@ -641,7 +641,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                         {Number(choice.final_choice) === 2 ? (
                                           <div className="flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-3.5 bg-red-50 text-red-500 font-bold rounded-xl sm:rounded-2xl border border-red-100 text-[10px] sm:text-xs whitespace-nowrap flex items-center justify-center gap-2 cursor-not-allowed">
                                             <X size={14} className="sm:w-4 sm:h-4" />
-                                            {language === 'fr' ? 'Refusé' : 'Rejected'}
+                                            {language === 'fr' ? 'RefusÃ©' : 'Rejected'}
                                           </div>
                                         ) : (
                                           <button
@@ -651,7 +651,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                                 title: language === 'fr' ? 'Refuser le choix' : 'Reject Choice',
                                                 message:
                                                   language === 'fr'
-                                                    ? 'Êtes-vous sûr de vouloir refuser ce choix ?'
+                                                    ? 'ÃŠtes-vous sÃ»r de vouloir refuser ce choix ?'
                                                     : 'Are you sure you want to reject this choice?',
                                                 confirmColor: 'bg-red-500',
                                                 onConfirm: async () => {
@@ -661,7 +661,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                                     const resp = await api.rejectChoice(choice.id);
 
                                                     if (resp && resp.status) {
-                                                      // ✅ refresh user data
+                                                      // âœ… refresh user data
                                                       const userResp = await api.getUser();
                                                       if (userResp.status && userResp.data) {
                                                         setUser(userResp.data);
@@ -763,7 +763,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors">
                               <td className="px-6 py-4 font-bold text-slate-700 text-sm">{inv.invoice_num}</td>
                               <td className="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">{inv.due_date}</td>
-                              <td className="px-6 py-4 font-bold text-slate-800 text-sm">€{parseFloat(inv.amount).toFixed(2)}</td>
+                              <td className="px-6 py-4 font-bold text-slate-800 text-sm">â‚¬{parseFloat(inv.amount).toFixed(2)}</td>
                               <td className="px-6 py-4 text-slate-600 text-sm font-medium capitalize">{formatBillingMonth(inv.due_date)}</td>
                               <td className="px-6 py-4">
                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${inv.payment_status === 'Paid'
@@ -819,7 +819,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
                       <h4 className="text-lg font-bold text-slate-800">
-                        {language === 'fr' ? 'Mes Cartes Enregristrées' : 'My Saved Cards'}
+                        {language === 'fr' ? 'Mes Cartes EnregristrÃ©es' : 'My Saved Cards'}
                       </h4>
                       <button
                         onClick={() => setIsAddCardModalOpen(true)}
@@ -849,7 +849,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                               <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Card Number</p>
                                 <p className="text-2xl font-display font-bold text-slate-900 tracking-wider">
-                                  •••• •••• •••• {card.card.last4}
+                                  â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ {card.card.last4}
                                 </p>
                               </div>
 
@@ -869,7 +869,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                   <div className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-brand-accent/10 rounded-xl text-brand-accent">
                                     <Star size={16} className="fill-brand-accent" />
                                     <span className="text-[10px] font-bold uppercase tracking-widest">
-                                      {language === 'fr' ? 'Par défaut' : 'Default'}
+                                      {language === 'fr' ? 'Par dÃ©faut' : 'Default'}
                                     </span>
                                   </div>
                                 ) : (
@@ -878,7 +878,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                     className="flex-1 px-4 py-2.5 bg-brand-accent/10 text-brand-accent text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-brand-accent hover:text-white transition-all flex items-center justify-center gap-2"
                                   >
                                     <Star size={14} />
-                                    {language === 'fr' ? 'Par défaut' : 'Set Default'}
+                                    {language === 'fr' ? 'Par dÃ©faut' : 'Set Default'}
                                   </button>
                                 )}
                                 <button
@@ -949,16 +949,16 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       </div>
                       <div>
                         <h3 className="text-2xl font-display font-bold text-slate-900 tracking-tight">
-                          {(t.profilePage as any).cmg?.title || 'CAF Numéro allocataire'}
+                          {(t.profilePage as any).cmg?.title || 'CAF NumÃ©ro allocataire'}
                         </h3>
-                        <p className="text-sm text-slate-400 font-medium">{(t.profilePage as any).cmg?.subtitle || 'Renseigner votre numéro allocataire CAF.'}</p>
+                        <p className="text-sm text-slate-400 font-medium">{(t.profilePage as any).cmg?.subtitle || 'Renseigner votre numÃ©ro allocataire CAF.'}</p>
                       </div>
                     </div>
 
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">
-                          {(t.profilePage as any).cmg?.fieldLabel || 'Votre numéro CMG'}
+                          {(t.profilePage as any).cmg?.fieldLabel || 'Votre numÃ©ro CMG'}
                         </label>
                         <div className="relative group">
                           <input
@@ -993,7 +993,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             const response = await api.updateCmg(cmgValue);
                             if (response.status) {
                               setCmgMessage({
-                                text: (t.profilePage as any).cmg?.updateSuccess || 'Numéro CMG mis à jour avec succès',
+                                text: (t.profilePage as any).cmg?.updateSuccess || 'NumÃ©ro CMG mis Ã  jour avec succÃ¨s',
                                 type: 'success'
                               });
                               // Refresh user data to sync
@@ -1029,7 +1029,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           <AlertCircle size={16} />
                         </div>
                         <p className="text-[11px] text-slate-500 leading-relaxed">
-                          {(t.profilePage as any).cmg?.description || 'Votre numéro allocataire est important pour la transmission de vos données de garde afin d\'avoir vos remboursements CAF.'}
+                          {(t.profilePage as any).cmg?.description || 'Votre numÃ©ro allocataire est important pour la transmission de vos donnÃ©es de garde afin d\'avoir vos remboursements CAF.'}
                         </p>
                       </div>
                     </div>

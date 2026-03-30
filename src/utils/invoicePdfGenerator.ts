@@ -11,9 +11,17 @@ const buildInvoiceHtml = (
   _language: string, // Ignored, always French now
   _t: any // Ignored, using hardcoded French
 ): string => {
-  const locale = 'fr-FR';
-  const dueDate = new Date(invoice.due_date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-  const billingMonth = new Date(invoice.due_date).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  const formatDate = (date: Date | string | number) => {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const dueDate = formatDate(invoice.due_date);
+  const billingMonth = new Date(invoice.due_date).toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' });
   const brandTeal = '#38B2AC';
 
   const totalAmount = parseFloat(invoice.amount);
@@ -69,7 +77,7 @@ const buildInvoiceHtml = (
             <h1 class="title">Facture</h1>
             <div class="meta">
                 <div>N° de facture : <strong>${invoice.invoice_num}</strong></div>
-                <div>Émise le : <strong>${new Date(invoice.created_at).toLocaleDateString(locale)}</strong></div>
+                <div>Émise le : <strong>${formatDate(invoice.created_at)}</strong></div>
                 <div>Date d'échéance : <strong>${dueDate}</strong></div>
             </div>
         </div>
@@ -79,7 +87,7 @@ const buildInvoiceHtml = (
                     <span style="margin-right: 8px; font-weight: 600; color: #94a3b8;">Statut :</span>
                     <span class="status-badge" style="background: ${statusColor}15; color: ${statusColor}">${statusText}</span>
                 </div>
-                ${invoice.payment_date ? `<div>Payée le : <strong>${new Date(invoice.payment_date).toLocaleDateString(locale)}</strong></div>` : ''}
+                ${invoice.payment_date ? `<div>Payée le : <strong>${formatDate(invoice.payment_date)}</strong></div>` : ''}
             </div>
         </div>
     </div>
@@ -147,7 +155,7 @@ const buildInvoiceHtml = (
         <p><strong>Informations de paiement</strong></p>
         <p>Merci d'avoir choisi NannyMatch pour vos besoins de garde d'enfants.</p>
         <p>Cette facture est soumise à nos conditions générales de vente.</p>
-        <p style="margin-top: 24px; font-size: 9px; opacity: 0.7;">${invoice.invoice_num} • Générée le ${new Date().toLocaleDateString(locale)}</p>
+        <p style="margin-top: 24px; font-size: 9px; opacity: 0.7;">${invoice.invoice_num} • Générée le ${formatDate(new Date())}</p>
     </div>
 </body>
 </html>`;

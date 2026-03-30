@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from './i18n/LanguageContext';
 import { api, User, ParentRequest } from './services/api';
@@ -226,7 +226,7 @@ interface FormErrors {
 }
 
 export default function App() {
-  const { t, language, setLanguage, formatCurrency, formatNumber } = useLanguage();
+  const { t, language, setLanguage, formatCurrency, formatNumber, formatDate } = useLanguage();
   const [hourlyRate, setHourlyRate] = useState(28.50);
   const [externalSitters, setExternalSitters] = useState<Babysitter[]>([]);
   const [sitterPage, setSitterPage] = useState(1);
@@ -418,7 +418,7 @@ export default function App() {
   const getAvailableMonths = () => {
     const monthsSet = new Set<string>();
     dateSchedule.forEach(item => {
-      const monthStr = item.date.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+      const monthStr = item.date.toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' });
       monthsSet.add(monthStr);
     });
     return Array.from(monthsSet);
@@ -1410,7 +1410,7 @@ export default function App() {
     return dateSchedule
       .filter(item => {
         if (!selectedMonth) return true;
-        const monthStr = item.date.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+        const monthStr = item.date.toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' });
         return monthStr === selectedMonth;
       })
       .reduce((total, item) => {
@@ -2048,7 +2048,7 @@ export default function App() {
                           <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
                             <div className="flex items-center justify-between mb-6">
                               <h2 className="font-display font-bold text-slate-800">
-                                {calendarViewDate.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' })}
+                                {calendarViewDate.toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' })}
                               </h2>
                               <div className="flex gap-2">
                                 <button
@@ -2153,7 +2153,7 @@ export default function App() {
                                             {item.date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long' })}
                                           </p>
                                           <p className="font-display font-bold text-slate-800">
-                                            {item.date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            {formatDate(item.date)}
                                           </p>
                                         </div>
                                       </div>
@@ -2386,7 +2386,7 @@ export default function App() {
                               <div className="flex justify-between items-start">
                                 <div className="flex flex-col">
                                   <span className="text-sm font-bold text-slate-700">{t.step2.childcarePackage}</span>
-                                  <span className="text-[11px] text-slate-400">({formatNumber(totalHours)}h × {formatCurrency(hourlyRate)})</span>
+                                  <span className="text-[11px] text-slate-400">({formatNumber(totalHours)}h Ã— {formatCurrency(hourlyRate)})</span>
                                 </div>
                                 <span className="font-bold text-slate-700">{formatCurrency(baseSubtotal)}</span>
                               </div>
@@ -2731,7 +2731,7 @@ export default function App() {
                                   <div className="flex-1 flex items-start justify-between">
                                     <div>
                                       <h3 className="font-display font-bold text-slate-800">{sitter.name} {sitter.lastName}</h3>
-                                      <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} • {formatExperienceShortFromMonths((sitter as any).experienceMonths || 0)}</p>
+                                      <p className="text-xs text-slate-500">{sitter.age} {t.step4.years} â€¢ {formatExperienceShortFromMonths((sitter as any).experienceMonths || 0)}</p>
                                      {/* 
                                       <div className="flex items-center gap-1 mt-1">
                                         <Star size={12} className="text-amber-400 fill-amber-400" />
