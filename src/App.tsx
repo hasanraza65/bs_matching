@@ -444,7 +444,12 @@ export default function App() {
             setIsLoggedIn(true);
             setUser(response.data);
             if (!initialPath.includes('/contract/') && !initialPath.includes('/price/') && !initialPath.includes('/cmg/')) {
-              setView('profile');
+              // Properly route to admin or parent based on user data
+              if (response.data.email?.toLowerCase() === 'admin@mail.com' || response.data.user_role === 1) {
+                setView('admin-dashboard');
+              } else {
+                setView('profile');
+              }
             }
             // Pre-fill form data if user is logged in
             setFormData(prev => ({

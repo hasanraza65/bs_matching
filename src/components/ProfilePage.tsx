@@ -354,9 +354,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               </button>
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-slate-900 tracking-tight">
-              {t.profilePage.title.split(' ')[0]}
+              {t.profilePage?.title?.split(' ')[0] || 'VOTRE'}
               <span className="text-brand-accent">.</span>
-              <span className="block text-xl md:text-3xl text-slate-400 font-medium mt-1 leading-tight">{t.profilePage.subtitle}</span>
+              <span className="block text-xl md:text-3xl text-slate-400 font-medium mt-1 leading-tight">{t.profilePage?.subtitle}</span>
             </h1>
           </div>
 
