@@ -465,7 +465,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                   return <StatusBadge status={status} />;
                                 })()}
                               </div>
-                              <p className="text-[10px] sm:text-xs text-slate-400 font-medium">Created on {req.created_at?.split('T')[0] || '--'}</p>
+                              <p className="text-[10px] sm:text-xs text-slate-400 font-medium">
+                                Created on {req.created_at ? new Date(req.created_at).toLocaleDateString('en-GB') : '--'}
+                              </p>
                             </div>
                           </div>
 
@@ -525,7 +527,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                               {req.schedules.map((s: any) => (
                                 <div key={s.id} className="p-3 sm:p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-brand-accent/20 transition-colors">
-                                  <span className="text-[10px] sm:text-xs font-bold text-slate-900">{s.schedule_date}</span>
+                                  <span className="text-[10px] sm:text-xs font-bold text-slate-900">
+                                    {new Date(s.schedule_date).toLocaleDateString('en-GB')}
+                                  </span>
                                   <div className="flex flex-col gap-1">
                                     {s.slots?.map((slot: any) => (
                                       <div key={slot.id} className="flex items-center gap-1.5 sm:gap-2">
@@ -565,13 +569,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <p className="text-base sm:text-lg font-display font-bold text-slate-900 truncate mb-1">
-                                        {choice.babysitter_first_name} {choice.babysitter_last_name}
+                                        <a
+                                          href={`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="hover:underline"
+                                        >
+                                          {choice.babysitter_first_name} {choice.babysitter_last_name}
+                                        </a>
                                       </p>
                                       <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-4">
                                         <div className="w-fit px-2 py-0.5 sm:px-2.5 sm:py-1 bg-brand-blue/5 rounded-lg flex items-center gap-1.5 self-start">
                                           <Calendar size={10} className="text-brand-blue sm:w-3 sm:h-3" />
                                           <span className="text-[9px] sm:text-[10px] font-bold text-brand-blue uppercase tracking-wider">
-                                            {choice.interview_date} @ {choice.interview_time?.substring(0, 5)}
+                                            {choice.interview_date
+                                              ? new Date(choice.interview_date).toLocaleDateString('en-GB')
+                                              : '--'} @ {choice.interview_time?.substring(0, 5)}
                                           </span>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3">
@@ -742,74 +755,76 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left min-w-[700px]">
-                      <thead>
-                        <tr className="bg-slate-50 border-bottom border-slate-100">
-                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.number}</th>
-                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.date}</th>
-                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.amount}</th>
-                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.billingMonth}</th>
-                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.status}</th>
-                          <th className="px-6 py-4 text-right"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {invoices.length > 0 ? (
-                          invoices.map((inv) => (
-                            <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 font-bold text-slate-700 text-sm">{inv.invoice_num}</td>
-                              <td className="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">{inv.due_date}</td>
-                              <td className="px-6 py-4 font-bold text-slate-800 text-sm">€{parseFloat(inv.amount).toFixed(2)}</td>
-                              <td className="px-6 py-4 text-slate-600 text-sm font-medium capitalize">{formatBillingMonth(inv.due_date)}</td>
-                              <td className="px-6 py-4">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${inv.payment_status === 'Paid'
-                                  ? 'bg-green-50 text-green-600 border border-green-100'
-                                  : inv.payment_status === 'Suspended'
-                                    ? 'bg-red-50 text-red-600 border border-red-100'
-                                    : 'bg-amber-50 text-amber-600 border border-amber-100'
-                                  }`}>
-                                  {inv.payment_status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                {inv.payment_status === 'Paid' ? (
-                                  <button
-                                    onClick={async () => {
-                                      const { generateInvoicePdf } = await import('../utils/invoicePdfGenerator');
-                                      if (user) {
-                                        generateInvoicePdf(inv, user, language, t);
-                                      }
-                                    }}
-                                    className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold"
-                                  >
-                                    <Download size={14} />
-                                    <span className="hidden sm:inline">{t.profilePage.invoices.download}</span>
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      setSelectedInvoice(inv);
-                                      setIsInvoiceModalOpen(true);
-                                    }}
-                                    className="px-4 py-2 bg-brand-accent text-white rounded-xl hover:bg-[#66B2AC] transition-all text-xs font-bold shadow-sm"
-                                  >
-                                    {language === 'fr' ? 'Payer' : 'Pay'}
-                                  </button>
-                                )}
+                        <thead>
+                          <tr className="bg-slate-50 border-bottom border-slate-100">
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.number}</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.date}</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.amount}</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.billingMonth}</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.profilePage.invoices.status}</th>
+                            <th className="px-6 py-4 text-right"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {invoices.length > 0 ? (
+                            invoices.map((inv) => (
+                              <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-6 py-4 font-bold text-slate-700 text-sm">{inv.invoice_num}</td>
+                                <td className="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">{inv.due_date
+                                  ? new Date(inv.due_date).toLocaleDateString('en-GB')
+                                  : '--'}</td>
+                                <td className="px-6 py-4 font-bold text-slate-800 text-sm">€{parseFloat(inv.amount).toFixed(2)}</td>
+                                <td className="px-6 py-4 text-slate-600 text-sm font-medium capitalize">{formatBillingMonth(inv.due_date)}</td>
+                                <td className="px-6 py-4">
+                                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${inv.payment_status === 'Paid'
+                                    ? 'bg-green-50 text-green-600 border border-green-100'
+                                    : inv.payment_status === 'Suspended'
+                                      ? 'bg-red-50 text-red-600 border border-red-100'
+                                      : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                    }`}>
+                                    {inv.payment_status}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  {inv.payment_status === 'Paid' ? (
+                                    <button
+                                      onClick={async () => {
+                                        const { generateInvoicePdf } = await import('../utils/invoicePdfGenerator');
+                                        if (user) {
+                                          generateInvoicePdf(inv, user, language, t);
+                                        }
+                                      }}
+                                      className="p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-colors inline-flex items-center gap-2 text-xs font-bold"
+                                    >
+                                      <Download size={14} />
+                                      <span className="hidden sm:inline">{t.profilePage.invoices.download}</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        setSelectedInvoice(inv);
+                                        setIsInvoiceModalOpen(true);
+                                      }}
+                                      className="px-4 py-2 bg-brand-accent text-white rounded-xl hover:bg-[#66B2AC] transition-all text-xs font-bold shadow-sm"
+                                    >
+                                      {language === 'fr' ? 'Payer' : 'Pay'}
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} className="px-6 py-20 text-center">
+                                <Receipt size={48} className="mx-auto text-slate-200 mb-4" />
+                                <p className="text-slate-400 font-medium">{t.profilePage.invoices.noInvoices}</p>
                               </td>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="px-6 py-20 text-center">
-                              <Receipt size={48} className="mx-auto text-slate-200 mb-4" />
-                              <p className="text-slate-400 font-medium">{t.profilePage.invoices.noInvoices}</p>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
                 ) : (
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
