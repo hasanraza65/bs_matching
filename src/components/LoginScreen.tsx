@@ -41,7 +41,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     try {
       const response = await api.checkEmail(email);
       if (response.status) {
-        if (email.toLowerCase() === 'admin@mail.com') {
+        if (email.toLowerCase() === 'ponctuel@bloom-buddies.fr') {
           setStep('password');
         } else {
           setStep('otp');
@@ -104,7 +104,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       
       if (response.status && response.data) {
         api.setToken(response.data.token);
-        onLoginSuccess(email.toLowerCase() === 'admin@mail.com');
+        onLoginSuccess(email.toLowerCase() === 'ponctuel@bloom-buddies.fr');
       } else {
         setError(response.message || 'Login failed. Please check your credentials.');
       }

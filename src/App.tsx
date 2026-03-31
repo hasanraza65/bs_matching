@@ -445,7 +445,7 @@ export default function App() {
             setUser(response.data);
             if (!initialPath.includes('/contract/') && !initialPath.includes('/price/') && !initialPath.includes('/cmg/')) {
               // Properly route to admin or parent based on user data
-              if (response.data.email?.toLowerCase() === 'admin@mail.com' || response.data.user_role === 1) {
+              if (response.data.email?.toLowerCase() === 'ponctuel@bloom-buddies.fr' || response.data.user_role === 1) {
                 setView('admin-dashboard');
               } else {
                 setView('profile');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Baby,
@@ -105,7 +105,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           setCmgValue(userData.cmg_num || '');
           onUserLoaded?.(userData);
 
-          if (userData.email === 'admin@mail.com') {
+          if (userData.email === 'ponctuel@bloom-buddies.fr') {
             onGoToAdmin();
           }
         } else {

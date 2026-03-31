@@ -7,51 +7,51 @@ import { toast } from 'react-hot-toast';
 
 
 import {
-  LayoutDashboard,
-  ClipboardList,
-  Calendar,
-  Receipt,
-  FileText,
-  Users,
-  Search,
-  Bell,
-  LogOut,
-  Menu,
-  X,
-  ChevronRight,
-  ChevronLeft,
-  MoreVertical,
-  Download,
-  Filter,
-  TrendingUp,
-  Eye,
-  Trash2,
-  Edit2,
-  Clock,
-  Phone,
-  Mail,
-  MapPin,
-  CheckCircle2,
-  AlertCircle,
-  Baby,
-  User as UserIcon,
-  Shield,
-  LayoutGrid,
-  Table as TableIcon,
-  ShieldCheck,
-  Loader2,
-  History,
-  TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
-  Activity,
-  CreditCard,
-  DollarSign,
-  Briefcase,
-  Plus,
-  Link as LinkIcon,
-  Video,
-  ExternalLink
+    LayoutDashboard,
+    ClipboardList,
+    Calendar,
+    Receipt,
+    FileText,
+    Users,
+    Search,
+    Bell,
+    LogOut,
+    Menu,
+    X,
+    ChevronRight,
+    ChevronLeft,
+    MoreVertical,
+    Download,
+    Filter,
+    TrendingUp,
+    Eye,
+    Trash2,
+    Edit2,
+    Clock,
+    Phone,
+    Mail,
+    MapPin,
+    CheckCircle2,
+    AlertCircle,
+    Baby,
+    User as UserIcon,
+    Shield,
+    LayoutGrid,
+    Table as TableIcon,
+    ShieldCheck,
+    Loader2,
+    History,
+    TrendingDown,
+    ArrowUpRight,
+    ArrowDownRight,
+    Activity,
+    CreditCard,
+    DollarSign,
+    Briefcase,
+    Plus,
+    Link as LinkIcon,
+    Video,
+    ExternalLink
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -86,282 +86,282 @@ import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { StatusBadge } from './StatusBadge';
 
 interface AdminDashboardProps {
-  onLogout: () => void;
+    onLogout: () => void;
 }
 
 type AdminPage = 'dashboard' | 'new-requests' | 'completed-requests' | 'ongoing-requests' | 'requests' | 'active-requests' | 'signed-contracts' | 'interviews' | 'invoices' | 'contracts' | 'attestations' | 'users';
 
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
-  const [activePage, setActivePage] = useState<AdminPage>('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [viewingUserId, setViewingUserId] = useState<number | null>(null);
-  const [viewingChoiceId, setViewingChoiceId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUserIdForInvoices, setSelectedUserIdForInvoices] = useState<number | null>(null);
+    const [activePage, setActivePage] = useState<AdminPage>('dashboard');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [viewingUserId, setViewingUserId] = useState<number | null>(null);
+    const [viewingChoiceId, setViewingChoiceId] = useState<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedUserIdForInvoices, setSelectedUserIdForInvoices] = useState<number | null>(null);
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'requests', label: 'All Requests', icon: ClipboardList },
-    { id: 'new-requests', label: 'New Request', icon: Plus },
-    { id: 'active-requests', label: 'Active Requests', icon: Activity },
-    { id: 'ongoing-requests', label: 'Ongoing Requests', icon: Clock },
-    { id: 'completed-requests', label: 'Completed Request', icon: CheckCircle2 },
-    { id: 'signed-contracts', label: 'Signed Contract', icon: ShieldCheck },
-    { id: 'invoices', label: 'Invoices', icon: Receipt },
-    { id: 'contracts', label: 'Contracts', icon: FileText },
-    { id: 'attestations', label: 'Attestations Fiscales', icon: History },
-    { id: 'users', label: 'All Users', icon: Users },
-  ];
+    const menuItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'requests', label: 'All Requests', icon: ClipboardList },
+        { id: 'new-requests', label: 'New Request', icon: Plus },
+        { id: 'active-requests', label: 'Active Requests', icon: Activity },
+        { id: 'ongoing-requests', label: 'Ongoing Requests', icon: Clock },
+        { id: 'completed-requests', label: 'Completed Request', icon: CheckCircle2 },
+        { id: 'signed-contracts', label: 'Signed Contract', icon: ShieldCheck },
+        { id: 'invoices', label: 'Invoices', icon: Receipt },
+        { id: 'contracts', label: 'Contracts', icon: FileText },
+        { id: 'attestations', label: 'Attestations Fiscales', icon: History },
+        { id: 'users', label: 'All Users', icon: Users },
+    ];
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  
 
-  return (
-    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
-      {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0 -translate-x-full md:w-20 md:translate-x-0'
-          }`}
-      >
-        <div className="h-full flex flex-col">
-          {/* Sidebar Header */}
-          <div className="h-20 flex items-center justify-between px-6 border-b border-slate-100">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shrink-0">
-                <Shield size={24} />
-              </div>
-              {isSidebarOpen && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-xl font-bold tracking-tight whitespace-nowrap"
-                >
-                  AdminPanel
-                </motion.span>
-              )}
-            </div>
 
-            {/* Desktop Collapse Toggle */}
-            <button
-              onClick={toggleSidebar}
-              className="hidden md:flex p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-900 transition-colors"
-            >
-              {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-            </button>
-          </div>
-
-          {/* Sidebar Menu */}
-          <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activePage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActivePage(item.id as AdminPage);
-                    if (item.id === 'invoices') setSelectedUserIdForInvoices(null);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${isActive
-                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+    return (
+        <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
+            {/* Sidebar */}
+            <aside
+                className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0 -translate-x-full md:w-20 md:translate-x-0'
                     }`}
-                >
-                  <Icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900'} />
-                  {isSidebarOpen && (
-                    <span className="font-medium text-sm">{item.label}</span>
-                  )}
-                  {!isSidebarOpen && isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-slate-900 rounded-r-full" />
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Sidebar Footer */}
-          <div className="p-4 border-t border-slate-100">
-            <button
-              onClick={onLogout}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all group ${!isSidebarOpen && 'justify-center'}`}
             >
-              <LogOut size={20} />
-              {isSidebarOpen && <span className="font-medium text-sm">Logout</span>}
-            </button>
-          </div>
+                <div className="h-full flex flex-col">
+                    {/* Sidebar Header */}
+                    <div className="h-20 flex items-center justify-between px-6 border-b border-slate-100">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shrink-0">
+                                <Shield size={24} />
+                            </div>
+                            {isSidebarOpen && (
+                                <motion.span
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="text-xl font-bold tracking-tight whitespace-nowrap"
+                                >
+                                    AdminPanel
+                                </motion.span>
+                            )}
+                        </div>
+
+                        {/* Desktop Collapse Toggle */}
+                        <button
+                            onClick={toggleSidebar}
+                            className="hidden md:flex p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-900 transition-colors"
+                        >
+                            {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                        </button>
+                    </div>
+
+                    {/* Sidebar Menu */}
+                    <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+                        {menuItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = activePage === item.id;
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => {
+                                        setActivePage(item.id as AdminPage);
+                                        if (item.id === 'invoices') setSelectedUserIdForInvoices(null);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${isActive
+                                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
+                                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                                        }`}
+                                >
+                                    <Icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900'} />
+                                    {isSidebarOpen && (
+                                        <span className="font-medium text-sm">{item.label}</span>
+                                    )}
+                                    {!isSidebarOpen && isActive && (
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-slate-900 rounded-r-full" />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </nav>
+
+                    {/* Sidebar Footer */}
+                    <div className="p-4 border-t border-slate-100">
+                        <button
+                            onClick={onLogout}
+                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all group ${!isSidebarOpen && 'justify-center'}`}
+                        >
+                            <LogOut size={20} />
+                            {isSidebarOpen && <span className="font-medium text-sm">Logout</span>}
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+                {/* Top Header Bar */}
+                <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-6 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={toggleSidebar}
+                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors md:hidden"
+                        >
+                            <Menu size={20} />
+                        </button>
+                        <h2 className="text-xl font-bold text-slate-900 capitalize hidden sm:block">
+                            {viewingUserId ? 'User Details' : viewingChoiceId ? 'Contract Details' : activePage.replace('-', ' ')}
+                        </h2>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        {/* Search Bar */}
+                        <div className="relative hidden md:block">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search anything..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-slate-200 rounded-xl text-sm outline-none transition-all w-64"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all relative">
+                                <Bell size={20} />
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+                            </button>
+
+                            <div className="h-8 w-px bg-slate-200 mx-1" />
+
+                            <div className="flex items-center gap-3 pl-2">
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-sm font-bold text-slate-900">Admin User</p>
+                                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Super Admin</p>
+                                </div>
+                                <div className="w-10 h-10 bg-slate-200 rounded-xl flex items-center justify-center text-slate-500 font-bold border-2 border-white shadow-sm">
+                                    AD
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Dynamic Content Area */}
+                <main className="p-6 md:p-8">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activePage}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {activePage === 'dashboard' && <DashboardView />}
+                            {activePage === 'new-requests' && <NewRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+                            {activePage === 'completed-requests' && <CompletedRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
+                            {activePage === 'ongoing-requests' && <OngoingRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
+                            {activePage === 'requests' && <RequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+                            {activePage === 'active-requests' && <ActiveRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+                            {activePage === 'signed-contracts' && <SignedContractsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
+                            {activePage === 'interviews' && <InterviewsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+                            {activePage === 'invoices' && <InvoicesView searchQuery={searchQuery} onSearchChange={setSearchQuery} userId={selectedUserIdForInvoices} onClearUserFilter={() => setSelectedUserIdForInvoices(null)} />}
+                            {activePage === 'attestations' && <AttestationsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+                            {viewingChoiceId ? (
+
+                                <ContractDetailView
+                                    choiceId={viewingChoiceId}
+                                    onBack={() => setViewingChoiceId(null)}
+                                />
+                            ) : activePage === 'contracts' ? (
+                                <ContractsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewContract={(id) => setViewingChoiceId(id)} />
+                            ) : null}
+                            {activePage === 'users' && (
+                                viewingUserId ? (
+                                    <UserDetailsView
+                                        id={viewingUserId}
+                                        onBack={() => setViewingUserId(null)}
+                                    />
+                                ) : (
+                                    <UsersView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewUser={(id) => setViewingUserId(id)} />
+                                )
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </main>
+            </div>
         </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
-        {/* Top Header Bar */}
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={toggleSidebar}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors md:hidden"
-            >
-              <Menu size={20} />
-            </button>
-            <h2 className="text-xl font-bold text-slate-900 capitalize hidden sm:block">
-              {viewingUserId ? 'User Details' : viewingChoiceId ? 'Contract Details' : activePage.replace('-', ' ')}
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-6">
-            {/* Search Bar */}
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search anything..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-slate-200 rounded-xl text-sm outline-none transition-all w-64"
-              />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all relative">
-                <Bell size={20} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-              </button>
-
-              <div className="h-8 w-px bg-slate-200 mx-1" />
-
-              <div className="flex items-center gap-3 pl-2">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-slate-900">Admin User</p>
-                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Super Admin</p>
-                </div>
-                <div className="w-10 h-10 bg-slate-200 rounded-xl flex items-center justify-center text-slate-500 font-bold border-2 border-white shadow-sm">
-                  AD
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Dynamic Content Area */}
-        <main className="p-6 md:p-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activePage}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {activePage === 'dashboard' && <DashboardView />}
-              {activePage === 'new-requests' && <NewRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
-              {activePage === 'completed-requests' && <CompletedRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
-              {activePage === 'ongoing-requests' && <OngoingRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
-               {activePage === 'requests' && <RequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
-               {activePage === 'active-requests' && <ActiveRequestsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
-               {activePage === 'signed-contracts' && <SignedContractsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewInvoices={(userId) => { setSelectedUserIdForInvoices(userId); setActivePage('invoices'); }} />}
-               {activePage === 'interviews' && <InterviewsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
-               {activePage === 'invoices' && <InvoicesView searchQuery={searchQuery} onSearchChange={setSearchQuery} userId={selectedUserIdForInvoices} onClearUserFilter={() => setSelectedUserIdForInvoices(null)} />}
-               {activePage === 'attestations' && <AttestationsView searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
-              {viewingChoiceId ? (
-
-                <ContractDetailView 
-                  choiceId={viewingChoiceId} 
-                  onBack={() => setViewingChoiceId(null)} 
-                />
-              ) : activePage === 'contracts' ? (
-                 <ContractsView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewContract={(id) => setViewingChoiceId(id)} />
-               ) : null}
-               {activePage === 'users' && (
-                 viewingUserId ? (
-                   <UserDetailsView 
-                     id={viewingUserId} 
-                     onBack={() => setViewingUserId(null)} 
-                   />
-                 ) : (
-                   <UsersView searchQuery={searchQuery} onSearchChange={setSearchQuery} onViewUser={(id) => setViewingUserId(id)} />
-                 )
-               )}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-      </div>
-    </div>
-  );
+    );
 };
 
 // --- Sub-Views ---
 
 const DashboardView = () => {
-  const stats = [
-    { label: 'Total Requests', value: '1,284', trend: '+12.5%', icon: ClipboardList, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Active Interviews', value: '42', trend: '+5.2%', icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Pending Payments', value: '€3,450', trend: '-2.4%', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Total Revenue', value: '€48,290', trend: '+18.7%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  ];
+    const stats = [
+        { label: 'Total Requests', value: '1,284', trend: '+12.5%', icon: ClipboardList, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { label: 'Active Interviews', value: '42', trend: '+5.2%', icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
+        { label: 'Pending Payments', value: '€3,450', trend: '-2.4%', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: 'Total Revenue', value: '€48,290', trend: '+18.7%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    ];
 
-  return (
-    <div className="space-y-8">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center`}>
-                <stat.icon size={24} />
-              </div>
-              <span className={`text-xs font-bold px-2 py-1 rounded-lg ${stat.trend.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                {stat.trend}
-              </span>
+    return (
+        <div className="space-y-8">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {stats.map((stat, idx) => (
+                    <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center`}>
+                                <stat.icon size={24} />
+                            </div>
+                            <span className={`text-xs font-bold px-2 py-1 rounded-lg ${stat.trend.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                                {stat.trend}
+                            </span>
+                        </div>
+                        <p className="text-sm font-medium text-slate-400 mb-1">{stat.label}</p>
+                        <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
+                    </div>
+                ))}
             </div>
-            <p className="text-sm font-medium text-slate-400 mb-1">{stat.label}</p>
-            <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
-          </div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Chart Placeholder */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-bold text-slate-900">Revenue Analytics</h3>
-            <select className="bg-slate-50 border-none text-xs font-bold rounded-lg px-3 py-2 outline-none">
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-            </select>
-          </div>
-          <div className="h-64 bg-slate-50 rounded-xl flex items-end justify-between px-8 pb-4 gap-2">
-            {[40, 70, 45, 90, 65, 85, 55].map((h, i) => (
-              <div key={i} className="flex-1 bg-slate-200 rounded-t-lg hover:bg-slate-900 transition-colors cursor-pointer group relative" style={{ height: `${h}%` }}>
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                  {h * 100}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Chart Placeholder */}
+                <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-8">
+                        <h3 className="text-lg font-bold text-slate-900">Revenue Analytics</h3>
+                        <select className="bg-slate-50 border-none text-xs font-bold rounded-lg px-3 py-2 outline-none">
+                            <option>Last 7 Days</option>
+                            <option>Last 30 Days</option>
+                        </select>
+                    </div>
+                    <div className="h-64 bg-slate-50 rounded-xl flex items-end justify-between px-8 pb-4 gap-2">
+                        {[40, 70, 45, 90, 65, 85, 55].map((h, i) => (
+                            <div key={i} className="flex-1 bg-slate-200 rounded-t-lg hover:bg-slate-900 transition-colors cursor-pointer group relative" style={{ height: `${h}%` }}>
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {h * 100}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Recent Activity</h3>
-          <div className="space-y-6">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex gap-4">
-                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
-                  <UserIcon size={18} />
+                {/* Recent Activity */}
+                <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-900 mb-6">Recent Activity</h3>
+                    <div className="space-y-6">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="flex gap-4">
+                                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
+                                    <UserIcon size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-800">New request from Family Smith</p>
+                                    <p className="text-xs text-slate-400">2 minutes ago</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-800">New request from Family Smith</p>
-                  <p className="text-xs text-slate-400">2 minutes ago</p>
-                </div>
-              </div>
-            ))}
-          </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
@@ -464,9 +464,9 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
     const filteredRequests = requests.filter(req => {
         const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
         const searchLower = searchQuery.toLowerCase();
-        return parentName.includes(searchLower) || 
-               req.id.toString().includes(searchLower) ||
-               req.parent_address?.toLowerCase().includes(searchLower);
+        return parentName.includes(searchLower) ||
+            req.id.toString().includes(searchLower) ||
+            req.parent_address?.toLowerCase().includes(searchLower);
     });
 
     const paginatedRequests = filteredRequests.slice(
@@ -493,7 +493,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                         />
                     </div>
 
-                    <button 
+                    <button
                         onClick={() => setIsAddModalOpen(true)}
                         className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2"
                     >
@@ -501,7 +501,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                         Add New Request
                     </button>
 
-                    <button 
+                    <button
                         onClick={fetchNewRequests}
                         className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
                     >
@@ -567,14 +567,34 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                         {formatDateDMY(req.created_at)}
                                     </td>
                                     <td className="px-6 py-4 text-center align-top">
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 const link = `${window.location.origin}/price/${req.id}`;
-                                                navigator.clipboard.writeText(link);
-                                                toast.success('Price Quote link copied!');
+                                                const lastName = req.user?.last_name || 'Parent';
+                                                const lang = req.user?.user_language || 'en';
+
+                                                let message = '';
+
+                                                if (lang === 'fr') {
+                                                    message = `Cher(e) ${lastName},
+
+Un nouveau devis a été préparé pour votre demande. Vous pouvez maintenant consulter les détails et décider si vous souhaitez poursuivre.
+
+Voici le lien vers votre devis : ${link}`;
+                                                } else {
+                                                    message = `Dear ${lastName},
+
+A new price quote has been prepared for your request.
+You can now review the details and decide whether to proceed.
+
+Here is the link to your price quote: ${link}`;
+                                                }
+
+                                                navigator.clipboard.writeText(message);
+                                                toast.success('Message copied!');
                                             }}
                                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 mx-auto bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs shadow-sm shadow-emerald-200/50"
-                                            title="Copy Price Quote Link"
+                                            title="Copy Price Quote Message"
                                         >
                                             <LinkIcon size={14} />
                                             <span>Copy Link</span>
@@ -582,14 +602,14 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                     </td>
                                     <td className="px-6 py-4 text-right align-top">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button 
+                                            <button
                                                 onClick={() => handleEdit(req)}
                                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                 title="Edit"
                                             >
                                                 <Edit2 size={18} />
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleDeleteClick(req.id)}
                                                 className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                 title="Delete"
@@ -603,7 +623,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                         </tbody>
                     </table>
                 </div>
-                <Pagination 
+                <Pagination
                     totalItems={filteredRequests.length}
                     itemsPerPage={itemsPerPage}
                     currentPage={currentPage}
@@ -611,7 +631,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                 />
             </div>
 
-              <AnimatePresence>
+            <AnimatePresence>
                 {isAddModalOpen && (
                     <AddNewActiveRequestModal
                         onClose={() => setIsAddModalOpen(false)}
@@ -645,7 +665,7 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
             </AnimatePresence>
 
         </div>
-        
+
     );
 };
 
@@ -750,10 +770,10 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
         const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
         const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
         const searchLower = searchQuery.toLowerCase();
-        return parentName.includes(searchLower) || 
-               sitterName.includes(searchLower) ||
-               req.id.toString().includes(searchLower) ||
-               req.parent_address?.toLowerCase().includes(searchLower);
+        return parentName.includes(searchLower) ||
+            sitterName.includes(searchLower) ||
+            req.id.toString().includes(searchLower) ||
+            req.parent_address?.toLowerCase().includes(searchLower);
     });
 
     const paginatedRequests = filteredRequests.slice(
@@ -779,7 +799,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
-                    <button 
+                    <button
                         onClick={fetchOngoingRequests}
                         className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
                     >
@@ -879,7 +899,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                                         <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
                                                     </span>
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => handleDeleteClick(req.id)}
                                                     className="w-full sm:w-auto max-w-[48px] p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all flex items-center justify-center"
                                                     title="Delete"
@@ -894,7 +914,7 @@ const OngoingRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                         </tbody>
                     </table>
                 </div>
-                <Pagination 
+                <Pagination
                     totalItems={filteredRequests.length}
                     itemsPerPage={itemsPerPage}
                     currentPage={currentPage}
@@ -1029,10 +1049,10 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
         const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
         const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
         const searchLower = searchQuery.toLowerCase();
-        return parentName.includes(searchLower) || 
-               sitterName.includes(searchLower) ||
-               req.id.toString().includes(searchLower) ||
-               req.parent_address?.toLowerCase().includes(searchLower);
+        return parentName.includes(searchLower) ||
+            sitterName.includes(searchLower) ||
+            req.id.toString().includes(searchLower) ||
+            req.parent_address?.toLowerCase().includes(searchLower);
     });
 
     const paginatedRequests = filteredRequests.slice(
@@ -1058,7 +1078,7 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
-                    <button 
+                    <button
                         onClick={fetchCompletedRequests}
                         className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
                     >
@@ -1147,7 +1167,7 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                                         </td>
                                         <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button 
+                                                <button
                                                     onClick={() => onViewInvoices?.(req.user_id)}
                                                     className="group/btn relative flex items-center justify-center p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm shadow-slate-200"
                                                     title="View Invoices"
@@ -1166,7 +1186,7 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
                         </tbody>
                     </table>
                 </div>
-                <Pagination 
+                <Pagination
                     totalItems={filteredRequests.length}
                     itemsPerPage={itemsPerPage}
                     currentPage={currentPage}
@@ -1200,11 +1220,11 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
     );
 };
 
-const SitterChoicesModal: React.FC<{ 
-    choices: any[], 
-    requestId: number, 
+const SitterChoicesModal: React.FC<{
+    choices: any[],
+    requestId: number,
     onClose: () => void,
-    onRefresh?: () => void 
+    onRefresh?: () => void
 }> = ({ choices, requestId, onClose, onRefresh }) => {
     const { formatDate } = useLanguage();
     const handleSelectFinal = async (choiceId: number) => {
@@ -1227,7 +1247,7 @@ const SitterChoicesModal: React.FC<{
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -1238,7 +1258,7 @@ const SitterChoicesModal: React.FC<{
                         <h3 className="text-xl font-bold text-slate-900">Sitter Choices</h3>
                         <p className="text-sm text-slate-500">Request #{requestId}</p>
                     </div>
-                    <button 
+                    <button
                         onClick={onClose}
                         className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-slate-900 shadow-sm border border-transparent hover:border-slate-100"
                     >
@@ -1248,122 +1268,122 @@ const SitterChoicesModal: React.FC<{
                 <div className="p-6 max-h-[70vh] overflow-y-auto">
                     <div className="flex flex-col gap-4">
                         {choices.map((choice) => (
-                                <div key={choice.id} className="group relative bg-white border border-slate-100 rounded-3xl p-6 transition-all hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-0.5 overflow-hidden">
-                                    <div className="grid grid-cols-1 md:grid-cols-[auto,1fr,auto] items-center gap-4">
-                                        {/* Sitter Identity */}
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg overflow-hidden">
-                                                {choice.babysitter_pic ? (
-                                                    <img 
-                                                        src={`https://bloom-buddies.fr/uploads/profile_images/${choice.babysitter_pic}`} 
-                                                        alt={`${choice.babysitter_first_name}`}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <UserIcon size={24} />
-                                                )}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <h4 className="text-base font-bold text-slate-900 truncate">
-                                                    {choice.babysitter_first_name} {choice.babysitter_last_name}
-                                                </h4>
-                                                <p className="text-xs text-slate-500 font-medium truncate flex items-center gap-1.5 mt-1">
-                                                    <Mail size={12} className="text-slate-400" />
-                                                    {choice.babysitter_email}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Center Details Section */}
-                                        <div className="min-w-0">
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6">
-                                                <div className="flex items-center gap-2.5 text-xs text-slate-700 font-bold">
-                                                    <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                                                        <Phone size={14} />
-                                                    </div>
-                                                    <span className="truncate">{choice.babysitter_phone || 'N/A'}</span>
-                                                </div>
-
-                                                <div className="mt-3 sm:mt-0">
-                                                    {choice.interview_date ? (
-                                                        <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5 rounded-xl border border-blue-100/50 text-xs">
-                                                            <div className="flex items-center gap-1.5 text-blue-600 font-bold whitespace-nowrap">
-                                                                <Calendar size={13} />
-                                                                <span>{formatDate(choice.interview_date)}</span>
-                                                            </div>
-                                                            <div className="w-px h-3 bg-blue-200/50" />
-                                                            <div className="flex items-center gap-1.5 text-blue-500 font-bold whitespace-nowrap">
-                                                                <Clock size={13} />
-                                                                <span>{choice.interview_time?.substring(0, 5)}</span>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium px-3 py-1.5 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 italic whitespace-nowrap">
-                                                            <Clock size={13} className="text-slate-300" />
-                                                            Not scheduled
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Actions Section */}
-                                        <div className="flex flex-wrap items-center gap-2 justify-end">
-                                            {Number(choice.final_choice) === 1 ? (
-                                                <div className="flex items-center gap-2">
-                                                    <button 
-                                                        onClick={() => {
-                                                            const link = `${window.location.origin}/contract/${choice.id}`;
-                                                            navigator.clipboard.writeText(link);
-                                                            toast.success('Contract link copied!');
-                                                        }}
-                                                        className="px-3 py-2 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm font-bold text-[11px] flex items-center gap-1.5 whitespace-nowrap"
-                                                        title="Copy Contract Link"
-                                                    >
-                                                        <FileText size={14} />
-                                                        <span>Contract</span>
-                                                    </button>
-                                                    <div className="px-3 py-2 bg-emerald-500 text-white text-[11px] font-black rounded-xl shadow-lg shadow-emerald-100 flex items-center gap-1.5 uppercase tracking-wide whitespace-nowrap">
-                                                        <CheckCircle2 size={14} />
-                                                        Accepted
-                                                    </div>
-                                                </div>
+                            <div key={choice.id} className="group relative bg-white border border-slate-100 rounded-3xl p-6 transition-all hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-0.5 overflow-hidden">
+                                <div className="grid grid-cols-1 md:grid-cols-[auto,1fr,auto] items-center gap-4">
+                                    {/* Sitter Identity */}
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg overflow-hidden">
+                                            {choice.babysitter_pic ? (
+                                                <img
+                                                    src={`https://bloom-buddies.fr/uploads/profile_images/${choice.babysitter_pic}`}
+                                                    alt={`${choice.babysitter_first_name}`}
+                                                    className="w-full h-full object-cover"
+                                                />
                                             ) : (
-                                                <button 
-                                                    onClick={() => handleSelectFinal(choice.id)}
-                                                    className="px-4 py-2.5 bg-slate-900 text-white text-[11px] font-extrabold rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-1.5 active:scale-95 whitespace-nowrap"
-                                                >
-                                                    <CheckCircle2 size={16} />
-                                                    Final Choice
-                                                </button>
+                                                <UserIcon size={24} />
                                             )}
-
-                                            {choice.bb_bs_id && (
-                                                <a 
-                                                    href={`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="w-10 h-10 flex items-center justify-center bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 active:scale-95"
-                                                    title="View Public Profile"
-                                                >
-                                                    <ExternalLink size={16} />
-                                                </a>
-                                            )}
-
-                                            {choice.zoom_meeting_link && (
-                                                <a 
-                                                    href={choice.zoom_meeting_link}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95"
-                                                    title="Join Zoom Meeting"
-                                                >
-                                                    <Video size={16} />
-                                                </a>
-                                            )}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h4 className="text-base font-bold text-slate-900 truncate">
+                                                {choice.babysitter_first_name} {choice.babysitter_last_name}
+                                            </h4>
+                                            <p className="text-xs text-slate-500 font-medium truncate flex items-center gap-1.5 mt-1">
+                                                <Mail size={12} className="text-slate-400" />
+                                                {choice.babysitter_email}
+                                            </p>
                                         </div>
                                     </div>
+
+                                    {/* Center Details Section */}
+                                    <div className="min-w-0">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6">
+                                            <div className="flex items-center gap-2.5 text-xs text-slate-700 font-bold">
+                                                <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+                                                    <Phone size={14} />
+                                                </div>
+                                                <span className="truncate">{choice.babysitter_phone || 'N/A'}</span>
+                                            </div>
+
+                                            <div className="mt-3 sm:mt-0">
+                                                {choice.interview_date ? (
+                                                    <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5 rounded-xl border border-blue-100/50 text-xs">
+                                                        <div className="flex items-center gap-1.5 text-blue-600 font-bold whitespace-nowrap">
+                                                            <Calendar size={13} />
+                                                            <span>{formatDate(choice.interview_date)}</span>
+                                                        </div>
+                                                        <div className="w-px h-3 bg-blue-200/50" />
+                                                        <div className="flex items-center gap-1.5 text-blue-500 font-bold whitespace-nowrap">
+                                                            <Clock size={13} />
+                                                            <span>{choice.interview_time?.substring(0, 5)}</span>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium px-3 py-1.5 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 italic whitespace-nowrap">
+                                                        <Clock size={13} className="text-slate-300" />
+                                                        Not scheduled
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions Section */}
+                                    <div className="flex flex-wrap items-center gap-2 justify-end">
+                                        {Number(choice.final_choice) === 1 ? (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        const link = `${window.location.origin}/contract/${choice.id}`;
+                                                        navigator.clipboard.writeText(link);
+                                                        toast.success('Contract link copied!');
+                                                    }}
+                                                    className="px-3 py-2 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm font-bold text-[11px] flex items-center gap-1.5 whitespace-nowrap"
+                                                    title="Copy Contract Link"
+                                                >
+                                                    <FileText size={14} />
+                                                    <span>Contract</span>
+                                                </button>
+                                                <div className="px-3 py-2 bg-emerald-500 text-white text-[11px] font-black rounded-xl shadow-lg shadow-emerald-100 flex items-center gap-1.5 uppercase tracking-wide whitespace-nowrap">
+                                                    <CheckCircle2 size={14} />
+                                                    Accepted
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleSelectFinal(choice.id)}
+                                                className="px-4 py-2.5 bg-slate-900 text-white text-[11px] font-extrabold rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-1.5 active:scale-95 whitespace-nowrap"
+                                            >
+                                                <CheckCircle2 size={16} />
+                                                Final Choice
+                                            </button>
+                                        )}
+
+                                        {choice.bb_bs_id && (
+                                            <a
+                                                href={`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-10 h-10 flex items-center justify-center bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 active:scale-95"
+                                                title="View Public Profile"
+                                            >
+                                                <ExternalLink size={16} />
+                                            </a>
+                                        )}
+
+                                        {choice.zoom_meeting_link && (
+                                            <a
+                                                href={choice.zoom_meeting_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95"
+                                                title="Join Zoom Meeting"
+                                            >
+                                                <Video size={16} />
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -1374,9 +1394,9 @@ const SitterChoicesModal: React.FC<{
     );
 };
 
-const ActiveRequestChoicesCell: React.FC<{ 
-    choices: any[], 
-    requestId: number, 
+const ActiveRequestChoicesCell: React.FC<{
+    choices: any[],
+    requestId: number,
     onShowMore: (choices: any[], reqId: number) => void,
     onRefresh?: () => void
 }> = ({ choices, requestId, onShowMore, onRefresh }) => {
@@ -1408,8 +1428,8 @@ const ActiveRequestChoicesCell: React.FC<{
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 shrink-0 overflow-hidden">
                                 {choice.babysitter_pic ? (
-                                    <img 
-                                        src={`https://bloom-buddies.fr/uploads/profile_images/${choice.babysitter_pic}`} 
+                                    <img
+                                        src={`https://bloom-buddies.fr/uploads/profile_images/${choice.babysitter_pic}`}
                                         alt={`${choice.babysitter_first_name}`}
                                         className="w-full h-full object-cover"
                                     />
@@ -1424,7 +1444,7 @@ const ActiveRequestChoicesCell: React.FC<{
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                             {choice.bb_bs_id && (
-                                <a 
+                                <a
                                     href={`https://bloom-buddies.fr/babysitter/${choice.bb_bs_id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -1439,7 +1459,7 @@ const ActiveRequestChoicesCell: React.FC<{
                                 </a>
                             )}
                             {choice.zoom_meeting_link && (
-                                <a 
+                                <a
                                     href={choice.zoom_meeting_link}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -1485,7 +1505,7 @@ const ActiveRequestChoicesCell: React.FC<{
                 </div>
             ))}
             {hasMore && (
-                <button 
+                <button
                     onClick={() => onShowMore(choices, requestId)}
                     className="flex items-center justify-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 w-fit"
                 >
@@ -1614,9 +1634,9 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
     const filteredRequests = requests.filter(req => {
         const parentName = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
         const searchLower = searchQuery.toLowerCase();
-        return parentName.includes(searchLower) || 
-               req.id.toString().includes(searchLower) ||
-               req.parent_address?.toLowerCase().includes(searchLower);
+        return parentName.includes(searchLower) ||
+            req.id.toString().includes(searchLower) ||
+            req.parent_address?.toLowerCase().includes(searchLower);
     });
 
     const paginatedRequests = filteredRequests.slice(
@@ -1642,7 +1662,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                             className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
                         />
                     </div>
-                    <button 
+                    <button
                         onClick={fetchActiveRequests}
                         className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
                         title="Refresh"
@@ -1708,9 +1728,9 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                     </td>
 
                                     <td className="px-4 py-4 align-top">
-                                        <ActiveRequestChoicesCell 
-                                            choices={req.choices ?? []} 
-                                            requestId={req.id} 
+                                        <ActiveRequestChoicesCell
+                                            choices={req.choices ?? []}
+                                            requestId={req.id}
                                             onShowMore={(choices, reqId) => setViewingSitterChoices({ choices, reqId })}
                                             onRefresh={fetchActiveRequests}
                                         />
@@ -1719,9 +1739,9 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                         {(() => {
                                             const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
                                             if (!hiredSitter) return <span className="text-slate-400 text-[10px] italic mt-2 block">No sitter accepted</span>;
-                                            
+
                                             return (
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         const link = `${window.location.origin}/contract/${hiredSitter.id}`;
                                                         navigator.clipboard.writeText(link);
@@ -1729,9 +1749,9 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                                     }}
                                                     className="p-2.5 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm mx-auto flex items-center justify-center mt-1"
                                                     title="Copy Contract Link"
-                                                 >
+                                                >
                                                     <LinkIcon size={18} />
-                                                 </button>
+                                                </button>
                                             );
                                         })()}
                                     </td>
@@ -1740,14 +1760,14 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                     </td>
                                     <td className="px-4 py-4 text-right align-top">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button 
+                                            <button
                                                 onClick={() => handleEdit(req)}
                                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                 title="Edit"
                                             >
                                                 <Edit2 size={18} />
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleDeleteClick(req.id)}
                                                 className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                 title="Delete"
@@ -1761,7 +1781,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                         </tbody>
                     </table>
                 </div>
-                <Pagination 
+                <Pagination
                     totalItems={filteredRequests.length}
                     itemsPerPage={itemsPerPage}
                     currentPage={currentPage}
@@ -1909,9 +1929,9 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
         const hiredSitter = req.choices?.find(c => Number(c.final_choice) === 1);
         const sitterName = hiredSitter ? `${hiredSitter.babysitter_first_name} ${hiredSitter.babysitter_last_name}`.toLowerCase() : '';
         const searchLower = searchQuery.toLowerCase();
-        return parentName.includes(searchLower) || 
-               sitterName.includes(searchLower) ||
-               req.id.toString().includes(searchLower);
+        return parentName.includes(searchLower) ||
+            sitterName.includes(searchLower) ||
+            req.id.toString().includes(searchLower);
     });
 
     const paginatedRequests = filteredRequests.slice(
@@ -2006,7 +2026,7 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                                         </td>
                                         <td className="px-6 py-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button 
+                                                <button
                                                     onClick={() => onViewInvoices?.(req.user_id)}
                                                     className="group/btn relative flex items-center justify-center p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm shadow-slate-200 ml-2"
                                                     title="View Invoices"
@@ -2025,7 +2045,7 @@ const SignedContractsView = ({ onViewInvoices, searchQuery, onSearchChange }: { 
                         </tbody>
                     </table>
                 </div>
-                <Pagination 
+                <Pagination
                     totalItems={filteredRequests.length}
                     itemsPerPage={itemsPerPage}
                     currentPage={currentPage}
@@ -2189,7 +2209,7 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                     <button className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
                         <Filter size={18} />
                     </button>
-                    <button 
+                    <button
                         onClick={fetchRequests}
                         className="p-2 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
                         title="Refresh"
@@ -2277,7 +2297,7 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                                         <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-6 py-4 font-bold text-slate-900 align-top">#{req.id}</td>
                                             <td className="px-6 py-4 font-bold text-slate-800 align-top">
-                                            {req.user?.first_name} {req.user?.last_name}
+                                                {req.user?.first_name} {req.user?.last_name}
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 align-top">
                                                 {req.children?.length}
@@ -2287,14 +2307,14 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                                             </td>
                                             <td className="px-6 py-4 text-right align-top">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleEdit(req)}
                                                         className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                         title="Edit"
                                                     >
                                                         <Edit2 size={18} />
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleDeleteClick(req.id)}
                                                         className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                         title="Delete"
@@ -2308,7 +2328,7 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
                                 </tbody>
                             </table>
                         </div>
-                        <Pagination 
+                        <Pagination
                             totalItems={filteredRequests.length}
                             itemsPerPage={itemsPerPage}
                             currentPage={currentPage}
@@ -2356,7 +2376,7 @@ const RequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; on
 // --- Helper: Schedule Dates Cell ---
 
 interface ScheduleDatesCellProps {
-  schedules: import('../services/api').Schedule[];
+    schedules: import('../services/api').Schedule[];
 }
 
 const MAX_VISIBLE_DATES = 4;
@@ -2441,144 +2461,144 @@ const ActiveRequestSchedulesCell: React.FC<{ schedules: any[] }> = ({ schedules 
 };
 
 const ScheduleDatesCell: React.FC<ScheduleDatesCellProps> = ({ schedules }) => {
-  const [tooltipOpen, setTooltipOpen] = useState(false);
+    const [tooltipOpen, setTooltipOpen] = useState(false);
 
-  if (schedules.length === 0) {
-    return <span className="text-slate-400 text-sm italic">No dates</span>;
-  }
+    if (schedules.length === 0) {
+        return <span className="text-slate-400 text-sm italic">No dates</span>;
+    }
 
-  const dates = schedules.map((s) => s.schedule_date);
-  const visibleDates = dates.slice(0, MAX_VISIBLE_DATES);
-  const hiddenDates = dates.slice(MAX_VISIBLE_DATES);
+    const dates = schedules.map((s) => s.schedule_date);
+    const visibleDates = dates.slice(0, MAX_VISIBLE_DATES);
+    const hiddenDates = dates.slice(MAX_VISIBLE_DATES);
 
-  return (
-    <span className="flex items-center flex-wrap gap-x-1 gap-y-0.5">
-      <span>{visibleDates.join(', ')}</span>
-      {hiddenDates.length > 0 && (
-        <span className="relative inline-block">
-          <button
-            onMouseEnter={() => setTooltipOpen(true)}
-            onMouseLeave={() => setTooltipOpen(false)}
-            onClick={() => setTooltipOpen((v) => !v)}
-            className="ml-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold rounded-full transition-colors whitespace-nowrap"
-            aria-label={`Show ${hiddenDates.length} more dates`}
-          >
-            +{hiddenDates.length} more
-          </button>
-          {tooltipOpen && (
-            <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs font-medium rounded-xl px-3 py-2 shadow-xl whitespace-nowrap">
-              {hiddenDates.join(', ')}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
-            </div>
-          )}
+    return (
+        <span className="flex items-center flex-wrap gap-x-1 gap-y-0.5">
+            <span>{visibleDates.join(', ')}</span>
+            {hiddenDates.length > 0 && (
+                <span className="relative inline-block">
+                    <button
+                        onMouseEnter={() => setTooltipOpen(true)}
+                        onMouseLeave={() => setTooltipOpen(false)}
+                        onClick={() => setTooltipOpen((v) => !v)}
+                        className="ml-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold rounded-full transition-colors whitespace-nowrap"
+                        aria-label={`Show ${hiddenDates.length} more dates`}
+                    >
+                        +{hiddenDates.length} more
+                    </button>
+                    {tooltipOpen && (
+                        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs font-medium rounded-xl px-3 py-2 shadow-xl whitespace-nowrap">
+                            {hiddenDates.join(', ')}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                        </div>
+                    )}
+                </span>
+            )}
         </span>
-      )}
-    </span>
-  );
+    );
 };
 
 
 
 const InterviewsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-  const allInterviews = [
-    { id: '1', family: 'Smith Family', sitter: 'Amélie Laurent', date: '15/03/2026', status: 'Scheduled' },
-    { id: '2', family: 'Dupont Family', sitter: 'Thomas Dubois', date: '16/03/2026', status: 'Completed' },
-    { id: '3', family: 'Miller Family', sitter: 'Chloé Mercier', date: '18/03/2026', status: 'Cancelled' },
-    { id: '4', family: 'Garcia Family', sitter: 'Lucas Martin', date: '20/03/2026', status: 'Scheduled' },
-    { id: '5', family: 'Lefevre Family', sitter: 'Manon Petit', date: '22/03/2026', status: 'Completed' },
-    { id: '6', family: 'Dubois Family', sitter: 'Arthur Bernard', date: '25/03/2026', status: 'Scheduled' },
-    { id: '7', family: 'Moreau Family', sitter: 'Emma Robert', date: '28/03/2026', status: 'Cancelled' },
-    { id: '8', family: 'Fournier Family', sitter: 'Jules Richard', date: '01/04/2026', status: 'Scheduled' },
-    { id: '9', family: 'Roux Family', sitter: 'Alice Durand', date: '03/04/2026', status: 'Completed' },
-    { id: '10', family: 'Lambert Family', sitter: 'Gabriel Leroy', date: '05/04/2026', status: 'Scheduled' },
-    { id: '11', family: 'Petit Family', sitter: 'Louise Morel', date: '07/04/2026', status: 'Scheduled' },
-    { id: '12', family: 'Thomas Family', sitter: 'Hugo Fournier', date: '09/04/2026', status: 'Completed' },
-  ];
+    const allInterviews = [
+        { id: '1', family: 'Smith Family', sitter: 'Amélie Laurent', date: '15/03/2026', status: 'Scheduled' },
+        { id: '2', family: 'Dupont Family', sitter: 'Thomas Dubois', date: '16/03/2026', status: 'Completed' },
+        { id: '3', family: 'Miller Family', sitter: 'Chloé Mercier', date: '18/03/2026', status: 'Cancelled' },
+        { id: '4', family: 'Garcia Family', sitter: 'Lucas Martin', date: '20/03/2026', status: 'Scheduled' },
+        { id: '5', family: 'Lefevre Family', sitter: 'Manon Petit', date: '22/03/2026', status: 'Completed' },
+        { id: '6', family: 'Dubois Family', sitter: 'Arthur Bernard', date: '25/03/2026', status: 'Scheduled' },
+        { id: '7', family: 'Moreau Family', sitter: 'Emma Robert', date: '28/03/2026', status: 'Cancelled' },
+        { id: '8', family: 'Fournier Family', sitter: 'Jules Richard', date: '01/04/2026', status: 'Scheduled' },
+        { id: '9', family: 'Roux Family', sitter: 'Alice Durand', date: '03/04/2026', status: 'Completed' },
+        { id: '10', family: 'Lambert Family', sitter: 'Gabriel Leroy', date: '05/04/2026', status: 'Scheduled' },
+        { id: '11', family: 'Petit Family', sitter: 'Louise Morel', date: '07/04/2026', status: 'Scheduled' },
+        { id: '12', family: 'Thomas Family', sitter: 'Hugo Fournier', date: '09/04/2026', status: 'Completed' },
+    ];
 
-  const filteredInterviews = allInterviews.filter(item => 
-    item.family.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.sitter.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    const filteredInterviews = allInterviews.filter(item =>
+        item.family.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.sitter.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.status.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-  const paginatedInterviews = filteredInterviews.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    const paginatedInterviews = filteredInterviews.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
-  return (
-    <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h3 className="text-lg font-bold text-slate-900">Interviews List</h3>
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input
-                    type="text"
-                    placeholder="Filter interviews..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                        onSearchChange(e.target.value);
-                        setCurrentPage(1);
-                    }}
-                    className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg font-bold text-slate-900">Interviews List</h3>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Filter interviews..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            onSearchChange(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none w-64 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all shadow-sm"
+                    />
+                </div>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto min-h-[300px]">
+                    <table className="w-full text-left table-fixed min-w-[800px]">
+                        <thead>
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Family</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Babysitter</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[18%]">Interview Date</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                            {paginatedInterviews.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                                        No interviews found.
+                                    </td>
+                                </tr>
+                            )}
+                            {paginatedInterviews.map((item) => (
+                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-6 py-4 font-bold text-slate-800 align-top">{item.family}</td>
+                                    <td className="px-6 py-4 text-slate-600 align-top">{item.sitter}</td>
+                                    <td className="px-6 py-4 text-slate-600 align-top">{formatDateDMY(item.date)}</td>
+                                    <td className="px-6 py-4 align-top">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
+                                            item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
+                                            }`}>
+                                            {item.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-right align-top">
+                                        <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit">
+                                            <Edit2 size={18} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <Pagination
+                    totalItems={filteredInterviews.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
                 />
             </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto min-h-[300px]">
-                <table className="w-full text-left table-fixed min-w-[800px]">
-                    <thead>
-                        <tr className="bg-slate-50/50 border-b border-slate-200">
-                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[8%]">ID</th>
-                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Family</th>
-                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[22%]">Babysitter</th>
-                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[18%]">Interview Date</th>
-                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
-                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                        {paginatedInterviews.length === 0 && (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
-                                    No interviews found.
-                                </td>
-                            </tr>
-                        )}
-                        {paginatedInterviews.map((item) => (
-                            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-6 py-4 font-bold text-slate-800 align-top">{item.family}</td>
-                                <td className="px-6 py-4 text-slate-600 align-top">{item.sitter}</td>
-                                <td className="px-6 py-4 text-slate-600 align-top">{formatDateDMY(item.date)}</td>
-                                <td className="px-6 py-4 align-top">
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
-                                        item.status === 'Scheduled' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'
-                                        }`}>
-                                        {item.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right align-top">
-                                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit">
-                                        <Edit2 size={18} />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <Pagination 
-                totalItems={filteredInterviews.length}
-                itemsPerPage={itemsPerPage}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-            />
-        </div>
-    </div>
-  );
+    );
 };
 
 const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }: { userId: number | null; onClearUserFilter: () => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
@@ -3253,685 +3273,685 @@ const UsersView = ({ onViewUser, searchQuery, onSearchChange }: { onViewUser: (i
 };
 
 const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => {
-  const [user, setUser] = useState<User & { parent_requests: any[] } | null>(null);
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<User & { parent_requests: any[] } | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const data = await api.getUserDetails(id);
-        setUser(data);
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetails();
-  }, [id]);
+    useEffect(() => {
+        const fetchDetails = async () => {
+            try {
+                const data = await api.getUserDetails(id);
+                setUser(data);
+            } catch (error) {
+                console.error("Error fetching user details:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDetails();
+    }, [id]);
 
-  if (loading) {
+    if (loading) {
+        return (
+            <div className="space-y-8 animate-pulse">
+                <div className="h-48 bg-white rounded-3xl border border-slate-100 shadow-sm" />
+                <div className="h-96 bg-white rounded-3xl border border-slate-100 shadow-sm" />
+            </div>
+        );
+    }
+
     return (
-      <div className="space-y-8 animate-pulse">
-        <div className="h-48 bg-white rounded-3xl border border-slate-100 shadow-sm" />
-        <div className="h-96 bg-white rounded-3xl border border-slate-100 shadow-sm" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-8">
-      {/* Back Button & Header */}
-      <div className="flex items-center justify-between">
-        <button 
-          onClick={onBack}
-          className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-all group"
-        >
-          <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
-            <ChevronLeft size={18} />
-          </div>
-          Back to Users
-        </button>
-      </div>
-
-      {/* User Info Card */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-900/20">
-              <UserIcon size={40} />
+        <div className="space-y-8">
+            {/* Back Button & Header */}
+            <div className="flex items-center justify-between">
+                <button
+                    onClick={onBack}
+                    className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-all group"
+                >
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
+                        <ChevronLeft size={18} />
+                    </div>
+                    Back to Users
+                </button>
             </div>
-            <div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-1">{user?.first_name} {user?.last_name}</h2>
-              <div className="flex items-center gap-4 text-sm text-slate-400 font-medium">
-                <span className="flex items-center gap-1.5"><Mail size={14} /> {user?.email || 'N/A'}</span>
-                <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                <span className="flex items-center gap-1.5"><Phone size={14} /> {user?.user_phone || 'N/A'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Address</label>
-            <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-              <MapPin size={18} className="text-slate-400 mt-0.5" />
-              <p className="text-sm font-bold text-slate-700 leading-relaxed">{user?.user_address || 'Not Provided'}</p>
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">CMG Identification</label>
-            <div className="flex items-center gap-3 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 group">
-              <Shield size={18} className="text-emerald-500" />
-              <div>
-                <p className="text-[10px] font-bold text-emerald-600/60 uppercase">CMG</p>
-                <p className="text-lg font-black text-emerald-600 tracking-wider">
-                  {user?.cmg_num || 'PENDING'}
-                </p>
-              </div>
-            </div>
-          </div>
+            {/* User Info Card */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-8 border-b border-slate-100 bg-slate-50/50">
+                    <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-900/20">
+                            <UserIcon size={40} />
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-1">{user?.first_name} {user?.last_name}</h2>
+                            <div className="flex items-center gap-4 text-sm text-slate-400 font-medium">
+                                <span className="flex items-center gap-1.5"><Mail size={14} /> {user?.email || 'N/A'}</span>
+                                <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                                <span className="flex items-center gap-1.5"><Phone size={14} /> {user?.user_phone || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Quick Stats</label>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Requests</p>
-                <p className="text-xl font-black text-slate-900">{user?.parent_requests?.length || 0}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Role</p>
-                <p className="text-xl font-black text-slate-900">Parent</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Address</label>
+                        <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <MapPin size={18} className="text-slate-400 mt-0.5" />
+                            <p className="text-sm font-bold text-slate-700 leading-relaxed">{user?.user_address || 'Not Provided'}</p>
+                        </div>
+                    </div>
 
-      {/* Requests Table */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <ClipboardList size={20} className="text-slate-400" /> Parent Requests
-          </h3>
-        </div>
-        <div className="overflow-x-auto min-h-[300px]">
-          <table className="w-full text-left table-fixed min-w-[800px]">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-200">
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Rate</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Address</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Children</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Created</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {user?.parent_requests?.map((req: any) => (
-                <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-black text-slate-900 align-top">#{req.id}</td>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">CMG Identification</label>
+                        <div className="flex items-center gap-3 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 group">
+                            <Shield size={18} className="text-emerald-500" />
+                            <div>
+                                <p className="text-[10px] font-bold text-emerald-600/60 uppercase">CMG</p>
+                                <p className="text-lg font-black text-emerald-600 tracking-wider">
+                                    {user?.cmg_num || 'PENDING'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Quick Stats</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">Requests</p>
+                                <p className="text-xl font-black text-slate-900">{user?.parent_requests?.length || 0}</p>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">Role</p>
+                                <p className="text-xl font-black text-slate-900">Parent</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Requests Table */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <ClipboardList size={20} className="text-slate-400" /> Parent Requests
+                    </h3>
+                </div>
+                <div className="overflow-x-auto min-h-[300px]">
+                    <table className="w-full text-left table-fixed min-w-[800px]">
+                        <thead>
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[10%]">ID</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Rate</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[30%]">Address</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Children</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-[15%]">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                            {user?.parent_requests?.map((req: any) => (
+                                <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-6 py-4 text-sm font-black text-slate-900 align-top">#{req.id}</td>
                                     <td className="px-6 py-4 align-top">
                                         <StatusBadge status={req.request_current_status || req.board_status} />
                                     </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">{req.hourly_rate}€/hr</td>
-                  <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate align-top">{req.parent_address}</td>
-                  <td className="px-6 py-4 align-top">
-                    <div className="flex items-center gap-1.5">
-                      <Baby size={14} className="text-slate-400" />
-                      <span className="text-sm font-bold text-slate-700">{req.children?.length || 0}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-xs text-slate-400 font-medium align-top">
-                    {formatDate(req.created_at ?? req.createdAt ?? '')}
-                  </td>
-                </tr>
-              ))}
-              {(!user?.parent_requests || user.parent_requests.length === 0) && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium italic">
-                    No requests found for this user.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                                    <td className="px-6 py-4 text-sm font-bold text-slate-700 align-top">{req.hourly_rate}€/hr</td>
+                                    <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate align-top">{req.parent_address}</td>
+                                    <td className="px-6 py-4 align-top">
+                                        <div className="flex items-center gap-1.5">
+                                            <Baby size={14} className="text-slate-400" />
+                                            <span className="text-sm font-bold text-slate-700">{req.children?.length || 0}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-xs text-slate-400 font-medium align-top">
+                                        {formatDate(req.created_at ?? req.createdAt ?? '')}
+                                    </td>
+                                </tr>
+                            ))}
+                            {(!user?.parent_requests || user.parent_requests.length === 0) && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                                        No requests found for this user.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: () => void }) => {
-  const { t: trans, language } = useLanguage();
-  const t = trans.contract;
-  const [contractData, setContractData] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+    const { t: trans, language } = useLanguage();
+    const t = trans.contract;
+    const [contractData, setContractData] = useState<any | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchContract = async () => {
-      try {
-        setLoading(true);
-        const data = await api.getContract(choiceId);
-        setContractData(data);
-      } catch (err) {
-        console.error("Failed to fetch contract:", err);
-      } finally {
-        setLoading(false);
-      }
+    useEffect(() => {
+        const fetchContract = async () => {
+            try {
+                setLoading(true);
+                const data = await api.getContract(choiceId);
+                setContractData(data);
+            } catch (err) {
+                console.error("Failed to fetch contract:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchContract();
+    }, [choiceId]);
+
+    const calculateHoursFromSlot = (slot: string): number => {
+        try {
+            const separator = slot.includes(' : ') ? ' : ' : ' - ';
+            const [start, end] = slot.split(separator).map(s => s.trim());
+            const [startH, startM] = start.split(':').map(Number);
+            const [endH, endM] = end.split(':').map(Number);
+            const startDecimal = startH + (startM / 60);
+            const endDecimal = endH + (endM / 60);
+            return Math.max(0, endDecimal - startDecimal);
+        } catch (e) {
+            return 0;
+        }
     };
-    fetchContract();
-  }, [choiceId]);
 
-  const calculateHoursFromSlot = (slot: string): number => {
-    try {
-      const separator = slot.includes(' : ') ? ' : ' : ' - ';
-      const [start, end] = slot.split(separator).map(s => s.trim());
-      const [startH, startM] = start.split(':').map(Number);
-      const [endH, endM] = end.split(':').map(Number);
-      const startDecimal = startH + (startM / 60);
-      const endDecimal = endH + (endM / 60);
-      return Math.max(0, endDecimal - startDecimal);
-    } catch (e) {
-      return 0;
+    const getMonthlyHours = (monthDates: Record<string, string[]>): number => {
+        let total = 0;
+        Object.values(monthDates).forEach(slots => {
+            (slots as string[]).forEach(slot => {
+                total += calculateHoursFromSlot(slot);
+            });
+        });
+        return total;
+    };
+
+    const formatMonthString = (monthStr: string) => {
+        try {
+            const [monthName, year] = monthStr.split(' ');
+            const date = new Date(Date.parse(`${monthName} 1, ${year}`));
+            if (isNaN(date.getTime())) return monthStr;
+            return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+        } catch {
+            return monthStr;
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20">
+                <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4" />
+                <p className="text-slate-500 font-bold">Loading contract details...</p>
+            </div>
+        );
     }
-  };
 
-  const getMonthlyHours = (monthDates: Record<string, string[]>): number => {
-    let total = 0;
-    Object.values(monthDates).forEach(slots => {
-      (slots as string[]).forEach(slot => {
-        total += calculateHoursFromSlot(slot);
-      });
-    });
-    return total;
-  };
-
-  const formatMonthString = (monthStr: string) => {
-    try {
-      const [monthName, year] = monthStr.split(' ');
-      const date = new Date(Date.parse(`${monthName} 1, ${year}`));
-      if (isNaN(date.getTime())) return monthStr;
-      return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
-    } catch {
-      return monthStr;
-    }
-  };
-
-  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4" />
-        <p className="text-slate-500 font-bold">Loading contract details...</p>
-      </div>
-    );
-  }
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <button
+                onClick={onBack}
+                className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-all group"
+            >
+                <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
+                    <ChevronLeft size={18} />
+                </div>
+                Back to Contracts
+            </button>
 
-  return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <button 
-        onClick={onBack}
-        className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-all group"
-      >
-        <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
-          <ChevronLeft size={18} />
-        </div>
-        Back to Contracts
-      </button>
+            <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 relative overflow-hidden max-w-4xl mx-auto">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-900/5 rounded-full -mr-32 -mt-32 blur-3xl" />
 
-      <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 relative overflow-hidden max-w-4xl mx-auto">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-900/5 rounded-full -mr-32 -mt-32 blur-3xl" />
-        
-        <div className="relative z-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-8 border-b border-slate-100">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-slate-900/10 rounded-2xl flex items-center justify-center text-slate-900">
-                <FileText size={28} />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                {t.title}
-              </h1>
-            </div>
-            <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">ID</p>
-              <p className="text-sm font-bold text-slate-700">#CTR-{choiceId}-{contractData?.contract_id}</p>
-            </div>
-          </div>
-
-          <div className="space-y-10 text-slate-600 leading-relaxed max-h-[70vh] overflow-y-auto pr-4 custom-scroll">
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 mb-6 uppercase tracking-wide">{t.between}</h2>
-              <p className="mb-6">{t.agency}</p>
-              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">{t.part1}</p>
-              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">{t.part2}</p>
-              <div className="mb-4">
-                <p>
-                  <strong className="text-slate-900">{contractData?.user?.first_name} {contractData?.user?.last_name}</strong>
-                  {contractData?.user?.user_address && (
-                    <span className="mx-1">{t.domiciledAt} {contractData.user.user_address}</span>
-                  )}
-                  {contractData?.user?.user_phone && (
-                    <span className="mx-1">{t.reachableAt} {contractData.user.user_phone}</span>
-                  )}
-                  {contractData?.user?.email && (
-                    <span className="mx-1">{language === 'fr' ? 'et' : 'and'} {contractData.user.email}</span>
-                  )}
-                </p>
-              </div>
-              <p className="italic text-slate-500 text-sm mb-4">{t.clientDesignation}</p>
-              <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider">{t.partOther}</p>
-            </section>
-
-            <p className="py-4 border-y border-slate-50 text-center font-medium text-slate-400 italic text-sm">
-              {t.agreedFollowing}
-            </p>
-
-            <section>
-              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">1</span>
-                {t.article1.title}
-              </h3>
-              <p className="mb-6">{t.article1.content}</p>
-              
-              <div className="space-y-4 mb-6">
-                {contractData?.format1 && Object.entries(contractData.format1 as Record<string, any>).map(([month, dates]) => {
-                  const monthlyHours = getMonthlyHours(dates);
-                  const formattedMonth = formatMonthString(month);
-                  return (
-                    <div key={month} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                      <h4 className="text-slate-900 font-bold text-xs uppercase tracking-widest mb-4">{formattedMonth}</h4>
-                      <div className="space-y-2 mb-4">
-                        {Object.entries(dates as Record<string, string[]>).map(([date, slots]) => (
-                          <div key={date} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-                            <span className="text-sm capitalize">{new Date(date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-                            <span className="text-sm font-bold text-slate-900">{(slots as string[]).join(' - ')}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="text-right text-xs font-bold text-slate-400 border-t border-slate-100 pt-4">
-                        {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-slate-900 ml-1 font-bold text-sm">{monthlyHours.toFixed(2)} h</span>
-                      </div>
+                <div className="relative z-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-8 border-b border-slate-100">
+                        <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-slate-900/10 rounded-2xl flex items-center justify-center text-slate-900">
+                                <FileText size={28} />
+                            </div>
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
+                                {t.title}
+                            </h1>
+                        </div>
+                        <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">ID</p>
+                            <p className="text-sm font-bold text-slate-700">#CTR-{choiceId}-{contractData?.contract_id}</p>
+                        </div>
                     </div>
-                  );
-                })}
-              </div>
-              <div className="p-5 bg-slate-900 text-white rounded-2xl flex justify-between items-center shadow-lg">
-                <span className="font-bold text-sm">{t.article1.totalPeriod}</span>
-                <span className="text-xl font-bold">
-                  {contractData ? Object.values(contractData.format1 as Record<string, any>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates), 0).toFixed(2) : '0.00'} h
-                </span>
-              </div>
-            </section>
 
-            <section>
-              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">2</span>
-                {t.article2.title}
-              </h3>
-              <p className="text-sm leading-relaxed">{t.article2.content}</p>
-            </section>
+                    <div className="space-y-10 text-slate-600 leading-relaxed max-h-[70vh] overflow-y-auto pr-4 custom-scroll">
+                        <section>
+                            <h2 className="text-lg font-bold text-slate-900 mb-6 uppercase tracking-wide">{t.between}</h2>
+                            <p className="mb-6">{t.agency}</p>
+                            <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">{t.part1}</p>
+                            <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-2">{t.part2}</p>
+                            <div className="mb-4">
+                                <p>
+                                    <strong className="text-slate-900">{contractData?.user?.first_name} {contractData?.user?.last_name}</strong>
+                                    {contractData?.user?.user_address && (
+                                        <span className="mx-1">{t.domiciledAt} {contractData.user.user_address}</span>
+                                    )}
+                                    {contractData?.user?.user_phone && (
+                                        <span className="mx-1">{t.reachableAt} {contractData.user.user_phone}</span>
+                                    )}
+                                    {contractData?.user?.email && (
+                                        <span className="mx-1">{language === 'fr' ? 'et' : 'and'} {contractData.user.email}</span>
+                                    )}
+                                </p>
+                            </div>
+                            <p className="italic text-slate-500 text-sm mb-4">{t.clientDesignation}</p>
+                            <p className="font-bold text-slate-900 text-[10px] uppercase tracking-wider">{t.partOther}</p>
+                        </section>
 
-            <section>
-              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">3</span>
-                {t.article3.title}
-              </h3>
-              <p className="mb-6">
-                {t.article3.content
-                  .replace('{start}', contractData?.start_date ? new Date(contractData.start_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[Date]')
-                  .replace('{end}', contractData?.end_date ? new Date(contractData.end_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[Date]')
-                }
-              </p>
-              <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article3.subTitle}</h4>
-                <p className="text-xs text-slate-500 italic">{t.article3.subContent}</p>
-              </div>
-            </section>
+                        <p className="py-4 border-y border-slate-50 text-center font-medium text-slate-400 italic text-sm">
+                            {t.agreedFollowing}
+                        </p>
 
-            <section>
-              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">4</span>
-                {t.article4.title}
-              </h3>
-              <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle41}</h4>
-              <p className="mb-4">{t.article4.content}</p>
+                        <section>
+                            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">1</span>
+                                {t.article1.title}
+                            </h3>
+                            <p className="mb-6">{t.article1.content}</p>
 
-              <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner bg-slate-50 mb-6">
-                <table className="w-full text-left text-sm">
-                  <thead className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
-                    <tr>
-                      <th className="px-6 py-4">{t.article4.period}</th>
-                      <th className="px-6 py-4">{t.article4.hrTotal}</th>
-                      <th className="px-6 py-4">{t.article4.amountTtc}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {contractData?.format2 && Object.entries(contractData.format2 as Record<string, number>).map(([month, amount]) => (
-                      <tr key={month}>
-                        <td className="px-6 py-4 font-bold text-slate-700 capitalize">{formatMonthString(month)}</td>
-                        <td className="px-6 py-4 text-slate-500">{getMonthlyHours(contractData.format1[month]).toFixed(2)}h</td>
-                        <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} €</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-slate-900 text-white">
-                    <tr>
-                      <td className="px-6 py-4 font-bold">{t.article4.hourlyRate}</td>
-                      <td colSpan={2} className="px-6 py-4 text-right font-bold text-lg">
-                        {contractData?.hourly_rate} €/h
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                  <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle42}</h4>
-                  <p className="text-xs text-slate-500 italic leading-relaxed">{t.article4.content42}</p>
+                            <div className="space-y-4 mb-6">
+                                {contractData?.format1 && Object.entries(contractData.format1 as Record<string, any>).map(([month, dates]) => {
+                                    const monthlyHours = getMonthlyHours(dates);
+                                    const formattedMonth = formatMonthString(month);
+                                    return (
+                                        <div key={month} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                            <h4 className="text-slate-900 font-bold text-xs uppercase tracking-widest mb-4">{formattedMonth}</h4>
+                                            <div className="space-y-2 mb-4">
+                                                {Object.entries(dates as Record<string, string[]>).map(([date, slots]) => (
+                                                    <div key={date} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+                                                        <span className="text-sm capitalize">{new Date(date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                                                        <span className="text-sm font-bold text-slate-900">{(slots as string[]).join(' - ')}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="text-right text-xs font-bold text-slate-400 border-t border-slate-100 pt-4">
+                                                {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-slate-900 ml-1 font-bold text-sm">{monthlyHours.toFixed(2)} h</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div className="p-5 bg-slate-900 text-white rounded-2xl flex justify-between items-center shadow-lg">
+                                <span className="font-bold text-sm">{t.article1.totalPeriod}</span>
+                                <span className="text-xl font-bold">
+                                    {contractData ? Object.values(contractData.format1 as Record<string, any>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates), 0).toFixed(2) : '0.00'} h
+                                </span>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">2</span>
+                                {t.article2.title}
+                            </h3>
+                            <p className="text-sm leading-relaxed">{t.article2.content}</p>
+                        </section>
+
+                        <section>
+                            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">3</span>
+                                {t.article3.title}
+                            </h3>
+                            <p className="mb-6">
+                                {t.article3.content
+                                    .replace('{start}', contractData?.start_date ? new Date(contractData.start_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[Date]')
+                                    .replace('{end}', contractData?.end_date ? new Date(contractData.end_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[Date]')
+                                }
+                            </p>
+                            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article3.subTitle}</h4>
+                                <p className="text-xs text-slate-500 italic">{t.article3.subContent}</p>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">4</span>
+                                {t.article4.title}
+                            </h3>
+                            <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle41}</h4>
+                            <p className="mb-4">{t.article4.content}</p>
+
+                            <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner bg-slate-50 mb-6">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+                                        <tr>
+                                            <th className="px-6 py-4">{t.article4.period}</th>
+                                            <th className="px-6 py-4">{t.article4.hrTotal}</th>
+                                            <th className="px-6 py-4">{t.article4.amountTtc}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {contractData?.format2 && Object.entries(contractData.format2 as Record<string, number>).map(([month, amount]) => (
+                                            <tr key={month}>
+                                                <td className="px-6 py-4 font-bold text-slate-700 capitalize">{formatMonthString(month)}</td>
+                                                <td className="px-6 py-4 text-slate-500">{getMonthlyHours(contractData.format1[month]).toFixed(2)}h</td>
+                                                <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} €</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot className="bg-slate-900 text-white">
+                                        <tr>
+                                            <td className="px-6 py-4 font-bold">{t.article4.hourlyRate}</td>
+                                            <td colSpan={2} className="px-6 py-4 text-right font-bold text-lg">
+                                                {contractData?.hourly_rate} €/h
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                    <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle42}</h4>
+                                    <p className="text-xs text-slate-500 italic leading-relaxed">{t.article4.content42}</p>
+                                </div>
+                                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                    <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle43}</h4>
+                                    <p className="text-xs text-slate-500 italic leading-relaxed">{t.article4.content43}</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((num) => {
+                            const art = (t as any)[`article${num}`];
+                            if (!art) return null;
+                            return (
+                                <section key={num}>
+                                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                        <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">{num}</span>
+                                        {art.title}
+                                    </h3>
+                                    <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+                                        {num === 6 && (
+                                            <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p></>
+                                        )}
+                                        {num === 9 && (
+                                            <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p></>
+                                        )}
+                                        {num === 11 && (
+                                            <>
+                                                <p>{art.content}</p>
+                                                <ul className="list-disc pl-5 space-y-2">
+                                                    <li>{art.item1}</li><li>{art.item2}</li><li>{art.item3}</li>
+                                                </ul>
+                                            </>
+                                        )}
+                                        {num === 13 && (
+                                            <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p></>
+                                        )}
+                                        {num === 14 && (
+                                            <>
+                                                <p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p>
+                                                <p>{art.content4}</p><p>{art.content5}</p>
+                                                <p className="italic font-medium">{art.content6}</p>
+                                            </>
+                                        )}
+                                        {num === 15 && (
+                                            <div className="space-y-4">
+                                                <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle151}</h4><p>{art.content151}</p></div>
+                                                <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle152}</h4><p>{art.content152}</p></div>
+                                                <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle153}</h4><p>{art.content153}</p></div>
+                                            </div>
+                                        )}
+                                        {num === 16 && (
+                                            <>
+                                                <p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p>
+                                                <p>{art.content4}</p><p>{art.content5}</p>
+                                                <p className="italic font-medium">{art.content6}</p>
+                                            </>
+                                        )}
+                                        {num === 17 && (
+                                            <>
+                                                <p>{art.content1}</p>
+                                                <div className="pl-4 space-y-3"><p>{art.itemA}</p><p>{art.itemB}</p></div>
+                                                <p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p>
+                                                <p className="italic font-medium">{art.content5}</p>
+                                            </>
+                                        )}
+                                        {num === 18 && (
+                                            <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p></>
+                                        )}
+                                        {num === 19 && (
+                                            <div className="space-y-6">
+                                                <div className="space-y-3"><p>{art.contentA}</p><p>{art.contentB}</p><p>{art.contentC}</p></div>
+                                                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                                    <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{art.subTitle1}</h4>
+                                                    <div className="space-y-2 text-xs text-slate-500 italic">
+                                                        <p>{art.subContent1A}</p><p>{art.subContent1B}</p><p>{art.subContent1C}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                                    <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{art.subTitle2}</h4>
+                                                    <div className="space-y-2 text-xs text-slate-500 italic">
+                                                        <p>{art.subContent2A}</p><p>{art.subContent2B}</p><p>{art.subContent2C}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {art.content && ![6, 9, 11, 13, 14, 15, 16, 17, 18, 19].includes(num) && (
+                                            <p>{art.content}</p>
+                                        )}
+                                    </div>
+                                </section>
+                            );
+                        })}
+
+                        <section className="mt-12 pt-12 border-t border-slate-100">
+                            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-slate-900/10 flex items-center justify-center text-slate-900">
+                                    <FileText size={20} />
+                                </div>
+                                {t.annexe.title}
+                            </h3>
+                            <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+                                <p>{t.annexe.content1}</p><p>{t.annexe.content2}</p>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>{t.annexe.item1}</li><li>{t.annexe.item2}</li>
+                                    <li>{t.annexe.item3}</li><li>{t.annexe.item4}</li><li>{t.annexe.item5}</li>
+                                </ul>
+                                <p className="italic text-slate-500">{t.annexe.content3}</p>
+                                <p>{t.annexe.content4}</p>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col items-end gap-2 text-slate-400">
+                        <p className="text-xs">
+                            {t.signatureLocationDate.replace('{date}', new Date(contractData?.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }))}
+                        </p>
+                        {contractData?.status === 1 && (
+                            <div className="text-right py-4">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Signature du Client</p>
+                                <p className="font-['Caveat',_cursive] text-4xl text-slate-900 mb-1 leading-none transform -rotate-2">
+                                    {contractData?.user?.first_name} {contractData?.user?.last_name}
+                                </p>
+                                <div className="w-56 h-0.5 bg-slate-900/10 rounded-full mt-2" />
+                            </div>
+                        )}
+                        <p className="font-bold text-slate-900 text-sm italic">
+                            {contractData?.status === 1 ? 'Electronic Signature Verified' : 'Pending Signature'}
+                        </p>
+                    </div>
                 </div>
-                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                  <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{t.article4.subTitle43}</h4>
-                  <p className="text-xs text-slate-500 italic leading-relaxed">{t.article4.content43}</p>
-                </div>
-              </div>
-            </section>
-
-            {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((num) => {
-              const art = (t as any)[`article${num}`];
-              if (!art) return null;
-              return (
-                <section key={num}>
-                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-900 text-sm">{num}</span>
-                    {art.title}
-                  </h3>
-                  <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-                    {num === 6 && (
-                      <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p></>
-                    )}
-                    {num === 9 && (
-                      <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p></>
-                    )}
-                    {num === 11 && (
-                      <>
-                        <p>{art.content}</p>
-                        <ul className="list-disc pl-5 space-y-2">
-                          <li>{art.item1}</li><li>{art.item2}</li><li>{art.item3}</li>
-                        </ul>
-                      </>
-                    )}
-                    {num === 13 && (
-                      <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p></>
-                    )}
-                    {num === 14 && (
-                      <>
-                        <p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p>
-                        <p>{art.content4}</p><p>{art.content5}</p>
-                        <p className="italic font-medium">{art.content6}</p>
-                      </>
-                    )}
-                    {num === 15 && (
-                      <div className="space-y-4">
-                        <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle151}</h4><p>{art.content151}</p></div>
-                        <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle152}</h4><p>{art.content152}</p></div>
-                        <div><h4 className="font-bold text-slate-700 text-sm mb-1">{art.subTitle153}</h4><p>{art.content153}</p></div>
-                      </div>
-                    )}
-                    {num === 16 && (
-                      <>
-                        <p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p>
-                        <p>{art.content4}</p><p>{art.content5}</p>
-                        <p className="italic font-medium">{art.content6}</p>
-                      </>
-                    )}
-                    {num === 17 && (
-                      <>
-                        <p>{art.content1}</p>
-                        <div className="pl-4 space-y-3"><p>{art.itemA}</p><p>{art.itemB}</p></div>
-                        <p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p>
-                        <p className="italic font-medium">{art.content5}</p>
-                      </>
-                    )}
-                    {num === 18 && (
-                      <><p>{art.content1}</p><p>{art.content2}</p><p>{art.content3}</p><p>{art.content4}</p></>
-                    )}
-                    {num === 19 && (
-                      <div className="space-y-6">
-                        <div className="space-y-3"><p>{art.contentA}</p><p>{art.contentB}</p><p>{art.contentC}</p></div>
-                        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                          <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{art.subTitle1}</h4>
-                          <div className="space-y-2 text-xs text-slate-500 italic">
-                            <p>{art.subContent1A}</p><p>{art.subContent1B}</p><p>{art.subContent1C}</p>
-                          </div>
-                        </div>
-                        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                          <h4 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">{art.subTitle2}</h4>
-                          <div className="space-y-2 text-xs text-slate-500 italic">
-                            <p>{art.subContent2A}</p><p>{art.subContent2B}</p><p>{art.subContent2C}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {art.content && ![6, 9, 11, 13, 14, 15, 16, 17, 18, 19].includes(num) && (
-                      <p>{art.content}</p>
-                    )}
-                  </div>
-                </section>
-              );
-            })}
-
-            <section className="mt-12 pt-12 border-t border-slate-100">
-              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-900/10 flex items-center justify-center text-slate-900">
-                  <FileText size={20} />
-                </div>
-                {t.annexe.title}
-              </h3>
-              <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-                <p>{t.annexe.content1}</p><p>{t.annexe.content2}</p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>{t.annexe.item1}</li><li>{t.annexe.item2}</li>
-                  <li>{t.annexe.item3}</li><li>{t.annexe.item4}</li><li>{t.annexe.item5}</li>
-                </ul>
-                <p className="italic text-slate-500">{t.annexe.content3}</p>
-                <p>{t.annexe.content4}</p>
-              </div>
-            </section>
-
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col items-end gap-2 text-slate-400">
-            <p className="text-xs">
-              {t.signatureLocationDate.replace('{date}', new Date(contractData?.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }))}
-            </p>
-            {contractData?.status === 1 && (
-              <div className="text-right py-4">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Signature du Client</p>
-                <p className="font-['Caveat',_cursive] text-4xl text-slate-900 mb-1 leading-none transform -rotate-2">
-                  {contractData?.user?.first_name} {contractData?.user?.last_name}
-                </p>
-                <div className="w-56 h-0.5 bg-slate-900/10 rounded-full mt-2" />
-              </div>
-            )}
-            <p className="font-bold text-slate-900 text-sm italic">
-              {contractData?.status === 1 ? 'Electronic Signature Verified' : 'Pending Signature'}
-            </p>
-          </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 const EditUserModal = ({ user, onClose, onUpdate }: { user: User; onClose: () => void; onUpdate: () => void }) => {
-  const [formData, setFormData] = useState({
-    first_name: user.first_name || '',
-    last_name: user.last_name || '',
-    user_phone: user.user_phone || '',
-    user_address: user.user_address || '',
-    cmg_num: user.cmg_num || '',
-    lat: '',
-    lng: ''
-  });
-  const [saving, setSaving] = useState(false);
-  const addressRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!addressRef.current || !window.google) return;
-    const autocomplete = new window.google.maps.places.Autocomplete(addressRef.current, {
-      types: ['address'],
-      fields: ['formatted_address', 'geometry']
+    const [formData, setFormData] = useState({
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        user_phone: user.user_phone || '',
+        user_address: user.user_address || '',
+        cmg_num: user.cmg_num || '',
+        lat: '',
+        lng: ''
     });
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (place.geometry?.location) {
-        setFormData(prev => ({
-          ...prev,
-          user_address: place.formatted_address || '',
-          lat: place.geometry!.location.lat().toString(),
-          lng: place.geometry!.location.lng().toString()
-        }));
-      }
-    });
-  }, []);
+    const [saving, setSaving] = useState(false);
+    const addressRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const response = await api.updateUser(user.id, formData);
-      if (response.status) {
-        toast.success(response.message || 'User profile updated successfully!');
-        onUpdate();
-        onClose();
-      } else {
-        toast.error(response.message || 'Failed to update user profile');
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error('An error occurred while updating the profile');
-    } finally {
-      setSaving(false);
-    }
-  };
+    useEffect(() => {
+        if (!addressRef.current || !window.google) return;
+        const autocomplete = new window.google.maps.places.Autocomplete(addressRef.current, {
+            types: ['address'],
+            fields: ['formatted_address', 'geometry']
+        });
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.geometry?.location) {
+                setFormData(prev => ({
+                    ...prev,
+                    user_address: place.formatted_address || '',
+                    lat: place.geometry!.location.lat().toString(),
+                    lng: place.geometry!.location.lng().toString()
+                }));
+            }
+        });
+    }, []);
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative w-full max-w-xl bg-white rounded-[32px] shadow-2xl overflow-hidden"
-      >
-        <form onSubmit={handleSubmit}>
-          <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white">
-                <Edit2 size={24} />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Edit User Profile</h2>
-                <p className="text-xs text-slate-400 font-medium">Update account information for {user.first_name}</p>
-              </div>
-            </div>
-            <button type="button" onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-all text-slate-400">
-              <X size={20} />
-            </button>
-          </div>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            const response = await api.updateUser(user.id, formData);
+            if (response.status) {
+                toast.success(response.message || 'User profile updated successfully!');
+                onUpdate();
+                onClose();
+            } else {
+                toast.error(response.message || 'Failed to update user profile');
+            }
+        } catch (error) {
+            console.error("Error updating user:", error);
+            toast.error('An error occurred while updating the profile');
+        } finally {
+            setSaving(false);
+        }
+    };
 
-          <div className="p-8 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">First Name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.first_name}
-                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Last Name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.last_name}
-                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phone Number</label>
-              <PhoneInput
-                country={'fr'}
-                value={formData.user_phone}
-                onChange={(phone) => setFormData({ ...formData, user_phone: phone })}
-                enableSearch={true}
-                inputClass="!w-full !h-[48px] !bg-slate-50 !border !border-slate-100 !rounded-xl !text-sm !font-bold !pl-12 focus:!bg-white focus:!ring-2 focus:!ring-slate-900/10 focus:!border-slate-900"
-                containerClass="phone-input-container"
-                buttonClass="!bg-transparent !border-none !rounded-l-xl"
-                searchClass="!bg-white !text-slate-900"
-                dropdownClass="!bg-white !text-slate-900 !rounded-xl !shadow-xl !border-slate-100"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Address</label>
-              <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input
-                  ref={addressRef}
-                  type="text"
-                  defaultValue={formData.user_address}
-                  placeholder="Street address, city..."
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">CMG Number</label>
-              <input
-                type="text"
-                placeholder="e.g. ABC123456"
-                value={formData.cmg_num}
-                onChange={(e) => setFormData({ ...formData, cmg_num: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
-              />
-            </div>
-          </div>
-
-          <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all"
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative w-full max-w-xl bg-white rounded-[32px] shadow-2xl overflow-hidden"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-8 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Update Profile'}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
-  );
+                <form onSubmit={handleSubmit}>
+                    <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white">
+                                <Edit2 size={24} />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900">Edit User Profile</h2>
+                                <p className="text-xs text-slate-400 font-medium">Update account information for {user.first_name}</p>
+                            </div>
+                        </div>
+                        <button type="button" onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-all text-slate-400">
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    <div className="p-8 space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">First Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.first_name}
+                                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Last Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.last_name}
+                                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phone Number</label>
+                            <PhoneInput
+                                country={'fr'}
+                                value={formData.user_phone}
+                                onChange={(phone) => setFormData({ ...formData, user_phone: phone })}
+                                enableSearch={true}
+                                inputClass="!w-full !h-[48px] !bg-slate-50 !border !border-slate-100 !rounded-xl !text-sm !font-bold !pl-12 focus:!bg-white focus:!ring-2 focus:!ring-slate-900/10 focus:!border-slate-900"
+                                containerClass="phone-input-container"
+                                buttonClass="!bg-transparent !border-none !rounded-l-xl"
+                                searchClass="!bg-white !text-slate-900"
+                                dropdownClass="!bg-white !text-slate-900 !rounded-xl !shadow-xl !border-slate-100"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Address</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    ref={addressRef}
+                                    type="text"
+                                    defaultValue={formData.user_address}
+                                    placeholder="Street address, city..."
+                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">CMG Number</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. ABC123456"
+                                value={formData.cmg_num}
+                                onChange={(e) => setFormData({ ...formData, cmg_num: e.target.value })}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className="px-8 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
+                        >
+                            {saving ? 'Saving...' : 'Update Profile'}
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
+        </div>
+    );
 };
 
