@@ -66,6 +66,7 @@ export interface Choice {
   zoom_meeting_link?: string;
   final_choice?: number;
   bb_bs_id?: number | null;
+  babysitter_pic?: string;
 }
 
 export interface ParentRequest {
@@ -229,6 +230,7 @@ export interface BabysitterChoicePayload {
   interview_date?: string;
   interview_time?: string;
   final_choice?: number;
+  babysitter_pic?: string;
 }
 
 export const api = {

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Baby,
@@ -564,8 +564,16 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                   <div className="absolute top-0 right-0 w-24 h-24 bg-brand-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover/choice:bg-brand-accent/10 transition-colors" />
 
                                   <div className="relative flex items-center sm:items-center gap-4 sm:gap-5 flex-1 min-w-0">
-                                    <div className="w-14 min-w-[56px] h-14 sm:w-16 sm:min-w-[64px] sm:h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-accent group-hover/choice:bg-brand-accent group-hover/choice:text-white transition-all duration-500 shadow-inner shrink-0">
-                                      <UserIcon size={24} className="sm:w-7 sm:h-7" />
+                                    <div className="w-14 min-w-[56px] h-14 sm:w-16 sm:min-w-[64px] sm:h-16 bg-slate-50 flex items-center justify-center text-brand-accent group-hover/choice:bg-brand-accent group-hover/choice:text-white transition-all duration-500 shadow-inner shrink-0 overflow-hidden rounded-2xl">
+                                      {choice.babysitter_pic ? (
+                                        <img 
+                                          src={`https://bloom-buddies.fr/uploads/profile_images/${choice.babysitter_pic}`} 
+                                          alt={`${choice.babysitter_first_name}`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <UserIcon size={24} className="sm:w-7 sm:h-7" />
+                                      )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <p className="text-base sm:text-lg font-display font-bold text-slate-900 truncate mb-1">

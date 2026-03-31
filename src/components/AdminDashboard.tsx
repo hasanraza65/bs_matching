@@ -1252,8 +1252,16 @@ const SitterChoicesModal: React.FC<{
                                     <div className="grid grid-cols-1 md:grid-cols-[auto,1fr,auto] items-center gap-4">
                                         {/* Sitter Identity */}
                                         <div className="flex items-start gap-4">
-                                            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                                                <UserIcon size={24} />
+                                            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg overflow-hidden">
+                                                {choice.babysitter_pic ? (
+                                                    <img 
+                                                        src={`https://bloom-buddies.fr/uploads/profile_images/${choice.babysitter_pic}`} 
+                                                        alt={`${choice.babysitter_first_name}`}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <UserIcon size={24} />
+                                                )}
                                             </div>
                                             <div className="min-w-0">
                                                 <h4 className="text-base font-bold text-slate-900 truncate">
@@ -1397,9 +1405,22 @@ const ActiveRequestChoicesCell: React.FC<{
             {visibleChoices.map((choice) => (
                 <div key={choice.id} className="flex flex-col space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100 group/choice hover:bg-white transition-all">
                     <div className="flex items-center justify-between gap-2">
-                        <div className="flex flex-col min-w-0">
-                            <span className="font-bold text-slate-800 text-sm truncate">{choice.babysitter_first_name} {choice.babysitter_last_name}</span>
-                            <span className="text-[10px] text-slate-400 truncate max-w-[150px]">{choice.babysitter_email}</span>
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 shrink-0 overflow-hidden">
+                                {choice.babysitter_pic ? (
+                                    <img 
+                                        src={`https://bloom-buddies.fr/uploads/profile_images/${choice.babysitter_pic}`} 
+                                        alt={`${choice.babysitter_first_name}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <UserIcon size={16} />
+                                )}
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                                <span className="font-bold text-slate-800 text-sm truncate">{choice.babysitter_first_name} {choice.babysitter_last_name}</span>
+                                <span className="text-[10px] text-slate-400 truncate max-w-[120px]">{choice.babysitter_email}</span>
+                            </div>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                             {choice.bb_bs_id && (

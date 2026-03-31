@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from './i18n/LanguageContext';
 import { api, User, ParentRequest } from './services/api';
@@ -87,6 +87,7 @@ interface Babysitter {
   email?: string;
   phone?: string;
   address?: string;
+  profile_pic?: string;
 }
 
 interface FormData {
@@ -339,7 +340,15 @@ export default function App() {
   const [selectedCandidates, setSelectedCandidates] = useState<Array<{
     sitterId: number,
     dbId?: number,
-    interview: { date: string, time: string, skipped: boolean }
+    interview: { date: string, time: string, skipped: boolean },
+    sitterInfo?: {
+      name?: string,
+      lastName?: string,
+      email?: string,
+      phone?: string,
+      address?: string,
+      profile_pic?: string
+    }
   }>>([]);
 
   // Load persisted selections from sessionStorage (survive back/next & tab navigation)
@@ -576,7 +585,8 @@ export default function App() {
             lastName: c.babysitter_last_name,
             email: c.babysitter_email,
             phone: c.babysitter_phone,
-            address: c.babysitter_address
+            address: c.babysitter_address,
+            profile_pic: c.babysitter_pic
           }
         };
       });
@@ -681,7 +691,8 @@ export default function App() {
                   lastName: choice.babysitter_last_name,
                   email: choice.babysitter_email,
                   phone: choice.babysitter_phone,
-                  address: choice.babysitter_address
+                  address: choice.babysitter_address,
+                  profile_pic: choice.babysitter_pic
                 }
               };
             });
@@ -752,7 +763,7 @@ export default function App() {
           const response = await api.getExternalBabysitters(sitterPage, filters);
           if (response && response.data) {
             const mapped = response.data.map((item: any) => {
-              const photoBaseUrl = 'https://bloom-buddies.fr/public/uploads/profile_images/';
+              const photoBaseUrl = 'https://bloom-buddies.fr/uploads/profile_images/';
               const photo = item.profile_pic
                 ? `${photoBaseUrl}${item.profile_pic}`
                 : `${photoBaseUrl}default.jpg`;
@@ -774,6 +785,7 @@ export default function App() {
                 description: item.babysitter_profiles_about || '',
                 fullBio: item.babysitter_profiles_personal || '',
                 photo,
+                profile_pic: item.profile_pic,
                 status: item.user_status === 1 ? 'Online' : 'Available',
                // rating: (item.rating1 && !isNaN(parseFloat(item.rating1))) ? parseFloat(item.rating1) : 4.5,
                 reviews: Math.floor(Math.random() * 50),
@@ -1261,7 +1273,7 @@ export default function App() {
           parent_request_id: idToUse,
           choices: selectedCandidates.map((c, index) => {
             const sitter = localizedSitters.find(s => s.id === c.sitterId);
-            const info = (c as any).sitterInfo;
+            const info = c.sitterInfo;
 
             // Ensure time is in HH:mm format
             let formattedTime = c.interview.time;
@@ -1280,6 +1292,7 @@ export default function App() {
               babysitter_email: sitter?.email || info?.email || `${sitter?.name?.toLowerCase() || 'babysitter'}@example.com`,
               babysitter_phone: sitter?.phone || info?.phone || "00000000000",
               babysitter_address: sitter?.address || info?.address || "Not Provided",
+              babysitter_pic: sitter?.profile_pic || info?.profile_pic,
               interview_date: c.interview.skipped ? undefined : c.interview.date,
               interview_time: c.interview.skipped ? undefined : formattedTime
             };
@@ -1352,7 +1365,15 @@ export default function App() {
         // Add new
         return [...prev, {
           sitterId: schedulingSitter.id,
-          interview: { ...modalInterviewConfig, skipped: finalSkipped }
+          interview: { ...modalInterviewConfig, skipped: finalSkipped },
+          sitterInfo: {
+            name: schedulingSitter.name,
+            lastName: schedulingSitter.lastName,
+            email: schedulingSitter.email,
+            phone: schedulingSitter.phone,
+            address: schedulingSitter.address,
+            profile_pic: schedulingSitter.profile_pic
+          }
         }];
       }
     });
