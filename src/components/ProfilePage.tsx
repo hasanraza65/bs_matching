@@ -506,7 +506,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           </div>
                           <div className="space-y-1 sm:space-y-2">
                             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.amount}</p>
-                            <p className="text-xl sm:text-3xl font-display font-bold text-brand-accent truncate">{formatCurrency(calculateTotalHours(req.schedules) * 28.50)}</p>
+                            <p className="text-xl sm:text-3xl font-display font-bold text-brand-accent truncate">
+                              {formatCurrency((calculateTotalHours(req.schedules) || 0) * 28.50)}
+                            </p>
                           </div>
                           <div className="space-y-1 sm:space-y-2">
                             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Schedules</p>
@@ -1070,7 +1072,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             <p className="text-sm text-slate-500">{(t.profilePage as any).support?.subtitle || 'Our support team is available 24/7 to assist you.'}</p>
           </div>
         </div>
-        <button className="px-6 py-3 bg-brand-blue text-white font-bold rounded-2xl hover:bg-brand-blue/90 transition-colors shadow-lg shadow-brand-blue/20">
+        <button 
+          onClick={() => window.open('https://wa.me/33780857676', '_blank')}
+          className="px-6 py-3 bg-brand-blue text-white font-bold rounded-2xl hover:bg-brand-blue/90 transition-colors shadow-lg shadow-brand-blue/20"
+        >
           {(t.profilePage as any).support?.button || 'Contact Support'}
         </button>
       </div>
