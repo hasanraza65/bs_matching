@@ -321,7 +321,7 @@ const SortableCard = ({
     );
   }
 
-  const { t } = useLanguage();
+  const { t, formatNumber } = useLanguage();
   const hasSchedules = request.schedules && request.schedules.length > 0;
   const hasSlots = hasSchedules && request.schedules.every((s: any) => s.slots && s.slots.length > 0);
   const hasChoices = request.choices && request.choices.length > 0;
@@ -357,7 +357,7 @@ const SortableCard = ({
           </div>
           <div className="flex items-center gap-1">
             <Clock size={12} className="text-slate-400" />
-            <span>{calculateTotalHours(request.schedules).toFixed(2)}h</span>
+            <span>{formatNumber(calculateTotalHours(request.schedules), 2)}h</span>
           </div>
         </div>
 
@@ -415,7 +415,7 @@ const SortableCard = ({
 // --- Main Kanban Component ---
 
 export const KanbanBoard: React.FC<{ initialRequests: ParentRequest[] }> = ({ initialRequests }) => {
-  const { t } = useLanguage();
+  const { t, formatNumber } = useLanguage();
   const [columns, setColumns] = useState<KanbanColumn[]>(INITIAL_COLUMNS);
   const [requests, setRequests] = useState<KanbanRequest[]>(() =>
     initialRequests.map(transformToKanbanRequest)
@@ -1167,7 +1167,7 @@ export const RequestDetailsModal = ({
   showOnlySitters?: boolean;
   hideBabysittersTab?: boolean;
 }) => {
-  const { t } = useLanguage();
+  const { t, formatNumber } = useLanguage();
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'sitters'>(showOnlySitters ? 'sitters' : 'overview');
   const [formData, setFormData] = useState<KanbanRequest>({
     ...request,
@@ -1620,7 +1620,7 @@ export const RequestDetailsModal = ({
                     <div>
                       <h3 className="text-lg font-bold text-slate-900">Detailed Schedule</h3>
                       <p className="text-xs text-slate-500 font-medium">
-                        Manage all dates and times for this request. Total: <span className="text-slate-900 font-bold">{formData.hours.toFixed(2)}h</span>
+                        Manage all dates and times for this request. Total: <span className="text-slate-900 font-bold">{formatNumber(formData.hours, 2)}h</span>
                       </p>
                     </div>
                     <div className="flex items-center gap-3">

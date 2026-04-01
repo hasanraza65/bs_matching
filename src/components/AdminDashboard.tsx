@@ -2682,6 +2682,7 @@ const InterviewsView = ({ searchQuery, onSearchChange }: { searchQuery: string; 
 };
 
 const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }: { userId: number | null; onClearUserFilter: () => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatCurrency } = useLanguage();
     const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -2846,7 +2847,7 @@ const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 align-top">{item.due_date}</td>
                                     <td className="px-6 py-4 text-slate-600 capitalize align-top">{formatBillingMonth(item.due_date)}</td>
-                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">€{parseFloat(item.amount).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">{formatCurrency(parseFloat(item.amount))}</td>
                                     <td className="px-6 py-4 align-top">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.payment_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
                                             item.payment_status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
@@ -3505,7 +3506,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
 };
 
 const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: () => void }) => {
-    const { t: trans, language } = useLanguage();
+    const { t: trans, language, formatNumber, formatCurrency } = useLanguage();
     const t = trans.contract;
     const [contractData, setContractData] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
@@ -3651,7 +3652,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                                                 ))}
                                             </div>
                                             <div className="text-right text-xs font-bold text-slate-400 border-t border-slate-100 pt-4">
-                                                {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-slate-900 ml-1 font-bold text-sm">{monthlyHours.toFixed(2)} h</span>
+                                                {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-slate-900 ml-1 font-bold text-sm">{formatNumber(monthlyHours, 2)} h</span>
                                             </div>
                                         </div>
                                     );
@@ -3660,7 +3661,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                             <div className="p-5 bg-slate-900 text-white rounded-2xl flex justify-between items-center shadow-lg">
                                 <span className="font-bold text-sm">{t.article1.totalPeriod}</span>
                                 <span className="text-xl font-bold">
-                                    {contractData ? Object.values(contractData.format1 as Record<string, any>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates), 0).toFixed(2) : '0.00'} h
+                                    {contractData ? formatNumber(Object.values(contractData.format1 as Record<string, any>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates), 0), 2) : '0,00'} h
                                 </span>
                             </div>
                         </section>
@@ -3711,8 +3712,8 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                                         {contractData?.format2 && Object.entries(contractData.format2 as Record<string, number>).map(([month, amount]) => (
                                             <tr key={month}>
                                                 <td className="px-6 py-4 font-bold text-slate-700 capitalize">{formatMonthString(month)}</td>
-                                                <td className="px-6 py-4 text-slate-500">{getMonthlyHours(contractData.format1[month]).toFixed(2)}h</td>
-                                                <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} €</td>
+                                                <td className="px-6 py-4 text-slate-500">{formatNumber(getMonthlyHours(contractData.format1[month]), 2)}h</td>
+                                                <td className="px-6 py-4 font-bold text-slate-900">{formatCurrency(amount)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -3720,7 +3721,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                                         <tr>
                                             <td className="px-6 py-4 font-bold">{t.article4.hourlyRate}</td>
                                             <td colSpan={2} className="px-6 py-4 text-right font-bold text-lg">
-                                                {contractData?.hourly_rate} €/h
+                                                {contractData?.hourly_rate ? formatCurrency(contractData.hourly_rate) + '/h' : '-- €/h'}
                                             </td>
                                         </tr>
                                     </tfoot>

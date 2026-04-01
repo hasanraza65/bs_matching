@@ -19,7 +19,7 @@ interface InvoicePaymentModalProps {
 }
 
 const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, onClose, invoice, onSuccess, savedCards, defaultPaymentMethod }) => {
-  const { trans, language } = useLanguage() as any;
+  const { trans, language, formatCurrency } = useLanguage() as any;
   const stripe = useStripe();
   const elements = useElements();
 
@@ -229,7 +229,7 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
             <div className="bg-slate-50 rounded-2xl p-5 mb-6 border border-slate-100 flex justify-between items-center relative z-10">
               <span className="text-slate-500 font-medium">{language === 'fr' ? 'Montant à payer' : 'Amount to pay'}</span>
               <span className="text-2xl font-display font-bold text-brand-blue">
-                {parseFloat(invoice.amount).toFixed(2)} €
+                {formatCurrency(parseFloat(invoice.amount))}
               </span>
             </div>
 
@@ -364,7 +364,7 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
             <div className={`px-2 relative z-10 transition-opacity duration-300 ${isProcessing ? 'opacity-0' : 'opacity-100'}`}>
               <SlideToAccept
                 onAccept={handlePayment}
-                text={t.payButton.replace('{amount}', `${parseFloat(invoice.amount).toFixed(2)} €`)}
+                text={t.payButton.replace('{amount}', formatCurrency(parseFloat(invoice.amount)))}
                 reset={!!error && !isProcessing}
               />
             </div>

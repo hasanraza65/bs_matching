@@ -10,8 +10,8 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: Translations;
-  formatCurrency: (amount: number) => string;
-  formatNumber: (num: number, decimals?: number) => string;
+  formatCurrency: (amount: number | string) => string;
+  formatNumber: (num: number | string, decimals?: number) => string;
   formatDate: (date: Date | string | number) => string;
 }
 
@@ -22,15 +22,19 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const t = language === 'en' ? en : (language === 'fr' ? fr : it);
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    const val = typeof amount === 'number' ? amount : parseFloat(amount);
+    if (isNaN(val)) return '0,00 €';
     if (language === 'fr' || language === 'it') {
-      return amount.toFixed(2).replace('.', ',') + ' €';
+      return val.toFixed(2).replace('.', ',') + ' €';
     }
-    return '€' + amount.toFixed(2);
+    return '€' + val.toFixed(2);
   };
 
-  const formatNumber = (num: number, decimals: number = 1) => {
-    const formatted = num.toFixed(decimals);
+  const formatNumber = (num: number | string, decimals: number = 1) => {
+    const val = typeof num === 'number' ? num : parseFloat(num);
+    if (isNaN(val)) return '0';
+    const formatted = val.toFixed(decimals);
     if (language === 'fr') {
       return formatted.replace('.', ',');
     }

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Baby,
@@ -57,7 +57,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onUserLoaded,
   initialTab = 'requests'
 }) => {
-  const { t, language, formatDate } = useLanguage();
+  const { t, language, formatDate, formatNumber, formatCurrency } = useLanguage();
   const [activeTab, setActiveTab] = useState<'requests' | 'invoices' | 'tax' | 'cmg'>(initialTab);
   const [user, setUser] = useState<User | null>(null);
   const [attestations, setAttestations] = useState<Attestation[]>([]);
@@ -314,7 +314,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         totalMinutes += (endH * 60 + endM) - (startH * 60 + startM);
       });
     });
-    return parseFloat((totalMinutes / 60).toFixed(2));
+    return totalMinutes / 60;
   };
 
   const formatBillingMonth = (dateString?: string) => {
@@ -500,13 +500,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           <div className="space-y-1 sm:space-y-2">
                             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.hours}</p>
                             <div className="flex items-baseline gap-1">
-                              <p className="text-2xl sm:text-3xl font-display font-bold text-slate-900">{calculateTotalHours(req.schedules)}</p>
+                              <p className="text-2xl sm:text-3xl font-display font-bold text-slate-900">{formatNumber(calculateTotalHours(req.schedules), 2)}</p>
                               <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase">Hrs</span>
                             </div>
                           </div>
                           <div className="space-y-1 sm:space-y-2">
                             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.amount}</p>
-                            <p className="text-xl sm:text-3xl font-display font-bold text-brand-accent truncate">€{(calculateTotalHours(req.schedules) * 28.50).toFixed(2)}</p>
+                            <p className="text-xl sm:text-3xl font-display font-bold text-brand-accent truncate">{formatCurrency(calculateTotalHours(req.schedules) * 28.50)}</p>
                           </div>
                           <div className="space-y-1 sm:space-y-2">
                             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Schedules</p>
@@ -781,7 +781,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                 <td className="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">{inv.due_date
                                   ? new Date(inv.due_date).toLocaleDateString('en-GB')
                                   : '--'}</td>
-                                <td className="px-6 py-4 font-bold text-slate-800 text-sm">€{parseFloat(inv.amount).toFixed(2)}</td>
+                                <td className="px-6 py-4 font-bold text-slate-800 text-sm">{formatCurrency(parseFloat(inv.amount))}</td>
                                 <td className="px-6 py-4 text-slate-600 text-sm font-medium capitalize">{formatBillingMonth(inv.due_date)}</td>
                                 <td className="px-6 py-4">
                                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${inv.payment_status === 'Paid'
