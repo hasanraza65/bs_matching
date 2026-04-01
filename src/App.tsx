@@ -3354,9 +3354,14 @@ export default function App() {
 
       {/* Sticky Footer Message */}
       <div className="mt-12 text-center">
-        <p className="text-slate-400 text-sm flex items-center justify-center gap-2">
+        <a 
+          href="https://wa.me/33780857676" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-slate-400 text-sm hover:text-brand-accent transition-colors flex items-center justify-center gap-2"
+        >
           {t.footer.assistance}
-        </p>
+        </a>
       </div>
 
       {/* WhatsApp Floating Button */}
@@ -3364,7 +3369,7 @@ export default function App() {
         whileHover={{ scale: 1.1, rotate: 5 }}
         whileTap={{ scale: 0.9 }}
         className="fixed bottom-8 right-8 w-14 h-14 bg-[#25D366] text-white rounded-full shadow-xl flex items-center justify-center z-50"
-        onClick={() => window.open('https://wa.me/1234567890', '_blank')}
+        onClick={() => window.open('https://wa.me/33780857676', '_blank')}
       >
         <MessageCircle size={28} fill="currentColor" />
       </motion.button>
