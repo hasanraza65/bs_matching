@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { generateContractPdf } from '../utils/contractPdfGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -51,7 +51,7 @@ interface ContractViewProps {
 }
 
 const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAccept, onRefuse, choiceId, autoShowCongrats, onCongratsClose }) => {
-    const { t: trans, language, formatDate } = useLanguage();
+    const { t: trans, language, formatDate, formatNumber, formatCurrency } = useLanguage();
     const t = trans.contract;
 
     const [contractData, setContractData] = useState<ContractResponse | null>(null);
@@ -369,7 +369,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                                         ))}
                                                     </div>
                                                     <div className="text-right text-xs font-bold text-slate-400 border-t border-slate-100 pt-4">
-                                                        {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-brand-blue ml-1 font-display text-sm">{monthlyHours.toFixed(2)} h</span>
+                                                        {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-brand-blue ml-1 font-display text-sm">{formatNumber(monthlyHours, 2)} h</span>
                                                     </div>
                                                 </div>
                                             );
@@ -382,8 +382,8 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                     <span className="text-slate-700 font-bold text-sm">{t.article1.totalPeriod}</span>
                                     <span className="text-xl font-display font-bold text-brand-blue">
                                         {contractData ?
-                                            Object.values(contractData.format1 as Record<string, Record<string, string[]>>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates as Record<string, string[]>), 0).toFixed(2)
-                                            : '0.00'} h
+                                            formatNumber(Object.values(contractData.format1 as Record<string, Record<string, string[]>>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates as Record<string, string[]>), 0), 2)
+                                            : '0,00'} h
                                     </span>
                                 </div>
                             </section>
@@ -444,9 +444,9 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                                                     {formatMonthString(month)}
                                                                 </td>
                                                                 <td className="px-6 py-4 text-slate-500">
-                                                                    {getMonthlyHours(contractData.format1[month]).toFixed(2)}h
+                                                                    {formatNumber(getMonthlyHours(contractData.format1[month]), 2)}h
                                                                 </td>
-                                                                <td className="px-6 py-4 font-bold text-brand-blue">{total.toFixed(2)} €</td>
+                                                                <td className="px-6 py-4 font-bold text-brand-blue">{formatCurrency(total)}</td>
                                                             </tr>
                                                         ))
                                                     ) : (
@@ -461,7 +461,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                                     <tr>
                                                         <td className="px-6 py-4 font-bold text-slate-900">{t.article4.hourlyRate}</td>
                                                         <td colSpan={2} className="px-6 py-4 text-right font-display font-black text-brand-blue text-lg italic">
-                                                            {contractData?.hourly_rate ? `${contractData.hourly_rate} €/h` : '-- €/h'}
+                                                            {contractData?.hourly_rate ? formatCurrency(contractData.hourly_rate) + '/h' : '-- €/h'}
                                                         </td>
                                                     </tr>
                                                 </tfoot>
@@ -762,7 +762,7 @@ const ContractViewInner: React.FC<ContractViewProps> = ({ userName, onBack, onAc
                                                 <p className="text-sm font-bold text-slate-800 capitalize">{Object.keys(contractData.format2)[0]}</p>
                                             </div>
                                             <div className="text-xl font-display font-bold text-brand-blue">
-                                                {getFirstMonthAmount().toFixed(2)} €
+                                                {formatCurrency(getFirstMonthAmount())}
                                             </div>
                                         </div>
                                     )}

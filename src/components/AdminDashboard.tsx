@@ -576,18 +576,29 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                                 let message = '';
 
                                                 if (lang === 'fr') {
-                                                    message = `Cher(e) ${lastName},
+                                                    message = `Cher/Chère ${lastName},
 
 Un nouveau devis a été préparé pour votre demande. Vous pouvez maintenant consulter les détails et décider si vous souhaitez poursuivre.
 
-Voici le lien vers votre devis : ${link}`;
+Voir le devis
+${link}
+
+Veuillez cliquer sur le lien ci-dessus pour consulter et accepter votre devis.
+
+Cordialement,
+Team Bloom`;
                                                 } else {
                                                     message = `Dear ${lastName},
 
-A new price quote has been prepared for your request.
-You can now review the details and decide whether to proceed.
+A new price quote has been prepared for your request. You can now review the details and decide whether to proceed.
 
-Here is the link to your price quote: ${link}`;
+Review Price Quote
+${link}
+
+Please visit the above link to accept your price quote.
+
+Best regards,
+Team Bloom`;
                                                 }
 
                                                 navigator.clipboard.writeText(message);
@@ -1223,9 +1234,11 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
 const SitterChoicesModal: React.FC<{
     choices: any[],
     requestId: number,
+    parentName?: string,
+    userLanguage?: string,
     onClose: () => void,
     onRefresh?: () => void
-}> = ({ choices, requestId, onClose, onRefresh }) => {
+}> = ({ choices, requestId, parentName, userLanguage, onClose, onRefresh }) => {
     const { formatDate } = useLanguage();
     const handleSelectFinal = async (choiceId: number) => {
 
@@ -1334,11 +1347,41 @@ const SitterChoicesModal: React.FC<{
                                                 <button
                                                     onClick={() => {
                                                         const link = `${window.location.origin}/contract/${choice.id}`;
-                                                        navigator.clipboard.writeText(link);
-                                                        toast.success('Contract link copied!');
+                                                        const lang = userLanguage || 'en';
+                                                        const name = parentName || 'Client';
+                                                        
+                                                        let message = '';
+                                                        if (lang === 'fr') {
+                                                            message = `Cher/Chère ${name},
+
+Un nouveau contrat a été préparé pour votre demande. Vous pouvez maintenant le consulter et le valider.
+
+Voir le contrat
+${link}
+
+Veuillez cliquer sur le lien ci-dessus pour consulter et signer votre contrat.
+
+Cordialement,
+Team Bloom`;
+                                                        } else {
+                                                            message = `Dear ${name},
+
+A new contract has been prepared for your request. You can now review and validate it.
+
+View Contract
+${link}
+
+Please click the link above to review and sign your contract.
+
+Best regards,
+Team Bloom`;
+                                                        }
+                                                        
+                                                        navigator.clipboard.writeText(message);
+                                                        toast.success('Contract message copied!');
                                                     }}
                                                     className="px-3 py-2 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm font-bold text-[11px] flex items-center gap-1.5 whitespace-nowrap"
-                                                    title="Copy Contract Link"
+                                                    title="Copy Contract Message"
                                                 >
                                                     <FileText size={14} />
                                                     <span>Contract</span>
@@ -1522,7 +1565,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
-    const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number } | null>(null);
+    const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number, parentName?: string, userLanguage?: string } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -1731,7 +1774,12 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                         <ActiveRequestChoicesCell
                                             choices={req.choices ?? []}
                                             requestId={req.id}
-                                            onShowMore={(choices, reqId) => setViewingSitterChoices({ choices, reqId })}
+                                            onShowMore={(choices, reqId) => setViewingSitterChoices({ 
+                                                choices, 
+                                                reqId,
+                                                parentName: req.user?.last_name,
+                                                userLanguage: req.user?.user_language
+                                            })}
                                             onRefresh={fetchActiveRequests}
                                         />
                                     </td>
@@ -1744,11 +1792,41 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                                 <button
                                                     onClick={() => {
                                                         const link = `${window.location.origin}/contract/${hiredSitter.id}`;
-                                                        navigator.clipboard.writeText(link);
-                                                        toast.success('Contract link copied!');
+                                                        const lang = req.user?.user_language || 'en';
+                                                        const name = req.user?.last_name || 'Client';
+
+                                                        let message = '';
+                                                        if (lang === 'fr') {
+                                                            message = `Cher/Chère ${name},
+
+Un nouveau contrat a été préparé pour votre demande. Vous pouvez maintenant le consulter et le valider.
+
+Voir le contrat
+${link}
+
+Veuillez cliquer sur le lien ci-dessus pour consulter et signer votre contrat.
+
+Cordialement,
+Team Bloom`;
+                                                        } else {
+                                                            message = `Dear ${name},
+
+A new contract has been prepared for your request. You can now review and validate it.
+
+View Contract
+${link}
+
+Please click the link above to review and sign your contract.
+
+Best regards,
+Team Bloom`;
+                                                        }
+
+                                                        navigator.clipboard.writeText(message);
+                                                        toast.success('Contract message copied!');
                                                     }}
                                                     className="p-2.5 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm mx-auto flex items-center justify-center mt-1"
-                                                    title="Copy Contract Link"
+                                                    title="Copy Contract Message"
                                                 >
                                                     <LinkIcon size={18} />
                                                 </button>
@@ -1794,6 +1872,8 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                     <SitterChoicesModal
                         requestId={viewingSitterChoices.reqId}
                         choices={viewingSitterChoices.choices}
+                        parentName={viewingSitterChoices.parentName}
+                        userLanguage={viewingSitterChoices.userLanguage}
                         onClose={() => setViewingSitterChoices(null)}
                         onRefresh={fetchActiveRequests}
                     />
@@ -2602,6 +2682,7 @@ const InterviewsView = ({ searchQuery, onSearchChange }: { searchQuery: string; 
 };
 
 const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }: { userId: number | null; onClearUserFilter: () => void; searchQuery: string; onSearchChange: (val: string) => void }) => {
+    const { formatCurrency } = useLanguage();
     const [invoices, setInvoices] = useState<import('../services/api').Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -2766,7 +2847,7 @@ const InvoicesView = ({ userId, onClearUserFilter, searchQuery, onSearchChange }
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 align-top">{item.due_date}</td>
                                     <td className="px-6 py-4 text-slate-600 capitalize align-top">{formatBillingMonth(item.due_date)}</td>
-                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">€{parseFloat(item.amount).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-900 align-top">{formatCurrency(parseFloat(item.amount))}</td>
                                     <td className="px-6 py-4 align-top">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.payment_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
                                             item.payment_status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
@@ -3425,7 +3506,7 @@ const UserDetailsView = ({ id, onBack }: { id: number; onBack: () => void }) => 
 };
 
 const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: () => void }) => {
-    const { t: trans, language } = useLanguage();
+    const { t: trans, language, formatNumber, formatCurrency } = useLanguage();
     const t = trans.contract;
     const [contractData, setContractData] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
@@ -3571,7 +3652,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                                                 ))}
                                             </div>
                                             <div className="text-right text-xs font-bold text-slate-400 border-t border-slate-100 pt-4">
-                                                {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-slate-900 ml-1 font-bold text-sm">{monthlyHours.toFixed(2)} h</span>
+                                                {t.article1.totalMonth.replace('{month}', formattedMonth)} <span className="text-slate-900 ml-1 font-bold text-sm">{formatNumber(monthlyHours, 2)} h</span>
                                             </div>
                                         </div>
                                     );
@@ -3580,7 +3661,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                             <div className="p-5 bg-slate-900 text-white rounded-2xl flex justify-between items-center shadow-lg">
                                 <span className="font-bold text-sm">{t.article1.totalPeriod}</span>
                                 <span className="text-xl font-bold">
-                                    {contractData ? Object.values(contractData.format1 as Record<string, any>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates), 0).toFixed(2) : '0.00'} h
+                                    {contractData ? formatNumber(Object.values(contractData.format1 as Record<string, any>).reduce((total: number, monthDates) => total + getMonthlyHours(monthDates), 0), 2) : '0,00'} h
                                 </span>
                             </div>
                         </section>
@@ -3631,8 +3712,8 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                                         {contractData?.format2 && Object.entries(contractData.format2 as Record<string, number>).map(([month, amount]) => (
                                             <tr key={month}>
                                                 <td className="px-6 py-4 font-bold text-slate-700 capitalize">{formatMonthString(month)}</td>
-                                                <td className="px-6 py-4 text-slate-500">{getMonthlyHours(contractData.format1[month]).toFixed(2)}h</td>
-                                                <td className="px-6 py-4 font-bold text-slate-900">{amount.toFixed(2)} €</td>
+                                                <td className="px-6 py-4 text-slate-500">{formatNumber(getMonthlyHours(contractData.format1[month]), 2)}h</td>
+                                                <td className="px-6 py-4 font-bold text-slate-900">{formatCurrency(amount)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -3640,7 +3721,7 @@ const ContractDetailView = ({ choiceId, onBack }: { choiceId: number; onBack: ()
                                         <tr>
                                             <td className="px-6 py-4 font-bold">{t.article4.hourlyRate}</td>
                                             <td colSpan={2} className="px-6 py-4 text-right font-bold text-lg">
-                                                {contractData?.hourly_rate} €/h
+                                                {contractData?.hourly_rate ? formatCurrency(contractData.hourly_rate) + '/h' : '-- €/h'}
                                             </td>
                                         </tr>
                                     </tfoot>
