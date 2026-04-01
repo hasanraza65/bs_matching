@@ -576,18 +576,29 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                                 let message = '';
 
                                                 if (lang === 'fr') {
-                                                    message = `Cher(e) ${lastName},
+                                                    message = `Cher/Chère ${lastName},
 
 Un nouveau devis a été préparé pour votre demande. Vous pouvez maintenant consulter les détails et décider si vous souhaitez poursuivre.
 
-Voici le lien vers votre devis : ${link}`;
+Voir le devis
+${link}
+
+Veuillez cliquer sur le lien ci-dessus pour consulter et accepter votre devis.
+
+Cordialement,
+Team Bloom`;
                                                 } else {
                                                     message = `Dear ${lastName},
 
-A new price quote has been prepared for your request.
-You can now review the details and decide whether to proceed.
+A new price quote has been prepared for your request. You can now review the details and decide whether to proceed.
 
-Here is the link to your price quote: ${link}`;
+Review Price Quote
+${link}
+
+Please visit the above link to accept your price quote.
+
+Best regards,
+Team Bloom`;
                                                 }
 
                                                 navigator.clipboard.writeText(message);
@@ -1223,9 +1234,11 @@ const CompletedRequestsView = ({ onViewInvoices, searchQuery, onSearchChange }: 
 const SitterChoicesModal: React.FC<{
     choices: any[],
     requestId: number,
+    parentName?: string,
+    userLanguage?: string,
     onClose: () => void,
     onRefresh?: () => void
-}> = ({ choices, requestId, onClose, onRefresh }) => {
+}> = ({ choices, requestId, parentName, userLanguage, onClose, onRefresh }) => {
     const { formatDate } = useLanguage();
     const handleSelectFinal = async (choiceId: number) => {
 
@@ -1334,11 +1347,41 @@ const SitterChoicesModal: React.FC<{
                                                 <button
                                                     onClick={() => {
                                                         const link = `${window.location.origin}/contract/${choice.id}`;
-                                                        navigator.clipboard.writeText(link);
-                                                        toast.success('Contract link copied!');
+                                                        const lang = userLanguage || 'en';
+                                                        const name = parentName || 'Client';
+                                                        
+                                                        let message = '';
+                                                        if (lang === 'fr') {
+                                                            message = `Cher/Chère ${name},
+
+Un nouveau contrat a été préparé pour votre demande. Vous pouvez maintenant le consulter et le valider.
+
+Voir le contrat
+${link}
+
+Veuillez cliquer sur le lien ci-dessus pour consulter et signer votre contrat.
+
+Cordialement,
+Team Bloom`;
+                                                        } else {
+                                                            message = `Dear ${name},
+
+A new contract has been prepared for your request. You can now review and validate it.
+
+View Contract
+${link}
+
+Please click the link above to review and sign your contract.
+
+Best regards,
+Team Bloom`;
+                                                        }
+                                                        
+                                                        navigator.clipboard.writeText(message);
+                                                        toast.success('Contract message copied!');
                                                     }}
                                                     className="px-3 py-2 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm font-bold text-[11px] flex items-center gap-1.5 whitespace-nowrap"
-                                                    title="Copy Contract Link"
+                                                    title="Copy Contract Message"
                                                 >
                                                     <FileText size={14} />
                                                     <span>Contract</span>
@@ -1522,7 +1565,7 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingRequest, setEditingRequest] = useState<KanbanRequest | null>(null);
-    const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number } | null>(null);
+    const [viewingSitterChoices, setViewingSitterChoices] = useState<{ choices: any[], reqId: number, parentName?: string, userLanguage?: string } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -1731,7 +1774,12 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                         <ActiveRequestChoicesCell
                                             choices={req.choices ?? []}
                                             requestId={req.id}
-                                            onShowMore={(choices, reqId) => setViewingSitterChoices({ choices, reqId })}
+                                            onShowMore={(choices, reqId) => setViewingSitterChoices({ 
+                                                choices, 
+                                                reqId,
+                                                parentName: req.user?.last_name,
+                                                userLanguage: req.user?.user_language
+                                            })}
                                             onRefresh={fetchActiveRequests}
                                         />
                                     </td>
@@ -1744,11 +1792,41 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                                 <button
                                                     onClick={() => {
                                                         const link = `${window.location.origin}/contract/${hiredSitter.id}`;
-                                                        navigator.clipboard.writeText(link);
-                                                        toast.success('Contract link copied!');
+                                                        const lang = req.user?.user_language || 'en';
+                                                        const name = req.user?.last_name || 'Client';
+
+                                                        let message = '';
+                                                        if (lang === 'fr') {
+                                                            message = `Cher/Chère ${name},
+
+Un nouveau contrat a été préparé pour votre demande. Vous pouvez maintenant le consulter et le valider.
+
+Voir le contrat
+${link}
+
+Veuillez cliquer sur le lien ci-dessus pour consulter et signer votre contrat.
+
+Cordialement,
+Team Bloom`;
+                                                        } else {
+                                                            message = `Dear ${name},
+
+A new contract has been prepared for your request. You can now review and validate it.
+
+View Contract
+${link}
+
+Please click the link above to review and sign your contract.
+
+Best regards,
+Team Bloom`;
+                                                        }
+
+                                                        navigator.clipboard.writeText(message);
+                                                        toast.success('Contract message copied!');
                                                     }}
                                                     className="p-2.5 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm mx-auto flex items-center justify-center mt-1"
-                                                    title="Copy Contract Link"
+                                                    title="Copy Contract Message"
                                                 >
                                                     <LinkIcon size={18} />
                                                 </button>
@@ -1794,6 +1872,8 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                     <SitterChoicesModal
                         requestId={viewingSitterChoices.reqId}
                         choices={viewingSitterChoices.choices}
+                        parentName={viewingSitterChoices.parentName}
+                        userLanguage={viewingSitterChoices.userLanguage}
                         onClose={() => setViewingSitterChoices(null)}
                         onRefresh={fetchActiveRequests}
                     />
