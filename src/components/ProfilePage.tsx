@@ -28,7 +28,8 @@ import {
   CreditCard,
   Star,
   Check,
-  ShieldCheck
+  ShieldCheck,
+  MessageCircle
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { api, User, Invoice, Attestation } from '../services/api';
@@ -1064,17 +1065,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       {/* Support Banner */}
       <div className="mt-12 bg-brand-blue/10 rounded-[32px] p-8 border border-brand-blue/20 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-blue shadow-sm">
-            <CheckCircle2 size={24} />
-          </div>
+          <button
+            onClick={() => window.open('https://wa.me/33780857676', '_blank')}
+            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-blue shadow-sm hover:bg-brand-blue hover:text-white transition-colors"
+            aria-label="Open WhatsApp support"
+            title="WhatsApp Support"
+          >
+            <MessageCircle size={24} />
+          </button>
           <div>
             <p className="font-bold text-slate-800">{(t.profilePage as any).support?.title || 'Need help with your documents?'}</p>
             <p className="text-sm text-slate-500">{(t.profilePage as any).support?.subtitle || 'Our support team is available 24/7 to assist you.'}</p>
           </div>
         </div>
-        <button 
-          onClick={() => window.open('https://wa.me/33780857676', '_blank')}
-          className="px-6 py-3 bg-brand-blue text-white font-bold rounded-2xl hover:bg-brand-blue/90 transition-colors shadow-lg shadow-brand-blue/20"
+        <button
+          type="button"
+          className="px-6 py-3 bg-brand-blue text-white font-bold rounded-2xl shadow-lg shadow-brand-blue/20 cursor-default"
         >
           {(t.profilePage as any).support?.button || 'Contact Support'}
         </button>
