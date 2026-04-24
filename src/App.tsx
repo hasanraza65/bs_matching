@@ -228,7 +228,7 @@ interface FormErrors {
 
 export default function App() {
   const { t, language, setLanguage, formatCurrency, formatNumber, formatDate } = useLanguage();
-  const [hourlyRate, setHourlyRate] = useState(28.50);
+  const [hourlyRate, setHourlyRate] = useState(27.99);
   const [externalSitters, setExternalSitters] = useState<Babysitter[]>([]);
   const [sitterPage, setSitterPage] = useState(1);
   const [hasMoreSitters, setHasMoreSitters] = useState(true);
@@ -868,7 +868,7 @@ export default function App() {
   const handleCreateNewRequest = useCallback(() => {
     setParentRequestId(null);
     setIsModifying(false);
-    setHourlyRate(28.50); // Reset to default
+    setHourlyRate(27.99); // Reset to default
     setFormData({
       firstName: user?.first_name || '',
       lastName: user?.last_name || '',

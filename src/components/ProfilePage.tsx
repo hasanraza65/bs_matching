@@ -508,7 +508,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           <div className="space-y-1 sm:space-y-2">
                             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.profilePage.requests.amount}</p>
                             <p className="text-xl sm:text-3xl font-display font-bold text-brand-accent truncate">
-                              {formatCurrency((calculateTotalHours(req.schedules) || 0) * 28.50)}
+                              {formatCurrency((calculateTotalHours(req.schedules) || 0) * 27.99)}
                             </p>
                           </div>
                           <div className="space-y-1 sm:space-y-2">

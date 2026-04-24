@@ -782,7 +782,7 @@ const NewRequestModal = ({
         slots: [{ start_time: '', end_time: '' }]
       }
     ],
-    hourly_rate: '28.50',
+    hourly_rate: '27.99',
     user_language: 'en' as 'en' | 'fr',
     lat: undefined as number | undefined,
     lng: undefined as number | undefined,
@@ -980,7 +980,7 @@ const NewRequestModal = ({
                 <input
                   type="number"
                   step="0.1"
-                  placeholder="28.50"
+                  placeholder="27.99"
                   value={formData.hourly_rate}
                   onChange={(e) => handleChange('hourly_rate', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-medium"

@@ -52,7 +52,7 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
     email: '',
     user_phone: '',
     parent_address: '',
-    hourly_rate: '28.50',
+    hourly_rate: '27.99',
     user_language: 'en' as 'en' | 'fr',
     lat: undefined as number | undefined,
     lng: undefined as number | undefined,
