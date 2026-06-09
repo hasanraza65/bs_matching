@@ -679,6 +679,22 @@ export const api = {
     return response.data;
   },
 
+  // Pay a monthly invoice by bank transfer / CESU: upload a proof of payment.
+  submitInvoiceProof: async (
+    invoiceId: number,
+    paymentMethod: "Bank Transfer" | "CESU",
+    file: File,
+  ): Promise<any> => {
+    const form = new FormData();
+    form.append("invoice_id", String(invoiceId));
+    form.append("payment_method", paymentMethod);
+    form.append("fileUpload", file);
+    const response = await apiClient.post("/invoice-payment-proof", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
   // Manual (non-card) payment for contract signing: bank transfer or CESU.
   // The user uploads a proof of payment file; the backend records it, marks the
   // contract paid/signed, and returns { status }. Mirrors the main site's

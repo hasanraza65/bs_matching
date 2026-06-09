@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CreditCard, Lock, Loader2, AlertCircle, CheckCircle2, ShieldCheck, Check } from 'lucide-react';
+import { X, CreditCard, Lock, Loader2, AlertCircle, CheckCircle2, ShieldCheck, Check, Landmark, FileText, Upload } from 'lucide-react';
 import { loadStripe, StripeCardNumberElement } from '@stripe/stripe-js';
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
 import { api, Invoice, PaymentMethod } from '../services/api';
@@ -43,6 +43,48 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
   const [selectedCardId, setSelectedCardId] = useState<string>(
     defaultPaymentMethod || (hasSavedCards ? savedCards[0].id : '')
   );
+
+  // Payment method (mirrors the contract pop-up): card / bank transfer / CESU.
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank' | 'cesu'>('card');
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const proofInputRef = useRef<HTMLInputElement>(null);
+
+  // Company payment details shown for manual (non-card) methods.
+  const RIB = {
+    iban: 'FR76 2823 3000 0150 9805 3550 539',
+    bic: 'REVOFRP2',
+    accountName: 'ENQAVON SERVICE',
+  };
+  const CESU_NAN = '1761420';
+
+  const handleProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProofFile(e.target.files?.[0] || null);
+    setError(null);
+  };
+
+  /** Pay the invoice by bank transfer / CESU — upload a proof of payment. */
+  const handleSubmitProof = async (): Promise<void> => {
+    if (!proofFile) {
+      setError(language === 'fr' ? "Veuillez d'abord téléverser votre preuve de paiement." : 'Please upload your proof of payment first.');
+      return;
+    }
+    setIsProcessing(true);
+    setError(null);
+    try {
+      const method = paymentMethod === 'bank' ? 'Bank Transfer' : 'CESU';
+      const res = await api.submitInvoiceProof(invoice.id, method, proofFile);
+      if (res.status) {
+        setIsSuccess(true);
+        setTimeout(() => { onSuccess(); onClose(); }, 2000);
+      } else {
+        throw new Error(res.message || (language === 'fr' ? "Erreur lors de l'envoi" : 'Submission error'));
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || (err instanceof Error ? err.message : 'Failed'));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const t = trans?.payment || {
     cardNumber: "Card Number",
@@ -233,8 +275,27 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
               </span>
             </div>
 
+            {/* Payment method selector (Card / Bank transfer / CESU) */}
+            <div className="grid grid-cols-3 gap-2 mb-6 relative z-10">
+              {([
+                { key: 'card', label: language === 'fr' ? 'Carte' : 'Card', icon: <CreditCard size={16} /> },
+                { key: 'bank', label: language === 'fr' ? 'Virement' : 'Transfer', icon: <Landmark size={16} /> },
+                { key: 'cesu', label: 'CESU', icon: <FileText size={16} /> },
+              ] as const).map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => { setPaymentMethod(opt.key); setError(null); }}
+                  disabled={isProcessing}
+                  className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-[11px] font-bold transition-all ${paymentMethod === opt.key ? 'border-brand-blue bg-brand-blue/5 text-brand-blue shadow-sm' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                >
+                  {opt.icon}
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
             {/* Payment Mode Toggle (only if saved cards exist) */}
-            {hasSavedCards && (
+            {hasSavedCards && paymentMethod === 'card' && (
               <div className="flex p-1 bg-slate-100/50 rounded-2xl mb-6 border border-slate-200/50">
                 <button
                   onClick={() => setPaymentMode('saved')}
@@ -262,6 +323,7 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
               </div>
             )}
 
+            {paymentMethod === 'card' && (
             <div className={`transition-opacity duration-300 relative z-10 ${isProcessing ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
               {/* Saved Cards List */}
               {paymentMode === 'saved' && hasSavedCards && (
@@ -360,11 +422,78 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
                 )}
               </div>
             </div>
+            )}
+
+            {/* Bank transfer / CESU details + proof of payment upload */}
+            {paymentMethod !== 'card' && (
+              <div className={`space-y-3 mb-6 relative z-10 transition-opacity duration-300 ${isProcessing ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                {paymentMethod === 'bank' ? (
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2.5">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">{language === 'fr' ? 'Coordonnées bancaires' : 'Bank details'}</p>
+                    {[
+                      { label: 'IBAN', value: RIB.iban },
+                      { label: 'BIC', value: RIB.bic },
+                      { label: language === 'fr' ? 'Titulaire' : 'Account', value: RIB.accountName },
+                    ].map(row => (
+                      <div key={row.label} className="flex justify-between items-center gap-3">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">{row.label}</span>
+                        <span className="text-xs font-bold text-slate-700 text-right break-all">{row.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2.5">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">{language === 'fr' ? "Numéro d'affiliation national (CESU)" : 'CESU affiliation number'}</p>
+                    <div className="flex justify-between items-center gap-3">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">NAN</span>
+                      <span className="text-xs font-bold text-slate-700 text-right break-all">{CESU_NAN}</span>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-slate-500 leading-relaxed px-1">
+                  {language === 'fr'
+                    ? 'Effectuez votre paiement, puis téléversez votre preuve de paiement.'
+                    : 'Make your payment, then upload your proof of payment.'}
+                </p>
+
+                <input ref={proofInputRef} type="file" accept="image/*,application/pdf" onChange={handleProofChange} className="hidden" disabled={isProcessing} />
+                <button
+                  type="button"
+                  onClick={() => proofInputRef.current?.click()}
+                  disabled={isProcessing}
+                  className={`w-full rounded-xl border-2 border-dashed px-4 py-4 flex flex-col items-center justify-center gap-1.5 transition-colors ${proofFile ? 'border-green-300 bg-green-50' : 'border-slate-200 hover:border-brand-blue/40 bg-white'}`}
+                >
+                  {proofFile ? (
+                    <>
+                      <CheckCircle2 size={20} className="text-green-500" />
+                      <span className="text-xs font-bold text-slate-700 truncate max-w-[220px]">{proofFile.name}</span>
+                      <span className="text-[10px] text-slate-400">{language === 'fr' ? 'Cliquer pour changer' : 'Click to change'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="text-slate-400" />
+                      <span className="text-xs font-bold text-slate-500">{language === 'fr' ? 'Téléverser la preuve de paiement' : 'Upload proof of payment'}</span>
+                      <span className="text-[10px] text-slate-400">{language === 'fr' ? 'Image ou PDF' : 'Image or PDF'}</span>
+                    </>
+                  )}
+                </button>
+
+                {error && (
+                  <div className="text-xs text-red-500 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 flex items-center gap-2">
+                    <AlertCircle size={14} className="shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className={`px-2 relative z-10 transition-opacity duration-300 ${isProcessing ? 'opacity-0' : 'opacity-100'}`}>
               <SlideToAccept
-                onAccept={handlePayment}
-                text={t.payButton.replace('{amount}', formatCurrency(parseFloat(invoice.amount)))}
+                onAccept={paymentMethod === 'card' ? handlePayment : handleSubmitProof}
+                text={paymentMethod === 'card'
+                  ? t.payButton.replace('{amount}', formatCurrency(parseFloat(invoice.amount)))
+                  : (language === 'fr' ? 'Glisser pour soumettre' : 'Slide to submit')}
                 reset={!!error && !isProcessing}
               />
             </div>
@@ -379,12 +508,18 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
               <CheckCircle2 size={48} />
             </div>
             <h3 className="text-3xl font-display font-bold text-slate-900 mb-3">
-              {t.success}
+              {paymentMethod === 'card'
+                ? t.success
+                : (language === 'fr' ? 'Preuve reçue' : 'Proof received')}
             </h3>
             <p className="text-slate-500 mb-10 font-medium text-sm leading-relaxed px-4">
-              {language === 'fr'
-                ? "Votre paiement a été traité avec succès. Merci !"
-                : "Your payment has been successfully processed. Thank you!"
+              {paymentMethod === 'card'
+                ? (language === 'fr'
+                    ? "Votre paiement a été traité avec succès. Merci !"
+                    : "Your payment has been successfully processed. Thank you!")
+                : (language === 'fr'
+                    ? "Votre preuve de paiement a bien été reçue et sera vérifiée par notre équipe."
+                    : "Your proof of payment has been received and will be verified by our team.")
               }
             </p>
           </motion.div>
