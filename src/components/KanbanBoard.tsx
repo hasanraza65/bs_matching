@@ -45,6 +45,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { copyToClipboard } from '../utils/clipboard';
 import { motion, AnimatePresence } from 'motion/react';
 import { api, ParentRequest } from '../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -1459,10 +1460,11 @@ export const RequestDetailsModal = ({
                   {formData.schedules && formData.schedules.length > 0 && formData.schedules.every(s => s.slots && s.slots.length > 0) && (
                     <div className="flex justify-end mb-4">
                       <button
-                        onClick={() => {
-                          const link = `https://ponctuel.bloom-buddies.fr/price/${formData.id}`;
-                          navigator.clipboard.writeText(link);
-                          toast.success('Price Quote link copied!');
+                        onClick={async () => {
+                          const link = `${window.location.origin}/price/${formData.id}`;
+                          const ok = await copyToClipboard(link);
+                          if (ok) toast.success('Price Quote link copied!');
+                          else toast.error('Could not copy automatically. Link: ' + link);
                         }}
                         className="px-4 py-2 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all flex items-center gap-2 border border-emerald-100"
                       >
@@ -1928,10 +1930,11 @@ export const RequestDetailsModal = ({
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
               <button
-                onClick={() => {
-                  const link = `https://ponctuel.bloom-buddies.fr/price/${formData.id}`;
-                  navigator.clipboard.writeText(link);
-                  toast.success('Price Quote link copied!');
+                onClick={async () => {
+                  const link = `${window.location.origin}/price/${formData.id}`;
+                  const ok = await copyToClipboard(link);
+                  if (ok) toast.success('Price Quote link copied!');
+                  else toast.error('Could not copy automatically. Link: ' + link);
                 }}
                 className="w-full sm:w-auto px-8 py-4 bg-emerald-50 text-emerald-600 text-sm font-black rounded-2xl hover:bg-emerald-100 transition-all border border-emerald-100 flex items-center justify-center gap-2 shadow-sm active:scale-95"
               >

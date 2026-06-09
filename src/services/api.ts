@@ -130,6 +130,8 @@ export interface User {
   cmg_num?: string;
   user_language?: 'en' | 'fr';
   profile_pic?: string | null;
+  // French tax resident (CAF aid + 50% tax credit) vs tourist (not eligible).
+  client_type?: 'resident' | 'tourist';
   children?: Child[];
   parent_requests?: ParentRequest[];
   invoices?: Invoice[];
@@ -248,6 +250,8 @@ export const api = {
       user_address: string;
       children: { child_dob: string }[];
       board_status?: string;
+      user_language?: 'en' | 'fr';
+      client_type?: 'resident' | 'tourist';
       lat?: number;
       lng?: number;
     },
@@ -356,6 +360,7 @@ export const api = {
     schedules: any[];
     hourly_rate?: string | number;
     user_language?: 'en' | 'fr';
+    client_type?: 'resident' | 'tourist';
     board_status?: string;
     from_admin?: boolean;
     lat?: number;
@@ -572,9 +577,10 @@ export const api = {
 
   acceptPriceQuote: async (
     id: number,
+    client_type?: 'resident' | 'tourist',
   ): Promise<{ status: boolean; message: string }> => {
     try {
-      const response = await apiClient.post(`/accept-price-quote/${id}`);
+      const response = await apiClient.post(`/accept-price-quote/${id}`, client_type ? { client_type } : {});
       return response.data;
     } catch (error: any) {
       throw error;
@@ -782,6 +788,8 @@ export const api = {
     user_phone: string;
     cmg_num: string;
     user_address: string;
+    client_type?: 'resident' | 'tourist';
+    user_language?: 'en' | 'fr';
     lat?: string | number;
     lng?: string | number;
   }): Promise<{ status: boolean; message: string }> => {

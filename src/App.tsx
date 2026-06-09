@@ -335,9 +335,18 @@ export default function App() {
   const [parentRequestId, setParentRequestId] = useState<number | null>(null);
   const [isModifying, setIsModifying] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  // Price-quote eligibility: French tax residents see CAF aid + the 50% tax
+  // credit; tourists do not. Defaults from the account (if known) else from the
+  // chosen UI language, and is editable via the checkbox on the quote step.
+  const [isResidentClient, setIsResidentClient] = useState<boolean>(language === 'fr');
   const [selectedChoiceId, setSelectedChoiceId] = useState<number | null>(null);
   const [matchRequestId, setMatchRequestId] = useState<number | null>(null);
   const [autoShowCongrats, setAutoShowCongrats] = useState(false);
+
+  // Keep the quote eligibility in sync with a known account's client type.
+  useEffect(() => {
+    if (user?.client_type) setIsResidentClient(user.client_type === 'resident');
+  }, [user?.client_type]);
 
   // Step 4 State (Babysitter Matching)
   const [selectedCandidates, setSelectedCandidates] = useState<Array<{
@@ -1132,6 +1141,8 @@ export default function App() {
               user_phone: formData.telephone,
               user_address: formData.address,
               children: formData.childDOBs.map(dob => ({ child_dob: dob })),
+              user_language: language === 'fr' ? 'fr' : 'en',
+              client_type: isResidentClient ? 'resident' : 'tourist',
               lat: formData.lat,
               lng: formData.lng,
             }, parentRequestId || undefined);
@@ -1325,9 +1336,10 @@ export default function App() {
       }
 
       // Confirm the request by accepting the price quote. Matching to
-      // babysitters is handled afterward by the admin / back-office.
+      // babysitters is handled afterward by the admin / back-office. The
+      // eligibility checkbox choice is persisted onto the account here.
       if (idToUse) {
-        await api.acceptPriceQuote(idToUse);
+        await api.acceptPriceQuote(idToUse, isResidentClient ? 'resident' : 'tourist');
       }
 
       try {
@@ -2487,28 +2499,47 @@ export default function App() {
                                 <span className="font-bold text-slate-700">{formatCurrency(baseSubtotal)}</span>
                               </div>
 
-                              <div className="flex justify-between items-start pt-4 md:pt-6 border-t border-slate-50">
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-slate-700">{t.step2.cafAssistance}</span>
-                                  <span className="text-[11px] font-mono text-slate-400">{cmgDisplayFormat}</span>
-                                </div>
-                                <span className="font-bold text-brand-accent">{formatCurrency(estimatedCMG)}</span>
-                              </div>
+                              {isResidentClient && (
+                                <>
+                                  <div className="flex justify-between items-start pt-4 md:pt-6 border-t border-slate-50">
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-bold text-slate-700">{t.step2.cafAssistance}</span>
+                                      <span className="text-[11px] font-mono text-slate-400">{cmgDisplayFormat}</span>
+                                    </div>
+                                    <span className="font-bold text-brand-accent">{formatCurrency(estimatedCMG)}</span>
+                                  </div>
 
-                              <div className="flex justify-between items-start pt-4 md:pt-6 border-t border-slate-50">
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-slate-700">{t.step2.taxCredit}</span>
-                                  <span className="text-[11px] font-mono text-slate-400">{taxCreditDisplayFormat}</span>
-                                </div>
-                                <span className="font-bold text-emerald-500">{formatCurrency(estimatedTaxCredit)}</span>
-                              </div>
+                                  <div className="flex justify-between items-start pt-4 md:pt-6 border-t border-slate-50">
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-bold text-slate-700">{t.step2.taxCredit}</span>
+                                      <span className="text-[11px] font-mono text-slate-400">{taxCreditDisplayFormat}</span>
+                                    </div>
+                                    <span className="font-bold text-emerald-500">{formatCurrency(estimatedTaxCredit)}</span>
+                                  </div>
+                                </>
+                              )}
 
                               <div className="pt-8 mt-2 border-t-2 border-dashed border-slate-100 flex justify-between items-center gap-3">
                                 <div>
                                   <span className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider">{t.step2.finalCost}</span>
                                 </div>
-                                <span className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-brand-accent whitespace-nowrap shrink-0">{formatCurrency(finalCostAfterAid)}</span>
+                                <span className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-brand-accent whitespace-nowrap shrink-0">{formatCurrency(isResidentClient ? finalCostAfterAid : totalBeforeAid)}</span>
                               </div>
+
+                              {/* Eligibility toggle — drives the CAF aid + tax credit display. */}
+                              <label className="flex items-start gap-3 pt-5 mt-1 border-t border-slate-50 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={isResidentClient}
+                                  onChange={(e) => setIsResidentClient(e.target.checked)}
+                                  className="mt-0.5 w-4 h-4 accent-brand-accent shrink-0"
+                                />
+                                <span className="text-[12px] sm:text-[13px] font-medium text-slate-500 leading-snug">
+                                  {language === 'fr'
+                                    ? 'Je suis résident fiscal français — afficher mon aide CAF et mon crédit d’impôt de 50 %.'
+                                    : "I'm a French tax resident — show my CAF aid & 50% tax credit."}
+                                </span>
+                              </label>
                             </div>
                           </div>
 

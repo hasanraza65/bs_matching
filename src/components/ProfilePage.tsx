@@ -319,13 +319,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   })) : [];
 
 
+  // Tourists are not eligible for CAF (CMG) or the French tax credit, so those
+  // two tabs are hidden for them.
+  const isTourist = user?.client_type === 'tourist';
   const tabs = [
     { id: 'requests', label: t.profilePage.tabs.requests, icon: Baby },
-    { id: 'cmg', label: t.profilePage.tabs.cmg || 'CMG', icon: ShieldCheck },
+    ...(isTourist ? [] : [{ id: 'cmg', label: t.profilePage.tabs.cmg || 'CMG', icon: ShieldCheck }]),
     { id: 'invoices', label: t.profilePage.tabs.invoices, icon: Receipt },
-    { id: 'tax', label: t.profilePage.tabs.tax, icon: FileText },
-
+    ...(isTourist ? [] : [{ id: 'tax', label: t.profilePage.tabs.tax, icon: FileText }]),
   ];
+
+  // If a tourist somehow lands on a hidden tab, fall back to requests.
+  useEffect(() => {
+    if (isTourist && (activeTab === 'cmg' || activeTab === 'tax')) setActiveTab('requests');
+  }, [isTourist, activeTab]);
 
   const calculateTotalHours = (schedules?: any[]) => {
     if (!schedules) return 0;

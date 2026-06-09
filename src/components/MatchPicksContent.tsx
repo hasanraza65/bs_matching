@@ -6,6 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { api, ParentRequest } from '../services/api';
 import { InterviewScheduler } from './InterviewScheduler';
 import { interviewRoomUrl } from '../utils/interview';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface MatchPicksContentProps {
     request: ParentRequest;
@@ -54,7 +55,7 @@ export const MatchPicksContent: React.FC<MatchPicksContentProps> = ({ request, o
         }
     };
 
-    const copyInvite = (c: any) => {
+    const copyInvite = async (c: any) => {
         const d = fmtDate(c.interview_date);
         const t = (c.interview_time || '').slice(0, 5);
         const name = `${c.babysitter_first_name ?? ''} ${c.babysitter_last_name ?? ''}`.trim();
@@ -65,8 +66,9 @@ export const MatchPicksContent: React.FC<MatchPicksContentProps> = ({ request, o
         lines.push(fr
             ? `Lien de visioconférence : ${interviewRoomUrl(c.id)}`
             : `Video-call link: ${interviewRoomUrl(c.id)}`);
-        navigator.clipboard.writeText(lines.join('\n'));
-        toast.success(fr ? 'Invitation copiée !' : 'Invitation copied!');
+        const ok = await copyToClipboard(lines.join('\n'));
+        if (ok) toast.success(fr ? 'Invitation copiée !' : 'Invitation copied!');
+        else toast.error(fr ? 'Copie impossible automatiquement.' : 'Could not copy automatically.');
     };
 
     const confirmFinalChoice = async () => {

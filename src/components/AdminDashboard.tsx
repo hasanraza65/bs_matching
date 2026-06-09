@@ -84,6 +84,7 @@ import { AddNewActiveRequestModal } from './AddNewActiveRequestModal';
 import { ProposeCandidatesModal } from './ProposeCandidatesModal';
 import { MatchPicksContent } from './MatchPicksContent';
 import { buildRequestDetailsText } from '../utils/requestDetails';
+import { copyToClipboard } from '../utils/clipboard';
 import { interviewRoomUrl } from '../utils/interview';
 import { generateContractPdf } from '../utils/contractPdfGenerator';
 import { generateBabysitterContractPdf } from '../utils/babysitterContractPdf';
@@ -588,13 +589,14 @@ const NewRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string;
                                     </td>
                                     <td className="px-6 py-4 text-center align-top">
                                         <button
-                                            onClick={() => {
+                                            onClick={async () => {
                                                 const link = `${window.location.origin}/price/${req.id}`;
-                                                navigator.clipboard.writeText(link);
-                                                toast.success('Link copied!');
+                                                const ok = await copyToClipboard(link);
+                                                if (ok) toast.success('Price quote link copied!');
+                                                else toast.error('Could not copy automatically. Link: ' + link);
                                             }}
                                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 mx-auto bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg hover:bg-emerald-600 hover:text-white transition-all font-bold text-xs shadow-sm shadow-emerald-200/50"
-                                            title="Copy Price Quote Message"
+                                            title="Copy price quote link"
                                         >
                                             <LinkIcon size={14} />
                                             <span>Copy Link</span>
@@ -1321,7 +1323,7 @@ const SitterChoicesModal: React.FC<{
                                         {Number(choice.final_choice) === 1 ? (
                                             <div className="flex items-center gap-2">
                                                 <button
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                         const link = `${window.location.origin}/contract/${choice.id}`;
                                                         const lang = userLanguage || 'en';
                                                         const name = parentName || 'Client';
@@ -1353,8 +1355,9 @@ Best regards,
 Team Bloom`;
                                                         }
                                                         
-                                                        navigator.clipboard.writeText(message);
-                                                        toast.success('Contract message copied!');
+                                                        const okMsg = await copyToClipboard(message);
+                                                        if (okMsg) toast.success('Contract message copied!');
+                                                        else toast.error('Could not copy automatically.');
                                                     }}
                                                     className="px-3 py-2 bg-brand-accent/5 text-brand-accent rounded-xl hover:bg-brand-accent hover:text-white transition-all border border-brand-accent/10 shadow-sm font-bold text-[11px] flex items-center gap-1.5 whitespace-nowrap"
                                                     title="Copy Contract Message"
@@ -1563,9 +1566,10 @@ const PendingSignatureView = ({ searchQuery, onSearchChange }: { searchQuery: st
     });
     const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    const copyContractLink = (choiceId: number) => {
-        navigator.clipboard.writeText(`${window.location.origin}/contract/${choiceId}`);
-        toast.success('Contract link copied!');
+    const copyContractLink = async (choiceId: number) => {
+        const ok = await copyToClipboard(`${window.location.origin}/contract/${choiceId}`);
+        if (ok) toast.success('Contract link copied!');
+        else toast.error('Could not copy automatically.');
     };
 
     return (
@@ -1672,9 +1676,10 @@ const PendingBabysitterSignatureView = ({ searchQuery, onSearchChange }: { searc
 
     const babysitterContractUrl = (choiceId: number) => `${window.location.origin}/babysitter-contract/${choiceId}`;
 
-    const copyLink = (choiceId: number) => {
-        navigator.clipboard.writeText(babysitterContractUrl(choiceId));
-        toast.success(language === 'fr' ? 'Lien du contrat copié !' : 'Contract link copied!');
+    const copyLink = async (choiceId: number) => {
+        const ok = await copyToClipboard(babysitterContractUrl(choiceId));
+        if (ok) toast.success(language === 'fr' ? 'Lien du contrat copié !' : 'Contract link copied!');
+        else toast.error(language === 'fr' ? 'Copie impossible automatiquement.' : 'Could not copy automatically.');
     };
 
     return (
@@ -1907,13 +1912,15 @@ const CompletedSignedRequestsView = ({ searchQuery, onSearchChange }: { searchQu
 
 const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (val: string) => void }) => {
     const { language } = useLanguage();
-    const copyDetails = (req: any) => {
-        navigator.clipboard.writeText(buildRequestDetailsText(req, language === 'fr'));
-        toast.success(language === 'fr' ? 'Détails copiés !' : 'Details copied!');
+    const copyDetails = async (req: any) => {
+        const ok = await copyToClipboard(buildRequestDetailsText(req, language === 'fr'));
+        if (ok) toast.success(language === 'fr' ? 'Détails copiés !' : 'Details copied!');
+        else toast.error(language === 'fr' ? 'Copie impossible automatiquement.' : 'Could not copy automatically.');
     };
-    const copyMatchLink = (req: any) => {
-        navigator.clipboard.writeText(`${window.location.origin}/match/${req.id}`);
-        toast.success(language === 'fr' ? 'Lien copié !' : 'Link copied!');
+    const copyMatchLink = async (req: any) => {
+        const ok = await copyToClipboard(`${window.location.origin}/match/${req.id}`);
+        if (ok) toast.success(language === 'fr' ? 'Lien copié !' : 'Link copied!');
+        else toast.error(language === 'fr' ? 'Copie impossible automatiquement.' : 'Could not copy automatically.');
     };
     const [requests, setRequests] = useState<import('../services/api').ParentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -3572,6 +3579,11 @@ const UsersView = ({ onViewUser, searchQuery, onSearchChange }: { onViewUser: (i
                                                     <UserIcon size={14} />
                                                 </div>
                                                 <span className="font-bold text-slate-800">{user.first_name || ''} {user.last_name || ''}</span>
+                                                {user.client_type === 'tourist' ? (
+                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">Tourist</span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-sky-50 text-sky-600 border border-sky-100">Resident</span>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-slate-600 font-medium text-sm align-top">{user.email || 'N/A'}</td>
@@ -4335,6 +4347,8 @@ const EditUserModal = ({ user, onClose, onUpdate }: { user: User; onClose: () =>
         user_phone: user.user_phone || '',
         user_address: user.user_address || '',
         cmg_num: user.cmg_num || '',
+        client_type: (user.client_type || 'resident') as 'resident' | 'tourist',
+        user_language: (user.user_language || 'fr') as 'en' | 'fr',
         lat: '',
         lng: ''
     });
@@ -4472,6 +4486,44 @@ const EditUserModal = ({ user, onClose, onUpdate }: { user: User; onClose: () =>
                                 onChange={(e) => setFormData({ ...formData, cmg_num: e.target.value })}
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all text-sm font-bold"
                             />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Client Type</label>
+                            <div className="flex items-center gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, client_type: 'tourist' })}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.client_type === 'tourist' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    Tourist
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, client_type: 'resident' })}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.client_type === 'resident' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    French Resident
+                                </button>
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Preferred Language</label>
+                            <div className="flex items-center gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, user_language: 'en' })}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.user_language === 'en' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    English
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, user_language: 'fr' })}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.user_language === 'fr' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    Français
+                                </button>
+                            </div>
                         </div>
                     </div>
 

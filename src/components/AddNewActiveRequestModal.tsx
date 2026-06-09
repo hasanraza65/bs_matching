@@ -18,6 +18,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../services/api';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface AddNewActiveRequestModalProps {
   onClose: () => void;
@@ -53,7 +54,9 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
     user_phone: '',
     parent_address: '',
     hourly_rate: '27.99',
-    user_language: 'en' as 'en' | 'fr',
+    // No default — the admin must explicitly pick the language and client type.
+    user_language: '' as '' | 'en' | 'fr',
+    client_type: '' as '' | 'resident' | 'tourist',
     lat: undefined as number | undefined,
     lng: undefined as number | undefined,
     children: [{ child_dob: '' }],
@@ -206,6 +209,8 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
     if (!formData.user_phone) errors.push('Phone Number');
     if (!formData.parent_address) errors.push('Address');
     if (!formData.hourly_rate) errors.push('Hourly Rate');
+    if (!formData.client_type) errors.push('Client Type');
+    if (!formData.user_language) errors.push('Preferred Language');
 
     if (errors.length > 0) {
       toast.error(`Please fill in required details: ${errors.join(', ')}`);
@@ -241,7 +246,8 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
         children: formData.children,
         schedules: formData.schedules,
         hourly_rate: formData.hourly_rate,
-        user_language: formData.user_language,
+        user_language: formData.user_language as 'en' | 'fr',
+        client_type: formData.client_type as 'resident' | 'tourist',
         board_status: 'In Matching',
         from_admin: true,
         lat: formData.lat,
@@ -379,15 +385,36 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
                 />
               </div>
               <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Client Type</label>
+                <div className="flex items-center gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => handleChange('client_type', 'tourist')}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.client_type === 'tourist' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    Tourist
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChange('client_type', 'resident')}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.client_type === 'resident' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    French Resident
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Preferred Language</label>
                 <div className="flex items-center gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl">
                   <button
+                    type="button"
                     onClick={() => handleChange('user_language', 'en')}
                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.user_language === 'en' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
                   >
                     English
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleChange('user_language', 'fr')}
                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.user_language === 'fr' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
                   >
@@ -572,11 +599,12 @@ export const AddNewActiveRequestModal: React.FC<AddNewActiveRequestModalProps> =
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (createdRequestId) {
-                      const link = `https://ponctuel.bloom-buddies.fr/price/${createdRequestId}`;
-                      navigator.clipboard.writeText(link);
-                      toast.success('Price Quote link copied!');
+                      const link = `${window.location.origin}/price/${createdRequestId}`;
+                      const ok = await copyToClipboard(link);
+                      if (ok) toast.success('Price Quote link copied!');
+                      else toast.error('Could not copy automatically. Link: ' + link);
                     }
                   }}
                   className="w-full sm:w-auto px-8 py-4 bg-emerald-50 text-emerald-600 text-sm font-black rounded-2xl hover:bg-emerald-100 transition-all border border-emerald-100 flex items-center justify-center gap-2 shadow-sm active:scale-95"
