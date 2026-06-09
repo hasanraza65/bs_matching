@@ -1694,8 +1694,8 @@ export default function App() {
                     onClick={() => setAccountMenuOpen(o => !o)}
                     className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-2xl bg-white border border-slate-200 hover:border-brand-accent transition-all"
                   >
-                    <div className="w-8 h-8 rounded-xl bg-brand-accent/10 text-brand-accent flex items-center justify-center shrink-0">
-                      <UserIcon size={16} />
+                    <div className="w-8 h-8 rounded-xl bg-brand-accent/10 text-brand-accent flex items-center justify-center shrink-0 overflow-hidden">
+                      <img src={user?.profile_pic || '/profile_picture.png'} alt="" className="w-full h-full object-cover" />
                     </div>
                     <span className="hidden md:inline font-bold text-sm text-slate-700 max-w-[120px] truncate">
                       {user?.first_name || t.profilePage.title}

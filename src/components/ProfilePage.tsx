@@ -29,14 +29,14 @@ import {
   Star,
   Check,
   ShieldCheck,
-  MessageCircle
+  MessageCircle,
+  Camera
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { api, User, Invoice, Attestation } from '../services/api';
 import { interviewRoomUrl } from '../utils/interview';
 import { InvoicePaymentModal } from './InvoicePaymentModal';
 import { AddCardModal } from './AddCardModal';
-import { StatusBadge } from './StatusBadge';
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -92,6 +92,29 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     onConfirm: () => { },
   });
   const [rejectingChoice, setRejectingChoice] = useState<number | null>(null);
+  const [isUploadingPic, setIsUploadingPic] = useState(false);
+  const profilePicInputRef = React.useRef<HTMLInputElement>(null);
+
+  /** Upload a new profile picture (phone camera/gallery or file) and persist it. */
+  const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (e.target) e.target.value = ''; // allow re-selecting the same file later
+    if (!file || !user) return;
+    setIsUploadingPic(true);
+    try {
+      const res = await api.uploadProfilePicture(file);
+      if (res?.status) {
+        setUser({ ...user, profile_pic: res.profile_pic || res.data?.profile_pic || null });
+      } else {
+        alert(res?.message || (language === 'fr' ? 'Échec du téléversement de la photo.' : 'Photo upload failed.'));
+      }
+    } catch (err: any) {
+      console.error('Profile picture upload failed:', err);
+      alert(err?.response?.data?.message || (language === 'fr' ? 'Échec du téléversement de la photo.' : 'Photo upload failed.'));
+    } finally {
+      setIsUploadingPic(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -354,16 +377,39 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               </button>
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-slate-900 tracking-tight">
-              {t.profilePage?.title?.split(' ')[0] || 'VOTRE'}
+              {user?.first_name
+                ? `${language === 'fr' ? 'Bonjour' : 'Hello'}, ${user.first_name}`
+                : (t.profilePage?.title || (language === 'fr' ? 'Mon espace' : 'My space'))}
               <span className="text-brand-accent">.</span>
               <span className="block text-xl md:text-3xl text-slate-400 font-medium mt-1 leading-tight">{t.profilePage?.subtitle}</span>
             </h1>
           </div>
 
           <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-2 pr-4 sm:pr-6 rounded-[24px] sm:rounded-[32px] border border-white shadow-xl shadow-slate-200/50">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-brand-accent rounded-[18px] sm:rounded-[24px] flex items-center justify-center text-white shadow-lg shadow-brand-accent/30 shrink-0">
-              <UserIcon size={24} className="sm:w-8 sm:h-8" />
-            </div>
+            <input
+              ref={profilePicInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePicChange}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => !isUploadingPic && profilePicInputRef.current?.click()}
+              disabled={isUploadingPic}
+              title={language === 'fr' ? 'Changer la photo' : 'Change photo'}
+              className="group relative w-12 h-12 sm:w-16 sm:h-16 bg-brand-accent rounded-[18px] sm:rounded-[24px] flex items-center justify-center text-white shadow-lg shadow-brand-accent/30 shrink-0 overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+            >
+              <img src={user?.profile_pic || '/profile_picture.png'} alt="" className="w-full h-full object-cover" />
+              {/* Hover/upload overlay */}
+              <span className={`absolute inset-0 flex items-center justify-center bg-slate-900/45 transition-opacity ${isUploadingPic ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                {isUploadingPic ? (
+                  <Loader2 size={18} className="animate-spin text-white" />
+                ) : (
+                  <Camera size={18} className="text-white" />
+                )}
+              </span>
+            </button>
             <div className="min-w-0">
               <p className="text-[10px] sm:text-[11px] font-bold text-brand-accent tracking-wide mb-0.5 truncate">
                 {language === 'fr' ? 'Famille Bloom' : 'Bloom Family'}
@@ -471,15 +517,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             <div>
                               <div className="flex items-center gap-2 sm:gap-3 mb-1">
                                 <span className="text-lg sm:text-xl font-display font-bold text-slate-900 tracking-tight">REQ-{req.id}</span>
-                                {(() => {
-                                  const hasSchedules = req.schedules && req.schedules.length > 0;
-                                  const hasSlots = hasSchedules && req.schedules.every((s: any) => s.slots && s.slots.length > 0);
-                                  const hasChoices = req.choices && req.choices.length > 0;
-                                  const isActive = hasSchedules && hasSlots && hasChoices;
-
-                                  const status = req.request_current_status || (isActive ? 'active' : 'new');
-                                  return <StatusBadge status={status} />;
-                                })()}
                               </div>
                               <p className="text-[10px] sm:text-xs text-slate-400 font-medium">
                                 Created on {req.created_at ? new Date(req.created_at).toLocaleDateString('en-GB') : '--'}

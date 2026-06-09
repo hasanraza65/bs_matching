@@ -129,6 +129,7 @@ export interface User {
   default_payment_method?: string;
   cmg_num?: string;
   user_language?: 'en' | 'fr';
+  profile_pic?: string | null;
   children?: Child[];
   parent_requests?: ParentRequest[];
   invoices?: Invoice[];
@@ -717,6 +718,17 @@ export const api = {
     return response.data;
   },
   
+  // Upload / replace the authenticated user's profile picture. Returns
+  // { status, profile_pic (full URL), data: user }.
+  uploadProfilePicture: async (file: File): Promise<any> => {
+    const form = new FormData();
+    form.append("profile_pic", file);
+    const response = await apiClient.post("/update-profile-picture", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
   setDefaultCard: async (paymentMethodId: string): Promise<any> => {
     const response = await apiClient.post("/set-default-card", {
       payment_method_id: paymentMethodId,

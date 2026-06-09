@@ -20,6 +20,11 @@ const buildInvoiceHtml = (
     return `${day}/${month}/${year}`;
   };
 
+  // French monetary format: comma decimal separator, space thousands, € suffix
+  // (e.g. "1 234,56 €").
+  const formatMoney = (n: number) =>
+    `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+
   const dueDate = formatDate(invoice.due_date);
   const billingMonth = new Date(invoice.due_date).toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' });
   const brandTeal = '#38B2AC';
@@ -64,7 +69,7 @@ const buildInvoiceHtml = (
         .total-row { display: flex; justify-content: space-between; width: 320px; padding: 10px 16px; font-size: 14px; color: #64748b; }
         .total-row.grand-total { background: #f8fafc; border-radius: 12px; margin-top: 12px; padding: 16px; font-weight: 800; font-size: 18px; color: #0f172a; }
 
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-badge { display: inline-flex; align-items: center; justify-content: center; padding: 7px 14px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; vertical-align: middle; }
 
         .footer { margin-top: 80px; padding-top: 32px; border-top: 1px solid #f1f5f9; color: #94a3b8; font-size: 11px; }
         .footer strong { color: #64748b; }
@@ -96,10 +101,10 @@ const buildInvoiceHtml = (
         <div class="billing-box">
             <div class="billing-label">Nos Coordonnées</div>
             <div class="billing-info">
-                <strong>NannyMatch SAS</strong><br>
-                123 Boulevard Haussmann<br>
-                75008 Paris, France<br>
-                contact@nannymatch.fr
+                <strong>Bloom Buddies Babysitting</strong><br>
+                7 rue Meyerbeer<br>
+                75009 Paris<br>
+                Hello@bloom-buddies.fr
             </div>
         </div>
         <div class="billing-box" style="text-align: right;">
@@ -113,7 +118,7 @@ const buildInvoiceHtml = (
     </div>
 
     <div class="invoice-summary">
-        <div class="summary-amount">€${totalAmount.toFixed(2)}</div>
+        <div class="summary-amount">${formatMoney(totalAmount)}</div>
         <div class="summary-note">Montant total dû au ${dueDate}</div>
     </div>
 
@@ -130,8 +135,8 @@ const buildInvoiceHtml = (
             <tr>
                 <td style="font-weight: 600;">Services de garde d'enfants - ${billingMonth}</td>
                 <td class="qty">${invoice.billable_hours}</td>
-                <td class="price">€${totalAmount.toFixed(2)}</td>
-                <td class="amount">€${totalAmount.toFixed(2)}</td>
+                <td class="price">${formatMoney(totalAmount)}</td>
+                <td class="amount">${formatMoney(totalAmount)}</td>
             </tr>
         </tbody>
     </table>
@@ -139,21 +144,21 @@ const buildInvoiceHtml = (
     <div class="totals">
         <div class="total-row">
             <span>Sous-total (Hors Taxe)</span>
-            <span>€${subTotalExclTax.toFixed(2)}</span>
+            <span>${formatMoney(subTotalExclTax)}</span>
         </div>
         <div class="total-row">
             <span>TVA (10%)</span>
-            <span>€${vatAmount.toFixed(2)}</span>
+            <span>${formatMoney(vatAmount)}</span>
         </div>
         <div class="total-row grand-total">
             <span style="color: ${brandTeal}">Montant Total</span>
-            <span>€${totalAmount.toFixed(2)}</span>
+            <span>${formatMoney(totalAmount)}</span>
         </div>
     </div>
 
     <div class="footer">
         <p><strong>Informations de paiement</strong></p>
-        <p>Merci d'avoir choisi NannyMatch pour vos besoins de garde d'enfants.</p>
+        <p>Merci d'avoir choisi Bloom Buddies pour vos besoins de garde d'enfants.</p>
         <p>Cette facture est soumise à nos conditions générales de vente.</p>
         <p style="margin-top: 24px; font-size: 9px; opacity: 0.7;">${invoice.invoice_num} • Générée le ${formatDate(new Date())}</p>
     </div>

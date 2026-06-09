@@ -236,7 +236,8 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-white rounded-[40px] p-10 w-full max-w-md shadow-2xl relative z-10 overflow-hidden"
+        className="bg-white rounded-[40px] p-6 sm:p-8 w-full shadow-2xl relative z-10 overflow-x-hidden overflow-y-auto max-h-[92vh] no-scrollbar"
+        style={{ maxWidth: '620px' }}
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -mr-16 -mt-16 blur-2xl" />
 
@@ -259,7 +260,7 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
               </button>
             </div>
 
-            <div className="text-center mb-6">
+            <div className="text-center mb-4">
               <h3 className="text-2xl font-display font-bold text-slate-900 mb-2 uppercase tracking-tight">
                 {isProcessing ? t.processing : (language === 'fr' ? 'Payer la Facture' : 'Pay Invoice')}
               </h3>
@@ -268,32 +269,39 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
               </p>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-5 mb-6 border border-slate-100 flex justify-between items-center relative z-10">
-              <span className="text-slate-500 font-medium">{language === 'fr' ? 'Montant à payer' : 'Amount to pay'}</span>
-              <span className="text-2xl font-display font-bold text-brand-blue">
-                {formatCurrency(parseFloat(invoice.amount))}
-              </span>
-            </div>
+            {/* Payment body: amount + method on the left, inputs on the right */}
+            <div className="grid sm:grid-cols-2 gap-5 mb-5 relative z-10 items-start">
+              {/* LEFT: amount + payment method */}
+              <div className="space-y-4">
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex justify-between items-center">
+                  <span className="text-slate-500 font-medium text-sm">{language === 'fr' ? 'Montant à payer' : 'Amount to pay'}</span>
+                  <span className="text-xl font-display font-bold text-brand-blue">
+                    {formatCurrency(parseFloat(invoice.amount))}
+                  </span>
+                </div>
 
-            {/* Payment method selector (Card / Bank transfer / CESU) */}
-            <div className="grid grid-cols-3 gap-2 mb-6 relative z-10">
-              {([
-                { key: 'card', label: language === 'fr' ? 'Carte' : 'Card', icon: <CreditCard size={16} /> },
-                { key: 'bank', label: language === 'fr' ? 'Virement' : 'Transfer', icon: <Landmark size={16} /> },
-                { key: 'cesu', label: 'CESU', icon: <FileText size={16} /> },
-              ] as const).map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => { setPaymentMethod(opt.key); setError(null); }}
-                  disabled={isProcessing}
-                  className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-[11px] font-bold transition-all ${paymentMethod === opt.key ? 'border-brand-blue bg-brand-blue/5 text-brand-blue shadow-sm' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
-                >
-                  {opt.icon}
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+                {/* Payment method selector (Card / Bank transfer / CESU) */}
+                <div className={`space-y-2 transition-opacity duration-300 ${isProcessing ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                  {([
+                    { key: 'card', label: language === 'fr' ? 'Carte de crédit' : 'Credit card', icon: <CreditCard size={16} /> },
+                    { key: 'bank', label: language === 'fr' ? 'Virement bancaire' : 'Bank transfer', icon: <Landmark size={16} /> },
+                    { key: 'cesu', label: 'CESU', icon: <FileText size={16} /> },
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => { setPaymentMethod(opt.key); setError(null); }}
+                      disabled={isProcessing}
+                      className={`w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl border text-xs font-bold transition-all ${paymentMethod === opt.key ? 'border-brand-blue bg-brand-blue/5 text-brand-blue shadow-sm' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    >
+                      {opt.icon}
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
+              {/* RIGHT: method-specific inputs */}
+              <div className="min-w-0">
             {/* Payment Mode Toggle (only if saved cards exist) */}
             {hasSavedCards && paymentMethod === 'card' && (
               <div className="flex p-1 bg-slate-100/50 rounded-2xl mb-6 border border-slate-200/50">
@@ -487,6 +495,8 @@ const InvoicePaymentModalInner: React.FC<InvoicePaymentModalProps> = ({ isOpen, 
                 )}
               </div>
             )}
+              </div>
+            </div>
 
             <div className={`px-2 relative z-10 transition-opacity duration-300 ${isProcessing ? 'opacity-0' : 'opacity-100'}`}>
               <SlideToAccept

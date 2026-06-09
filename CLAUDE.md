@@ -1,44 +1,47 @@
-# CLAUDE.md — Ponctuel (Bloom Buddies) project state
+# CLAUDE.md — Ponctuel / Bloom Buddies (babysitting platform)
 
-## Repos (two, both cloned locally)
-- **Frontend** `~/ponctual-module` (React 19 + Vite + Tailwind v4, TS). This repo. Public GitHub `Enqavon-Technologie/ponctual-module`.
-- **Backend** `~/ponctual_tourist_laravel` (Laravel 10/11, PHP 8.3, Sanctum). Private GitHub `Enqavon-Technologie/ponctual_tourist_laravel`.
-- Frontend talks to backend via `VITE_API_BASE_URL`. **Prod backend** = `https://ponctuel.bloom-buddies.fr/backend/public/api`. The **live prod backend differs from the repo** (has manually-added DB columns + allows `ponctuel@` admin login) — repo migrations were incomplete.
+## Repos (both cloned locally)
+- **Frontend** `~/ponctual-module` — React 19 + Vite + Tailwind v4 + TS. GitHub `Enqavon-Technologie/ponctual-module`. Branch: **`feature/persistent-login`** (HEAD `8805b19`, pushed).
+- **Backend** `~/ponctual_tourist_laravel` — Laravel 10/11, PHP 8.3, Sanctum (SQLite locally). GitHub `Enqavon-Technologie/ponctual_tourist_laravel`. Branch: **`feature/matching-phase4`** (HEAD `f8a4033`, pushed).
+- FE→BE via `VITE_API_BASE_URL`. Prod BE = `https://ponctuel.bloom-buddies.fr/backend/public/api`. **Prod DB differs from repo** (manual columns); nothing from these branches is deployed to prod yet.
 
 ## Architecture
-- Parent booking flow (`src/App.tsx`): now **3 steps** (was 4). Step3 = price quote → confirm modal → `acceptPriceQuote` → dashboard. Routes: `/price/:id`, `/contract/:id`, `/match/:id`, `/cmg/:id`. View state machine: `booking|profile|login|admin-dashboard|contract|match`.
-- Admin back office (`src/components/AdminDashboard.tsx`, ~4k lines): sidebar pages. Key: **Pending Requests** (`/new-requests`, FE-filtered `quote_status!=1`), **Requests in Matching** (`/matching-requests`, `quote_status=1` & no final_choice), **Pending Signature & Payment** (`/pending-signature-requests`, has final_choice + unsigned contract).
-- Auth = Sanctum bearer token in `localStorage.auth_token` + `auth_role`. `checkAuth` (App.tsx) optimistically restores from `auth_role` and **never auto-logs-out on 401** (persistence fix). Admin email `ponctuel@bloom-buddies.fr`.
+- **Auth**: Sanctum bearer in `localStorage.auth_token` + `auth_role`. `checkAuth` (App.tsx) optimistically restores from `auth_role`, never auto-logs-out on 401. Admin = `ponctuel@bloom-buddies.fr`. Local login is OTP/email-based (no SMTP locally) → log in by injecting a token in console: `localStorage.setItem('auth_token','<tok>');localStorage.setItem('auth_role','parent'|'admin');location.href='/'`.
+- **Booking flow** (`src/App.tsx`): 3 steps → price quote → `acceptPriceQuote` → **parent dashboard** (full reload to `/`; register sets `auth_role='parent'` so reload routes correctly). Logged-in "new request" pre-fills name/address/children from account. Routes parsed in App.tsx: `/price/:id`, `/contract/:id`, `/match/:id`, `/cmg/:id`. Standalone routes mounted in `main.tsx`: `/interview/:channel`, `/babysitter-contract/:choiceId`.
+- **Admin** (`src/components/AdminDashboard.tsx`, ~4k lines): sidebar = Pending Requests · Requests in Matching · Pending Signature & Payment · **Pending Babysitter Signature** · **Completed Requests** · **All Parents**. (Invoices/Contracts/Attestations sidebar items commented out — now shown inside the parent's detail page; "All Users"→"All Parents".) Header logo says "Punctual Babysitting".
+- **Parent dashboard** (`src/components/ProfilePage.tsx`): request card computes a `stage` mirroring admin: `awaiting → proposed → final-choice → contract → completed`, each with a banner. No "Modifier" button (delete only while `awaiting`). Tabs: Mes Demandes · CMG · Factures · Attestations. Header has a consolidated **account menu** (dashboard / new request / logout); EN/FR toggle visible on mobile.
 
-## Current task: the MATCHING feature (admin proposes → family picks → final choice)
-Flow: admin **proposes 3-5** candidates (external dir `bloom-buddies.fr/api/all-bs-for-api`) → family emailed `/match/:id` → family **selects + schedules video interviews** → admin **makes final choice** (creates contract) → request moves to Pending Signature.
-- Choice lifecycle via `parent_babysitter_choices.status`: `proposed`→`selected`→`rejected`; `final_choice=1` = hired.
-- Key FE components: `MatchSelectionView` (parent `/match/:id`), `MatchPicksContent` (admin inline candidate panel), `ProposeCandidatesModal`, `InterviewScheduler` (shared, date+time inputs, video-interview), `src/utils/requestDetails.ts` (copy-details text + 13.22€/h gross salary).
-- Key BE endpoints (`ParentBabysitterChoiceController` + `ParentRequestController`): `matchingRequests`, `proposeCandidates`, `proposedCandidates`/`selectCandidates` (parent), `pendingSignatureRequests`, `scheduleInterview` (admin reschedule), `updateFinalChoice` (creates contract+emails).
-- **Video interviews = Agora** (replaced Zoom). Deterministic channel `interview_{choiceId}`; FE room at `/interview/:channel` (standalone, rendered in `main.tsx`, no account) using `agora-rtc-sdk-ng` (`src/components/InterviewRoom.tsx`); link built FE-side via `src/utils/interview.ts` (`interviewRoomUrl`) from `window.location.origin`, BE-side via `interviewRoomLink()` from `APP_URL` (for emails). First to open the link creates the room. **Token auth required** (project has App Certificate): BE token server `AgoraTokenController@token` (`GET /api/agora/token`, public) using vendored `app/Agora/RtcTokenBuilder2.php` (AccessToken2 007, uid 0 wildcard, publisher). Creds: BE `.env` `AGORA_APP_ID`/`AGORA_APP_CERTIFICATE` (+`config/services.php` `services.agora`). DB column kept as `zoom_meeting_link` (now holds the Agora URL) to avoid a risky prod rename. **BLOCKER: provided App ID + Certificate don't validate together → Agora "invalid vendor key, can not find appid"; need a matching pair from the same Agora project.**
+## Full request lifecycle (core feature — WORKS end-to-end locally)
+1. Parent books → quote → accept → dashboard (`request awaiting`).
+2. Admin **proposes** 3-5 candidates (ext dir `bloom-buddies.fr/api/all-bs-for-api`) → parent emailed `/match/:id`.
+3. Parent **selects** candidates + schedules **Agora video interviews** (`parent_babysitter_choices.status`: proposed→selected→rejected).
+4. Admin **final choice** (`final_choice=1`) → creates `contract` → request → **Pending Signature & Payment**.
+5. Parent **signs+pays** first month at `/contract/:choiceId` (card via Stripe, OR bank/CESU + proof upload). Contract `status=1`.
+6. On payment, BE auto-generates **one invoice per month** (month 1 Paid, rest Pending, due end-of-month) AND **auto-generates the babysitter contract + emails them** a signing link → request → **Pending Babysitter Signature**.
+7. Babysitter opens `/babysitter-contract/:choiceId` (no account), enters DOB/SSN, signs (CDD template in `BabysitterContractView.tsx`, PDF via `utils/babysitterContractPdf.ts`). Sets `contracts.babysitter_signed_at` → request → **Completed Requests** (with total hours + revenue, downloadable parent & babysitter PDFs).
+8. **Subsequent monthly invoices**: parent pays each from Factures tab via `InvoicePaymentModal` — now supports **Card / Virement / CESU** (proof upload) just like the contract popup.
 
-## Works (verified locally end-to-end)
-Admin login (role-based), Requests-in-Matching card UI, propose, parent `/match/:id` select + interview (time input, auto-opens scheduler on select), select-candidates save, final choice, admin schedule/reschedule + copy invitation, real profile pics, persistent login.
+Key BE: `ParentBabysitterChoiceController`, `ParentRequestController` (`pendingBabysitterSignatureRequests`, `completedContractRequests`), `BabysitterContractController` (show/sign), `PaymentController` (`submitPaymentProof` contract, `submitInvoiceProof` per-invoice, `confirmInvoicePayment`), `AgoraTokenController`. Migrations add: `zoom_meeting_link`/`babysitter_*` cols on contracts, `payment_proof` on invoices.
+
+## Agora video interviews (WORKS — token bug fixed this session)
+Deterministic channel `interview_{choiceId}`; standalone FE room `/interview/:channel` (`InterviewRoom.tsx`, `agora-rtc-sdk-ng`, name-gated lobby, equal-size grid, token-auth). BE token server `AgoraTokenController@token` (`GET /api/agora/token`, public) using vendored `app/Agora/RtcTokenBuilder2.php`. **Two bugs fixed**: 007 token must be `gzcompress`'d; HMAC key/message were swapped in `getSign()`. Verified byte-identical to Agora's official lib; live join authenticates. Creds in BE `.env`: `AGORA_APP_ID=8d99e215697c43b2ad3ac0debafbeb1a`, `AGORA_APP_CERTIFICATE=789f5c6904c647818c6da85046fd18c1` (+`config/services.php`). DB column kept named `zoom_meeting_link` (holds Agora URL) to avoid risky prod rename.
 
 ## Broken / gaps
-- **Nothing is deployed to prod backend** → all new pages are empty on the live site until backend PRs deploy + `php artisan migrate`. This is THE blocker.
-- Zoom not configured locally (handled: `createZoomMeeting` is now non-fatal, returns `[]`). Stripe not configured → `getUser` (`/auth/user`) 500s locally (harmless; persistence keeps admin in).
-- `getUser` calls Stripe `PaymentMethod::all` — 500 if user has no `stripe_customer_id`.
-- Frontend `MatchPicksModal.tsx` is now DEAD (replaced by inline `MatchPicksContent`) — delete on commit.
-- `InterviewScheduler` duplicated (shared file + inline copy still in `MatchSelectionView`) — dedupe.
+- **No admin UI to view/verify uploaded payment proofs** (contract first-month + monthly invoices). Proofs are stored (`invoices.payment_proof`, public disk) and attached, but admin can't yet view/approve them. ← likely next task.
+- **No recurring auto-charge**: months 2+ are Pending invoices paid manually (card or proof); no Stripe subscription, no due-date reminder emails.
+- **Nothing deployed to prod** — needs `php artisan migrate` + `php artisan storage:link` + Agora env + `config:clear` on prod; restore FE `.env` `VITE_API_BASE_URL` to prod URL before FE deploy.
+- Camera-based video render only verifiable in a real browser w/ webcam (not headless preview).
 
 ## Local dev run
-- Backend: `cd ~/ponctual_tourist_laravel && php artisan serve --port=8000` (SQLite, `.env` set, `database/database.sqlite`). Seeder: `php artisan db:seed --class=LocalTestSeeder` (admin `ponctuel@bloom-buddies.fr`/`password`, family Jane Doe req#1 `quote_status=1`).
-- Frontend `.env` currently points `VITE_API_BASE_URL=http://localhost:8000/api` (**restore to prod URL before deploying FE**). Run via preview/vite.
-- Admin token for quick login (paste in console): `localStorage.setItem('auth_token','<from seeder>');localStorage.setItem('auth_role','admin');location.href='/'`
+- BE: `cd ~/ponctual_tourist_laravel && php artisan serve --port=8000` (run in background so it persists). Seeder: `php artisan db:seed --class=LocalTestSeeder`.
+- FE: Vite dev (preview tool, dynamic port). `.env` `VITE_API_BASE_URL=http://localhost:8000/api` (local-only, **git-ignored from commits — always `git restore --staged .env`**).
+- Demo data created this session: **Jane Doe** req#1 (completed flow); **Demo MultiMonth** `demo.multimonth@example.com`/`password` (user 17, 4-month booking, month-1 invoice paid + 3 pending — for testing the Factures/invoice-payment flow). Mint a token: `php artisan tinker --execute='echo App\Models\User::find(17)->createToken("x")->plainTextToken;'`
 
-## Git / PRs (stacked branches)
-- FE branches off `main`: `feature/booking-matching-overhaul`(P1,PR#17) → `feature/matching-phase2`(PR#18) → `phase3`(PR#19) → `phase4`(PR#20) → `feature/persistent-login`(PR#21).
-- BE branches: `feature/manual-payment-proof`(PR#1), `feature/matching-phase1`(PR#2) → `phase2`(PR#3) → `phase4`(PR#4, has parity migration fixes).
-- **UNCOMMITTED** — FE on branch `feature/persistent-login`: card redesign of Requests-in-Matching, video scheduler (time input)+auto-open-on-select, admin schedule/reschedule+invite, copy-details-on-row, `LoginScreen` real-error fix, new `InterviewScheduler.tsx`/`MatchPicksContent.tsx`/`utils/requestDetails.ts`. BE on branch `feature/matching-phase4`: `babysitter_pic` parity col, role-based admin login (`AuthController@login`), Zoom-non-fatal (`createZoomMeeting`), `schedule-interview` endpoint, `LocalTestSeeder`, migration parity fixes. **Local `.env`/`database.sqlite` are git-ignored (won't commit).**
+## Git
+All work committed + pushed (FE `8805b19`, BE `f8a4033`). Commit messages end with `Co-Authored-By: Claude Opus 4.8`. **Always exclude `.env`** when committing FE.
 
 ## Immediate next steps
-1. **Commit** the uncommitted batch (FE + BE), delete dead `MatchPicksModal.tsx`, dedupe `InterviewScheduler`, push, update/open PRs.
-2. **Deploy backend** to prod (merge PRs → `git pull` on server → `php artisan migrate` → cache clear). This unblocks everything.
-3. Restore FE `.env` `VITE_API_BASE_URL` to prod before FE deploy.
-4. Security follow-up (separate): repo `d5da707` history had an RCE backdoor (removed in FE commit `ca9430a` but still in older history) — purge history (`git filter-repo`) + rotate the admin password (shared in old chat) & any tokens.
+1. **Admin proof viewer/verifier**: surface `invoices.payment_proof` (and contract first-month proof) in the admin invoice/pending views; let admin mark verified → `Paid`.
+2. (Optional) recurring billing: Stripe subscription OR due-date reminder emails for monthly invoices.
+3. Deploy to prod (see Broken/gaps) + restore prod FE `.env`.
+4. Old security follow-up: purge RCE backdoor from FE git history (`git filter-repo`) + rotate admin password/tokens.
