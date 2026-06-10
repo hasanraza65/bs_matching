@@ -25,7 +25,7 @@ interface Candidate {
 }
 
 const PHOTO_BASE = 'https://bloom-buddies.fr/uploads/profile_images/';
-const MIN_PICK = 3;
+const MIN_PICK = 2;
 const MAX_PICK = 5;
 
 const mapSitter = (item: any): Candidate => {

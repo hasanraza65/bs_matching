@@ -489,7 +489,7 @@ export const api = {
     return response.data;
   },
 
-  // Admin: propose 3-5 babysitter candidates to a family (emails the parent a pick link).
+  // Admin: propose 2-5 babysitter candidates to a family (emails the parent a pick link).
   proposeCandidates: async (data: {
     parent_request_id: number;
     choices: Array<{
