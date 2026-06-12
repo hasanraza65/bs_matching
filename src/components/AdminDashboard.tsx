@@ -1546,6 +1546,10 @@ const PendingSignatureView = ({ searchQuery, onSearchChange }: { searchQuery: st
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const fetchData = async () => {
         setIsLoading(true); setError(null);
         try {
@@ -1558,6 +1562,27 @@ const PendingSignatureView = ({ searchQuery, onSearchChange }: { searchQuery: st
         }
     };
     React.useEffect(() => { fetchData(); }, []);
+
+    const handleDeleteClick = (id: number) => { setRequestToDelete(id); setIsDeleteModalOpen(true); };
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
+            }
+        } catch {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     const filtered = requests.filter(req => {
         const name = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
@@ -1625,12 +1650,18 @@ const PendingSignatureView = ({ searchQuery, onSearchChange }: { searchQuery: st
                                             <span className="inline-block text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-100">Awaiting signature</span>
                                         </td>
                                         <td className="px-4 py-4 text-right align-top">
-                                            {finalChoice && (
-                                                <button onClick={() => copyContractLink((finalChoice as any).id)}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-accent/10 text-brand-accent text-xs font-bold rounded-xl hover:bg-brand-accent hover:text-white transition-all">
-                                                    <LinkIcon size={14} /> Copy contract link
+                                            <div className="inline-flex items-center gap-2">
+                                                {finalChoice && (
+                                                    <button onClick={() => copyContractLink((finalChoice as any).id)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-accent/10 text-brand-accent text-xs font-bold rounded-xl hover:bg-brand-accent hover:text-white transition-all">
+                                                        <LinkIcon size={14} /> Copy contract link
+                                                    </button>
+                                                )}
+                                                <button onClick={() => handleDeleteClick(req.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete request">
+                                                    <Trash2 size={16} />
                                                 </button>
-                                            )}
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -1640,6 +1671,19 @@ const PendingSignatureView = ({ searchQuery, onSearchChange }: { searchQuery: st
                 </div>
                 <Pagination totalItems={filtered.length} itemsPerPage={itemsPerPage} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
+
+            <AnimatePresence>
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => { setIsDeleteModalOpen(false); setRequestToDelete(null); }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this request? This will also remove its contract progress and cannot be undone."
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -1654,6 +1698,10 @@ const PendingBabysitterSignatureView = ({ searchQuery, onSearchChange }: { searc
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const fetchData = async () => {
         setIsLoading(true); setError(null);
         try {
@@ -1666,6 +1714,27 @@ const PendingBabysitterSignatureView = ({ searchQuery, onSearchChange }: { searc
         }
     };
     React.useEffect(() => { fetchData(); }, []);
+
+    const handleDeleteClick = (id: number) => { setRequestToDelete(id); setIsDeleteModalOpen(true); };
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
+            }
+        } catch {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     const filtered = requests.filter(req => {
         const name = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
@@ -1735,18 +1804,24 @@ const PendingBabysitterSignatureView = ({ searchQuery, onSearchChange }: { searc
                                             <span className="inline-block text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-100">Awaiting babysitter signature</span>
                                         </td>
                                         <td className="px-4 py-4 text-right align-top">
-                                            {finalChoice && (
-                                                <div className="inline-flex items-center gap-2">
-                                                    <a href={babysitterContractUrl((finalChoice as any).id)} target="_blank" rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all">
-                                                        <FileText size={14} /> Preview
-                                                    </a>
-                                                    <button onClick={() => copyLink((finalChoice as any).id)}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-accent/10 text-brand-accent text-xs font-bold rounded-xl hover:bg-brand-accent hover:text-white transition-all">
-                                                        <LinkIcon size={14} /> Copy contract link
-                                                    </button>
-                                                </div>
-                                            )}
+                                            <div className="inline-flex items-center gap-2">
+                                                {finalChoice && (
+                                                    <>
+                                                        <a href={babysitterContractUrl((finalChoice as any).id)} target="_blank" rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all">
+                                                            <FileText size={14} /> Preview
+                                                        </a>
+                                                        <button onClick={() => copyLink((finalChoice as any).id)}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-accent/10 text-brand-accent text-xs font-bold rounded-xl hover:bg-brand-accent hover:text-white transition-all">
+                                                            <LinkIcon size={14} /> Copy contract link
+                                                        </button>
+                                                    </>
+                                                )}
+                                                <button onClick={() => handleDeleteClick(req.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete request">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -1756,6 +1831,19 @@ const PendingBabysitterSignatureView = ({ searchQuery, onSearchChange }: { searc
                 </div>
                 <Pagination totalItems={filtered.length} itemsPerPage={itemsPerPage} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
+
+            <AnimatePresence>
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => { setIsDeleteModalOpen(false); setRequestToDelete(null); }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this request? This will also remove its contract progress and cannot be undone."
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -1771,6 +1859,10 @@ const CompletedSignedRequestsView = ({ searchQuery, onSearchChange }: { searchQu
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const fetchData = async () => {
         setIsLoading(true); setError(null);
         try {
@@ -1783,6 +1875,27 @@ const CompletedSignedRequestsView = ({ searchQuery, onSearchChange }: { searchQu
         }
     };
     React.useEffect(() => { fetchData(); }, []);
+
+    const handleDeleteClick = (id: number) => { setRequestToDelete(id); setIsDeleteModalOpen(true); };
+    const confirmDelete = async () => {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.removeParentRequest(requestToDelete);
+            if (response.status) {
+                toast.success('Request deleted successfully');
+                setRequests(requests.filter(r => r.id !== requestToDelete));
+                setIsDeleteModalOpen(false);
+                setRequestToDelete(null);
+            } else {
+                toast.error(response.message || 'Failed to delete request');
+            }
+        } catch {
+            toast.error('An error occurred while deleting');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     const filtered = requests.filter(req => {
         const name = `${req.user?.first_name} ${req.user?.last_name}`.toLowerCase();
@@ -1885,18 +1998,24 @@ const CompletedSignedRequestsView = ({ searchQuery, onSearchChange }: { searchQu
                                         <td className="px-4 py-4 align-top font-semibold text-slate-700">{Number(req.total_hours || 0).toFixed(2)} h</td>
                                         <td className="px-4 py-4 align-top font-bold text-brand-accent">{eur(req.total_revenue)}</td>
                                         <td className="px-4 py-4 text-right align-top">
-                                            {choiceId && (
-                                                <div className="inline-flex items-center gap-2">
-                                                    <button onClick={() => downloadParent(choiceId)} disabled={downloading === `p-${choiceId}`}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all disabled:opacity-60">
-                                                        {downloading === `p-${choiceId}` ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Parent
-                                                    </button>
-                                                    <button onClick={() => downloadBabysitter(choiceId)} disabled={downloading === `b-${choiceId}`}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-accent/10 text-brand-accent text-xs font-bold rounded-xl hover:bg-brand-accent hover:text-white transition-all disabled:opacity-60">
-                                                        {downloading === `b-${choiceId}` ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Babysitter
-                                                    </button>
-                                                </div>
-                                            )}
+                                            <div className="inline-flex items-center gap-2">
+                                                {choiceId && (
+                                                    <>
+                                                        <button onClick={() => downloadParent(choiceId)} disabled={downloading === `p-${choiceId}`}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all disabled:opacity-60">
+                                                            {downloading === `p-${choiceId}` ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Parent
+                                                        </button>
+                                                        <button onClick={() => downloadBabysitter(choiceId)} disabled={downloading === `b-${choiceId}`}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-accent/10 text-brand-accent text-xs font-bold rounded-xl hover:bg-brand-accent hover:text-white transition-all disabled:opacity-60">
+                                                            {downloading === `b-${choiceId}` ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Babysitter
+                                                        </button>
+                                                    </>
+                                                )}
+                                                <button onClick={() => handleDeleteClick(req.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete request">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -1906,6 +2025,19 @@ const CompletedSignedRequestsView = ({ searchQuery, onSearchChange }: { searchQu
                 </div>
                 <Pagination totalItems={filtered.length} itemsPerPage={itemsPerPage} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
+
+            <AnimatePresence>
+                {isDeleteModalOpen && (
+                    <DeleteConfirmationModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => { setIsDeleteModalOpen(false); setRequestToDelete(null); }}
+                        onConfirm={confirmDelete}
+                        isLoading={isDeleting}
+                        title="Delete Request"
+                        message="Are you sure you want to delete this completed request? This action cannot be undone."
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -2142,6 +2274,13 @@ const ActiveRequestsView = ({ searchQuery, onSearchChange }: { searchQuery: stri
                                         className="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent text-white text-xs font-bold rounded-xl hover:bg-[#66B2AC] transition-all shadow-sm shadow-brand-accent/20"
                                     >
                                         <Users size={14} /> {hasChoices ? 'Re-propose' : 'Propose candidates'}
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteClick(req.id)}
+                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                        title="Delete request"
+                                    >
+                                        <Trash2 size={16} />
                                     </button>
                                 </div>
                             </div>

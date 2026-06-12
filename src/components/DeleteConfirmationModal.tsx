@@ -11,6 +11,9 @@ interface DeleteConfirmationModalProps {
   confirmText?: string;
   cancelText?: string;
   isDeleting?: boolean;
+  // Callers pass either `isDeleting` or `isLoading` — accept both so the
+  // spinner/disabled state works regardless of which one is provided.
+  isLoading?: boolean;
 }
 
 export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
@@ -21,8 +24,10 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
   message = "Are you sure you want to delete this item? This action cannot be undone.",
   confirmText = "Delete",
   cancelText = "Cancel",
-  isDeleting = false
+  isDeleting = false,
+  isLoading = false
 }) => {
+  const busy = isDeleting || isLoading;
   return (
     <AnimatePresence>
       {isOpen && (
@@ -70,17 +75,17 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
             <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-3">
               <button
                 onClick={onClose}
-                disabled={isDeleting}
+                disabled={busy}
                 className="w-full sm:flex-1 py-4 text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-white rounded-2xl transition-all active:scale-95 disabled:opacity-50"
               >
                 {cancelText}
               </button>
               <button
                 onClick={onConfirm}
-                disabled={isDeleting}
+                disabled={busy}
                 className="w-full sm:flex-1 py-4 bg-red-600 text-white text-sm font-black rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {isDeleting ? (
+                {busy ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                     Deleting...

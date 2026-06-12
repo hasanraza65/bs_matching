@@ -342,9 +342,15 @@ export default function App() {
   const [selectedChoiceId, setSelectedChoiceId] = useState<number | null>(null);
   const [matchRequestId, setMatchRequestId] = useState<number | null>(null);
   const [autoShowCongrats, setAutoShowCongrats] = useState(false);
+  // Once a specific request is loaded onto the quote (e.g. /price/:id), THAT
+  // request's account is authoritative for eligibility — block the logged-in
+  // viewer (e.g. an admin previewing a tourist lead) from overriding it.
+  const requestEligibilityLoaded = useRef(false);
 
-  // Keep the quote eligibility in sync with a known account's client type.
+  // Keep the quote eligibility in sync with a known account's client type,
+  // but only during a fresh booking — never clobber a loaded request's setting.
   useEffect(() => {
+    if (requestEligibilityLoaded.current) return;
     if (user?.client_type) setIsResidentClient(user.client_type === 'resident');
   }, [user?.client_type]);
 
@@ -560,6 +566,18 @@ export default function App() {
     setParentRequestId(data.id);
     if (data.hourly_rate) {
       setHourlyRate(parseFloat(data.hourly_rate));
+    }
+    // The quote belongs to a specific request: its eligibility (CAF aid + 50%
+    // tax credit) and UI language follow the account on that request — which the
+    // admin may have flagged as tourist / English on the "Add a request" form —
+    // not the logged-in viewer. Tourists must not see the resident-only aids,
+    // and an English lead should land on EN.
+    if (data.user?.client_type) {
+      requestEligibilityLoaded.current = true;
+      setIsResidentClient(data.user.client_type === 'resident');
+    }
+    if (data.user?.user_language) {
+      setLanguage(data.user.user_language === 'fr' ? 'fr' : 'en');
     }
     setFormData({
       firstName: data.user?.first_name || user?.first_name || '',

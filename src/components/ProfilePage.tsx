@@ -498,20 +498,27 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 {user?.parent_requests && user.parent_requests.length > 0 ? (
                   user.parent_requests.map((req) => {
                     // Stage of the request, mirroring the admin back-office flow:
-                    // awaiting (quote accepted, no candidates yet) → proposed
-                    // (pick candidates) → final-choice (pick the one) → contract
-                    // (view + sign) → completed (contract signed).
+                    // quote (price quote not yet accepted — the parent must
+                    // validate it before we start) → awaiting (quote accepted,
+                    // no candidates yet) → proposed (pick candidates) →
+                    // final-choice (pick the one) → contract (view + sign) →
+                    // completed (contract signed).
                     const reqChoices: any[] = (req.choices as any[]) || [];
                     const hasProposed = reqChoices.some((c) => c.status === 'proposed');
                     const hasSelected = reqChoices.some((c) => c.status === 'selected');
                     const finalChoice = reqChoices.find((c) => Number(c.final_choice) === 1);
                     const contract = Array.isArray((req as any).contract) ? (req as any).contract[0] : (req as any).contract;
                     const contractSigned = !!contract && Number(contract.status) === 1;
-                    const stage: 'awaiting' | 'proposed' | 'final-choice' | 'contract' | 'completed' =
+                    // Quote accepted (acceptPriceQuote sets quote_status = 1). A
+                    // request abandoned before accepting the quote sits here until
+                    // the parent validates it from their dashboard.
+                    const quoteAccepted = Number((req as any).quote_status) === 1;
+                    const stage: 'quote' | 'awaiting' | 'proposed' | 'final-choice' | 'contract' | 'completed' =
                       finalChoice ? (contractSigned ? 'completed' : 'contract')
                         : hasSelected ? 'final-choice'
                           : hasProposed ? 'proposed'
-                            : 'awaiting';
+                            : quoteAccepted ? 'awaiting'
+                              : 'quote';
                     return (
                     <div key={req.id} className="group bg-white rounded-[32px] sm:rounded-[40px] p-5 sm:p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative">
                       <div className="space-y-10">
@@ -533,7 +540,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
                           <div className="flex items-center gap-2 sm:gap-3">
                             {/* Request can only be cancelled before our team starts matching. */}
-                            {stage === 'awaiting' && (
+                            {(stage === 'awaiting' || stage === 'quote') && (
                               <button
                                 onClick={() => handleRemoveRequest(req.id.toString())}
                                 className="p-2.5 bg-slate-50 sm:bg-transparent text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl sm:rounded-2xl transition-all"
@@ -546,6 +553,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                         </div>
 
                         {/* Stage banner — mirrors the admin back-office flow */}
+                        {stage === 'quote' && (
+                          <div className="p-5 sm:p-6 rounded-[24px] bg-brand-accent/5 border border-brand-accent/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <FileText className="text-brand-accent shrink-0 mt-0.5" size={20} />
+                              <div className="min-w-0">
+                                <p className="font-display font-bold text-slate-800">{language === 'fr' ? 'Validez votre devis' : 'Validate your quote'}</p>
+                                <p className="text-sm text-slate-500 leading-snug">{language === 'fr' ? 'Votre demande est presque prête. Consultez votre devis et acceptez-le pour que notre équipe commence à vous proposer des babysitters.' : 'Your request is almost ready. Review your quote and accept it so our team can start proposing babysitters.'}</p>
+                              </div>
+                            </div>
+                            <a href={`/price/${req.id}`} className="shrink-0 inline-flex items-center justify-center gap-1.5 px-5 py-3 bg-brand-accent text-white font-bold rounded-2xl hover:bg-[#66B2AC] transition-all shadow-lg shadow-brand-accent/20 text-sm whitespace-nowrap">
+                              {language === 'fr' ? 'Voir et valider le devis' : 'Review & validate quote'} <ChevronRight size={16} />
+                            </a>
+                          </div>
+                        )}
                         {stage === 'awaiting' && (
                           <div className="p-5 sm:p-6 rounded-[24px] bg-amber-50 border border-amber-100 flex items-start gap-3">
                             <Clock className="text-amber-500 shrink-0 mt-0.5" size={20} />
@@ -1177,7 +1198,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
         <button
           type="button"
-          className="px-6 py-3 bg-brand-blue text-white font-bold rounded-2xl shadow-lg shadow-brand-blue/20 cursor-default"
+          onClick={() => window.open('https://wa.me/33780857676', '_blank')}
+          className="px-6 py-3 bg-brand-blue text-white font-bold rounded-2xl shadow-lg shadow-brand-blue/20 hover:bg-brand-blue/90 transition-colors active:scale-95"
         >
           {(t.profilePage as any).support?.button || 'Contact Support'}
         </button>
